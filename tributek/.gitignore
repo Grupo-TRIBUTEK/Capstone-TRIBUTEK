@@ -1,0 +1,7 @@
+# Aqui ignoramos las carpetas y archivos que no queremos subir al repositorio de Git.
+
+node_modules/
+.env
+.env.*
+.next/
+dist/
