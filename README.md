@@ -6,19 +6,23 @@
 ![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white) 
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white) 
 ![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white) 
-![GitHub Actions](https://img.shields.io/badge/GitHub_Actions-2088FF?style=for-the-badge&logo=github-actions&logoColor=white) 
+( talwind)
 
 ![Status](https://img.shields.io/badge/Status-Development-orange?style=for-the-badge)
 
 
-(Imagen)
+<img src="tributek/img/TRIBUTEK-capstone.png" width="800" height="500" style="border-radius: 10px;">
 
-## Índice 
+## Índice
 
 ## Introducción
 
-## Instalación 
+## Arquitectura
 
-Instalación de 
+### Arquitectura del proyecto
 
-[instalacionn.MD](tributek\instalacionn.MD)
+## Instalación
+
+### Creación del proyecto
+
+[Instalación de las tecnologías](tributek/instalacionn.md)
