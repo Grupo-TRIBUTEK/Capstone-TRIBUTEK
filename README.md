@@ -26,3 +26,15 @@
 ### Creación del proyecto
 
 [Instalación de las tecnologías](tributek/instalacionn.md)
+
+## Ejecucion del proyecto en entorno de ejecucion
+
+Algunas ejecuciones realizadas estan basadas en el proceso de instalacion.
+
+1. Ejecucion del backend y frontend
+
+```bash
+npm run dev
+```
+
+2. Prisma 

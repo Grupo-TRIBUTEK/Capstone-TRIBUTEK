@@ -1,0 +1,15 @@
+// Este archivo no lo usaremos en nuestro prisma
+// En su lugar utilizaremos contract.prisma
+
+/*
+
+contract.prisma sirve para definir el modelo 
+de datos de tu aplicación en Prisma 8. 
+En nuestro proyecto TRIBUTEK, 
+será el archivo donde vamos a 
+describir las tablas, campos y relaciones
+que tendrá la base de datos.
+
+*/
+
+

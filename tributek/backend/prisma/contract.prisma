@@ -1,3 +1,17 @@
+/*
+
+BD_TRIBUTEK -> la creamos en PostgreSQL.
+contract.prisma -> define los modelos de datos.
+contract emit -> genera los artefactos del contrato.
+db init sin --dry-run -> aplicaría la estructura a PostgreSQL.
+db init --dry-run -> solamente muestra qué haría, sin modificar la BD.
+
+*/
+
+// Modelo TRIBUTEK
+
+
+
 model Test {
   id Int @id @default(autoincrement())
 }
