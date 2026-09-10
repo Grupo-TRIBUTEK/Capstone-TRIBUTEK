@@ -1,4 +1,6 @@
+import Input from "../../ui/Input";
 import Button from "../../ui/Button";
+
 export default function LoginForm() {
     return (
         <form
@@ -11,19 +13,25 @@ export default function LoginForm() {
                 alt="Logo TRIBUTEK"
                 className="mx-auto h-32 w-64 object-contain"
             />
+
             <div className="flex flex-col items-center justify-center text-center text-[#252f46]">
                 <h3 className="text-xl font-bold">BIENVENIDO/A</h3>
-                <h3 className="mt-2 text-2xl font-bold">INGRESA A TU CUENTA</h3>
+                <h3 className="mt-2 text-2xl font-bold">
+                    INGRESA A TU CUENTA
+                </h3>
                 <p className="mt-1 text-xs text-slate-500">
                     Accede con las credenciales asignadas por TRIBUTEK
                 </p>
             </div>
 
-            <label className="font-semibold text-[#252f46]" htmlFor="email">
+            <label
+                className="font-semibold text-[#252f46]"
+                htmlFor="email"
+            >
                 Usuario
             </label>
-            <input
-                className="h-14 rounded-lg border border-slate-400 px-4 outline-none placeholder:text-slate-300 focus:border-[#252f46] focus:ring-1 focus:ring-[#252f46]"
+
+            <Input
                 id="email"
                 name="email"
                 type="email"
@@ -31,11 +39,14 @@ export default function LoginForm() {
                 required
             />
 
-            <label className="font-semibold text-[#252f46]" htmlFor="password">
+            <label
+                className="font-semibold text-[#252f46]"
+                htmlFor="password"
+            >
                 Contraseña
             </label>
-            <input
-                className="h-14 rounded-lg border border-slate-400 px-4 outline-none placeholder:text-slate-300 focus:border-[#252f46] focus:ring-1 focus:ring-[#252f46]"
+
+            <Input
                 id="password"
                 name="password"
                 type="password"
@@ -43,7 +54,10 @@ export default function LoginForm() {
                 required
             />
 
-            <a className="self-end text-sm text-[#b98b7b] underline" href="#">
+            <a
+                className="self-end text-sm text-[#b98b7b] underline"
+                href="#"
+            >
                 Olvidé mi contraseña
             </a>
 
