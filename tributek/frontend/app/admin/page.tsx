@@ -1,7 +1,12 @@
+import Header from "../components/layout/Header";
+
 export default function AdminPage() {
   return (
     <main>
-      <h1>Dashboard</h1>
+      <Header
+        title="Panel principal"
+        description="Resumen y seguimiento de las gestiones de TRIBUTEK."
+      />
     </main>
   );
 }
