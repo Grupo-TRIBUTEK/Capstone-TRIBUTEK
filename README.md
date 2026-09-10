@@ -37,4 +37,7 @@ Algunas ejecuciones realizadas estan basadas en el proceso de instalacion.
 npm run dev
 ```
 
+- Frontend: http://localhost:3000
+- Backend: http://localhost:3001
+
 2. Prisma 
