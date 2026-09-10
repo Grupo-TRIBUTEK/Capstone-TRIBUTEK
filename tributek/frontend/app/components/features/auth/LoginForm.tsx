@@ -1,3 +1,4 @@
+import Button from "../../ui/Button";
 export default function LoginForm() {
     return (
         <form
@@ -46,12 +47,12 @@ export default function LoginForm() {
                 Olvidé mi contraseña
             </a>
 
-            <button
-                className="mx-auto mt-2 w-3/4 rounded-xl bg-[#252f46] px-6 py-4 text-lg font-bold text-white transition-colors hover:bg-[#344463]"
+            <Button
+                className="mx-auto mt-2 w-3/4"
                 type="submit"
             >
                 INICIAR SESIÓN
-            </button>
+            </Button>
         </form>
     );
 }
