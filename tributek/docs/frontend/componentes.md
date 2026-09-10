@@ -1,5 +1,7 @@
 # Organización de componentes
 
+Componenestes especificos y generales.
+
 ## ¿Para qué sirve un componente?
 
 Un componente es una pieza reutilizable de la interfaz que encapsula su estructura, estilo y comportamiento. Su objetivo es facilitar la organización, reutilización y mantenimiento de la aplicación.
