@@ -1,0 +1,112 @@
+// MODELOS DE DATOS
+
+// Primeras tablas
+// - Roles
+// - Usuarios
+// - Clientes
+// - Relación: Usuario - Cliente
+// - Servicios
+// - Relación: Cliente - Servicio
+// - Períodos por cliente
+model Rol {
+  id          BigInt    @id @default(autoincrement())
+  nombre      String    @unique @db.VarChar(30)
+  descripcion String?   @db.VarChar(150)
+
+  usuarios    Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id               BigInt           @id @default(autoincrement())
+  rolId            BigInt           @map("rol_id")
+  nombre           String           @db.VarChar(120)
+  email            String?          @unique @db.VarChar(150)
+  nombreUsuario    String           @unique @map("nombre_usuario") @db.VarChar(80)
+  passwordHash     String           @map("password_hash") @db.VarChar(255)
+  activo           Boolean          @default(true)
+  creadoEn         DateTime?        @map("creado_en") @db.Timestamptz
+  actualizadoEn    DateTime?        @map("actualizado_en") @db.Timestamptz
+
+  rol              Rol              @relation(fields:[rolId], references:[id])
+  usuariosClientes UsuarioCliente[]
+
+  @@map("usuarios")
+}
+
+model Cliente {
+  id                BigInt            @id @default(autoincrement())
+  tipoCliente       String            @map("tipo_cliente") @db.VarChar(20)
+  rut               String            @unique @db.VarChar(20)
+  nombreRazonSocial String            @map("nombre_razon_social") @db.VarChar(180)
+  contactoPrincipal String?           @map("contacto_principal") @db.VarChar(120)
+  emailContacto     String?           @map("email_contacto") @db.VarChar(150)
+  telefono          String?           @db.VarChar(30)
+  direccion         String?           @db.VarChar(250)
+  estado            String            @db.VarChar(30)
+  creadoEn          DateTime?         @map("creado_en") @db.Timestamptz
+  actualizadoEn     DateTime?         @map("actualizado_en") @db.Timestamptz
+
+  usuariosClientes  UsuarioCliente[]
+  servicios         ClienteServicio[]
+  periodos          PeriodoCliente[]
+
+  @@map("clientes")
+}
+
+model UsuarioCliente {
+  usuarioId   BigInt  @map("usuario_id")
+  clienteId   BigInt  @map("cliente_id")
+  esPrincipal Boolean @default(false) @map("es_principal")
+
+  usuario     Usuario @relation(fields:[usuarioId], references:[id])
+  cliente     Cliente @relation(fields:[clienteId], references:[id])
+
+  @@id([usuarioId, clienteId])
+  @@map("usuario_cliente")
+}
+
+model Servicio {
+  id          BigInt            @id @default(autoincrement())
+  nombre      String            @unique @db.VarChar(100)
+  descripcion String?           @db.VarChar(250)
+  activo      Boolean           @default(true)
+
+  clientes    ClienteServicio[]
+
+  @@map("servicios")
+}
+
+model ClienteServicio {
+  id           BigInt    @id @default(autoincrement())
+  clienteId    BigInt    @map("cliente_id")
+  servicioId   BigInt    @map("servicio_id")
+  fechaInicio  DateTime? @map("fecha_inicio") @db.Date
+  fechaTermino DateTime? @map("fecha_termino") @db.Date
+  estado       String    @db.VarChar(30)
+
+  cliente      Cliente   @relation(fields:[clienteId], references:[id])
+  servicio     Servicio  @relation(fields:[servicioId], references:[id])
+
+  @@unique([clienteId, servicioId])
+  @@map("cliente_servicio")
+}
+
+model PeriodoCliente {
+  id               BigInt    @id @default(autoincrement())
+  clienteId        BigInt    @map("cliente_id")
+  anio             Int       @db.SmallInt
+  mes              Int       @db.SmallInt
+  estadoContable   String    @map("estado_contable") @db.VarChar(30)
+  fechaVencimiento DateTime? @map("fecha_vencimiento") @db.Date
+  cerrado          Boolean   @default(false)
+  creadoEn         DateTime? @map("creado_en") @db.Timestamptz
+
+  cliente          Cliente   @relation(fields:[clienteId], references:[id])
+
+  @@unique([clienteId, anio, mes])
+  @@map("periodos_cliente")
+}
+
+// -----------

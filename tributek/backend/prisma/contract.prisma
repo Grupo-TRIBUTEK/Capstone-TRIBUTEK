@@ -1,25 +1,268 @@
-/*
+// MODELOS DE DATOS
 
-BD_TRIBUTEK -> la creamos en PostgreSQL.
-contract.prisma -> define los modelos de datos.
-contract emit -> genera los artefactos del contrato.
-db init sin --dry-run -> aplicaría la estructura a PostgreSQL.
-db init --dry-run -> solamente muestra qué haría, sin modificar la BD.
+// Primeras tablas
+// - Roles
+// - Usuarios
+// - Clientes
+// - Relación: Usuario - Cliente
+// - Servicios
+// - Relación: Cliente - Servicio
+// - Períodos por cliente
+model Rol {
+  id          BigInt        @id @default(autoincrement())
+  nombre      VarChar(30)   @unique
+  descripcion VarChar(150)?
 
-*/
+  usuarios    Usuario[]
 
-// Modelo TRIBUTEK
+  @@map("roles")
+}
 
-/*
-Prisma 
+model Usuario {
+  id                     BigInt           @id @default(autoincrement())
+  rolId                  BigInt           @map("rol_id")
+  nombre                 VarChar(120)
+  email                  VarChar(150)?    @unique
+  nombreUsuario          VarChar(80)      @unique @map("nombre_usuario")
+  passwordHash           VarChar(255)     @map("password_hash")
+  activo                 Boolean          @default(true)
+  creadoEn               Timestamptz?     @map("creado_en")
+  actualizadoEn          Timestamptz?     @map("actualizado_en")
 
-Cuando hablamos de prisma, hablamos de un paquete o un modulo 
-de Javascript catalogado como ORM de backend
+  rol                    Rol              @relation(fields:[rolId], references:[id])
+  usuariosClientes       UsuarioCliente[]
+  documentos             Documento[]      @relation("DocumentoCargadoPor")
+  proyeccionesGeneradas  ProyeccionF29[]  @relation("ProyeccionGeneradaPor")
+  proyeccionesRevisadas  ProyeccionF29[]  @relation("ProyeccionRevisadaPor")
+  auditorias             Auditoria[]
+  transaccionesRevisadas Transaccion[]    @relation("TransaccionRevisadaPor")
+  gestionesResponsables  Gestion[]        @relation("GestionResponsable")
+  gestionesCreadas       Gestion[]        @relation("GestionCreadaPor")
 
-Prisma lo usaremos en conjunto con el framework de NESTJS
+  @@map("usuarios")
+}
 
-*/
+model Cliente {
+  id                BigInt            @id @default(autoincrement())
+  tipoCliente       VarChar(20)       @map("tipo_cliente")
+  rut               VarChar(20)       @unique
+  nombreRazonSocial VarChar(180)      @map("nombre_razon_social")
+  contactoPrincipal VarChar(120)?     @map("contacto_principal")
+  emailContacto     VarChar(150)?     @map("email_contacto")
+  telefono          VarChar(30)?
+  direccion         VarChar(250)?
+  estado            VarChar(30)
+  creadoEn          Timestamptz?      @map("creado_en")
+  actualizadoEn     Timestamptz?      @map("actualizado_en")
 
-model Test {
-  id Int @id @default(autoincrement())
+  usuariosClientes  UsuarioCliente[]
+  servicios         ClienteServicio[]
+  periodos          PeriodoCliente[]
+  trabajadores      Trabajador[]
+  documentos        Documento[]
+  transacciones     Transaccion[]
+  gestiones         Gestion[]
+
+  @@map("clientes")
+}
+
+model UsuarioCliente {
+  usuarioId   BigInt  @map("usuario_id")
+  clienteId   BigInt  @map("cliente_id")
+  esPrincipal Boolean @default(false) @map("es_principal")
+
+  usuario     Usuario @relation(fields:[usuarioId], references:[id])
+  cliente     Cliente @relation(fields:[clienteId], references:[id])
+
+  @@id([usuarioId, clienteId])
+  @@map("usuario_cliente")
+}
+
+model Servicio {
+  id          BigInt            @id @default(autoincrement())
+  nombre      VarChar(100)      @unique
+  descripcion VarChar(250)?
+  activo      Boolean           @default(true)
+
+  clientes    ClienteServicio[]
+  gestiones   Gestion[]
+
+  @@map("servicios")
+}
+
+model ClienteServicio {
+  id           BigInt      @id @default(autoincrement())
+  clienteId    BigInt      @map("cliente_id")
+  servicioId   BigInt      @map("servicio_id")
+  fechaInicio  Date?       @map("fecha_inicio")
+  fechaTermino Date?       @map("fecha_termino")
+  estado       VarChar(30)
+
+  cliente      Cliente     @relation(fields:[clienteId], references:[id])
+  servicio     Servicio    @relation(fields:[servicioId], references:[id])
+
+  @@unique([clienteId, servicioId])
+  @@map("cliente_servicio")
+}
+
+model PeriodoCliente {
+  id               BigInt          @id @default(autoincrement())
+  clienteId        BigInt          @map("cliente_id")
+  anio             SmallInt
+  mes              SmallInt
+  estadoContable   VarChar(30)     @map("estado_contable")
+  fechaVencimiento Date?           @map("fecha_vencimiento")
+  cerrado          Boolean         @default(false)
+  creadoEn         Timestamptz?    @map("creado_en")
+
+  cliente          Cliente         @relation(fields:[clienteId], references:[id])
+  documentos       Documento[]
+  proyeccionesF29  ProyeccionF29[]
+  transacciones    Transaccion[]
+  gestiones        Gestion[]
+
+  @@unique([clienteId, anio, mes])
+  @@map("periodos_cliente")
+}
+
+model Trabajador {
+  id           BigInt       @id @default(autoincrement())
+  clienteId    BigInt       @map("cliente_id")
+  rut          VarChar(20)
+  nombre       VarChar(150)
+  cargo        VarChar(120)
+  fechaIngreso Date         @map("fecha_ingreso")
+  fechaTermino Date?        @map("fecha_termino")
+  estado       VarChar(30)
+  creadoEn     Timestamptz? @map("creado_en")
+
+  cliente      Cliente      @relation(fields:[clienteId], references:[id])
+
+  @@map("trabajadores")
+}
+
+model TipoDocumento {
+  id          BigInt        @id @default(autoincrement())
+  nombre      VarChar(140)  @unique
+  area        VarChar(30)
+  descripcion VarChar(250)?
+  activo      Boolean       @default(true)
+
+  documentos  Documento[]
+
+  @@map("tipos_documento")
+}
+
+model Documento {
+  id              BigInt          @id @default(autoincrement())
+  clienteId       BigInt          @map("cliente_id")
+  periodoId       BigInt          @map("periodo_id")
+  tipoDocumentoId BigInt          @map("tipo_documento_id")
+  cargadoPor      BigInt          @map("cargado_por")
+  nombreArchivo   VarChar(255)    @map("nombre_archivo")
+  urlArchivo      VarChar(500)    @map("url_archivo")
+  mimeType        VarChar(100)    @map("mime_type")
+  tamanoBytes     BigInt          @map("tamano_bytes")
+  estado          VarChar(30)
+  observacion     VarChar(1000)?
+  visibleCliente  Boolean         @default(true) @map("visible_cliente")
+  cargadoEn       Timestamptz?    @map("cargado_en")
+
+  cliente         Cliente         @relation(fields:[clienteId], references:[id])
+  periodo         PeriodoCliente  @relation(fields:[periodoId], references:[id])
+  tipoDocumento   TipoDocumento   @relation(fields:[tipoDocumentoId], references:[id])
+  cargador        Usuario         @relation("DocumentoCargadoPor", fields:[cargadoPor], references:[id])
+  proyeccionF29   ProyeccionF29[] @relation("DocumentoGenerado")
+
+  @@map("documentos")
+}
+
+model ProyeccionF29 {
+  id                BigInt         @id @default(autoincrement())
+  periodoId         BigInt         @map("periodo_id")
+  version           Int
+  ivaDebito         Numeric(14, 2) @map("iva_debito")
+  ivaCredito        Numeric(14, 2) @map("iva_credito")
+  remanenteAnterior Numeric(14, 2) @map("remanente_anterior")
+  retenciones       Numeric(14, 2)
+  ppm               Numeric(14, 2)
+  impuestoEstimado  Numeric(14, 2) @map("impuesto_estimado")
+  totalEstimado     Numeric(14, 2) @map("total_estimado")
+  estado            VarChar(30)
+  generadoPor       BigInt?        @map("generado_por")
+  revisadoPor       BigInt?        @map("revisado_por")
+  documentoGenerado BigInt?        @map("documento_generado")
+  generadoEn        Timestamptz?   @map("generado_en")
+
+  periodo           PeriodoCliente @relation(fields:[periodoId], references:[id])
+  generador         Usuario?       @relation("ProyeccionGeneradaPor", fields:[generadoPor], references:[id])
+  revisor           Usuario?       @relation("ProyeccionRevisadaPor", fields:[revisadoPor], references:[id])
+  documento         Documento?     @relation("DocumentoGenerado", fields:[documentoGenerado], references:[id])
+
+  @@map("proyecciones_f29")
+}
+
+model Auditoria {
+  id        BigInt         @id @default(autoincrement())
+  usuarioId BigInt?        @map("usuario_id")
+  accion    VarChar(80)
+  entidad   VarChar(80)
+  entidadId BigInt?        @map("entidad_id")
+  detalle   VarChar(1000)?
+  creadoEn  Timestamptz?   @map("creado_en")
+
+  usuario   Usuario?       @relation(fields:[usuarioId], references:[id])
+
+  @@map("auditoria")
+}
+
+model Transaccion {
+  id             BigInt         @id @default(autoincrement())
+  clienteId      BigInt         @map("cliente_id")
+  periodoId      BigInt         @map("periodo_id")
+  fecha          Date
+  direccion      VarChar(15)
+  categoria      VarChar(100)?
+  descripcion    VarChar(300)
+  montoExento    Numeric(14, 2) @map("monto_exento")
+  montoNeto      Numeric(14, 2) @map("monto_neto")
+  iva            Numeric(14, 2)
+  montoTotal     Numeric(14, 2) @map("monto_total")
+  estadoRevision VarChar(30)    @map("estado_revision")
+  observacion    VarChar(1000)?
+  revisadoPor    BigInt?        @map("revisado_por")
+  revisadoEn     Timestamptz?   @map("revisado_en")
+  creadoPor      BigInt?        @map("creado_por")
+  creadoEn       Timestamptz?   @map("creado_en")
+
+  cliente        Cliente        @relation(fields:[clienteId], references:[id])
+  periodo        PeriodoCliente @relation(fields:[periodoId], references:[id])
+  revisor        Usuario?       @relation("TransaccionRevisadaPor", fields:[revisadoPor], references:[id])
+
+  @@map("transacciones")
+}
+
+model Gestion {
+  id               BigInt          @id @default(autoincrement())
+  clienteId        BigInt          @map("cliente_id")
+  servicioId       BigInt?         @map("servicio_id")
+  periodoId        BigInt?         @map("periodo_id")
+  titulo           VarChar(180)
+  tipo             VarChar(80)?
+  descripcion      VarChar(1000)?
+  fechaVencimiento Date?           @map("fecha_vencimiento")
+  estado           VarChar(30)
+  visibleCliente   Boolean         @default(true) @map("visible_cliente")
+  responsableId    BigInt?         @map("responsable_id")
+  creadoPor        BigInt?         @map("creado_por")
+  creadoEn         Timestamptz?    @map("creado_en")
+  actualizadoEn    Timestamptz?    @map("actualizado_en")
+
+  cliente          Cliente         @relation(fields:[clienteId], references:[id])
+  servicio         Servicio?       @relation(fields:[servicioId], references:[id])
+  periodo          PeriodoCliente? @relation(fields:[periodoId], references:[id])
+  responsable      Usuario?        @relation("GestionResponsable", fields:[responsableId], references:[id])
+  creador          Usuario?        @relation("GestionCreadaPor", fields:[creadoPor], references:[id])
+
+  @@map("gestiones")
 }
