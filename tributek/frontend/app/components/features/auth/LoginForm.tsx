@@ -8,7 +8,7 @@ export default function LoginForm() {
             <img
                 src="/images/tras-TRIBUTEK.svg"
                 alt="Logo TRIBUTEK"
-                className="mx-auto h-32 w-64 object-contain"
+                className="mx-auto h-35 w-100 object-contain"
             />
             <div className="flex flex-col items-center justify-center text-center text-[#252f46]">
                 <h3 className="text-xl font-bold">BIENVENIDO/A</h3>

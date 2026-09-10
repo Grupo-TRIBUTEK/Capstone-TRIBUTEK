@@ -10,7 +10,15 @@ db init --dry-run -> solamente muestra qué haría, sin modificar la BD.
 
 // Modelo TRIBUTEK
 
+/*
+Prisma 
 
+Cuando hablamos de prisma, hablamos de un paquete o un modulo 
+de Javascript catalogado como ORM de backend
+
+Prisma lo usaremos en conjunto con el framework de NESTJS
+
+*/
 
 model Test {
   id Int @id @default(autoincrement())
