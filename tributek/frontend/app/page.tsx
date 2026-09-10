@@ -3,7 +3,8 @@ export default function Home() {
     <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
     
     <p>ejemplo</p>
-      <a href="/admin">Login</a>
+      <a href="/admin">panel admin</a>
+      <a href="/login">Login</a>
 
 
     </div>
