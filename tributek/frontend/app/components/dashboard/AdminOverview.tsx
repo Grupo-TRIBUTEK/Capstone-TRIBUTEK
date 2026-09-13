@@ -3,25 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import EmptyState from "../ui/EmptyState";
-import Icon from "../ui/Icon";
-import { adminNavigation } from "../layout/adminNavigation";
+import Icon, { type IconName } from "../ui/Icon";
 
 const months = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-const indicators = [
-  { title: "Clientes activos", detail: "Clientes con servicios vigentes" },
-  { title: "Gestiones pendientes", detail: "Trabajo pendiente del período" },
-  { title: "Documentos recibidos", detail: "Antecedentes del período" },
-  { title: "Próximo vencimiento", detail: "Siguiente fecha por atender" },
+const indicators: { title: string; detail: string; href: string; icon: IconName; linkLabel: string }[] = [
+  { title: "Clientes activos", detail: "Clientes con servicios vigentes", href: "/admin/clientes", icon: "users", linkLabel: "Ir a Clientes" },
+  { title: "Gestiones pendientes", detail: "Trabajo pendiente del período", href: "/admin/seguimiento", icon: "briefcase", linkLabel: "Ir a Seguimiento mensual" },
+  { title: "Documentos recibidos", detail: "Antecedentes del período", href: "/admin/documentos", icon: "file", linkLabel: "Ir a Documentos" },
+  { title: "Próximo vencimiento", detail: "Siguiente fecha por atender", href: "/admin/seguimiento", icon: "calendar", linkLabel: "Ir a Seguimiento mensual" },
 ];
 
-const shortcuts = adminNavigation.filter((item) => item.href !== "/admin");
-
 export default function AdminOverview() {
-  // Período inicial de demostración. Todavía no se consultan datos del backend.
+  // Período inicial de demostración, todavía no se consultan datos del backend.
   const [month, setMonth] = useState("8");
   const [year, setYear] = useState("2026");
   const period = `${months[Number(month)]} de ${year}`;
@@ -58,9 +55,17 @@ export default function AdminOverview() {
         <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {indicators.map((indicator) => (
             <div key={indicator.title} className="rounded-xl border border-[#b98b7b]/40 bg-white p-5">
-              <dt className="text-sm font-medium text-slate-600">{indicator.title}</dt>
+              <dt className="flex items-center gap-3 text-sm font-medium text-slate-600">
+                <span className="rounded-lg bg-[#efe0da] p-2 text-[#735044]"><Icon name={indicator.icon} /></span>
+                {indicator.title}
+              </dt>
               <dd className="mt-3 text-lg font-semibold text-[#252f46]">Sin datos conectados</dd>
               <dd className="mt-2 text-xs leading-5 text-slate-500">{indicator.detail}</dd>
+              <dd className="mt-4">
+                <Link href={indicator.href} className="inline-flex min-h-11 items-center gap-2 rounded text-sm font-semibold text-[#735044] underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2">
+                  {indicator.linkLabel}<span aria-hidden="true">→</span>
+                </Link>
+              </dd>
             </div>
           ))}
         </dl>
@@ -70,7 +75,7 @@ export default function AdminOverview() {
         <section aria-labelledby="obligations-title" className="min-w-0 rounded-xl border border-slate-200 p-5">
           <h2 id="obligations-title" className="text-lg font-semibold text-[#252f46]">Obligaciones y vencimientos</h2>
           <p className="mb-5 mt-1 text-sm text-slate-600">Seguimiento de {period.toLowerCase()}.</p>
-          <EmptyState title="Seguimiento pendiente de integrar" description="Aquí podrás consultar el cliente, la gestión, su vencimiento y su estado para el período seleccionado." />
+          <EmptyState icon="calendar" title="Seguimiento pendiente de integrar" description="Aquí podrás consultar el cliente, la gestión, su vencimiento y su estado para el período seleccionado." />
         </section>
         <section aria-labelledby="documents-title" className="rounded-xl border border-slate-200 p-5">
           <h2 id="documents-title" className="mb-5 text-lg font-semibold text-[#252f46]">Documentos recientes</h2>
@@ -78,17 +83,12 @@ export default function AdminOverview() {
         </section>
       </div>
 
-      <section aria-labelledby="shortcuts-title">
-        <h2 id="shortcuts-title" className="text-lg font-semibold text-[#252f46]">Accesos a secciones</h2>
-        <p className="mb-4 mt-1 text-sm text-slate-600">Estas secciones cuentan con una pantalla inicial; sus funciones están en preparación.</p>
-        <div className="grid gap-4 md:grid-cols-3">
-          {shortcuts.map((shortcut) => (
-            <Link key={shortcut.href} href={shortcut.href} className="rounded-xl border border-slate-200 p-5 transition-colors hover:border-[#b98b7b] hover:bg-[#faf5f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#252f46]">
-              <span className="flex items-center gap-3 font-semibold text-[#252f46]"><Icon name={shortcut.icon} />{shortcut.label} <span aria-hidden="true">→</span></span>
-              <span className="mt-2 block text-sm text-slate-600">Explorar la sección · En preparación</span>
-            </Link>
-          ))}
-        </div>
+      <section aria-labelledby="activity-title" className="rounded-xl border border-slate-200 p-5">
+        <h2 id="activity-title" className="flex items-center gap-2 text-lg font-semibold text-[#252f46]">
+          <Icon name="shield" /> Actividad reciente
+        </h2>
+        <p className="mb-5 mt-1 text-sm text-slate-600">Acciones registradas durante {period.toLowerCase()}.</p>
+        <EmptyState icon="shield" title="Actividad pendiente de integrar" description="Aquí se mostrarán las acciones realizadas, la cuenta responsable y la fecha. Todavía no se consultan eventos reales." />
       </section>
     </div>
   );
