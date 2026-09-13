@@ -4,15 +4,6 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuth } from "@/app/features/auth/auth-client";
 
-const menuItems = [
-  { href: "/admin", label: "Inicio" },
-  { href: "/admin/documentos", label: "Documentos" },
-  { href: "/admin/f29", label: "Proyección F29" },
-  { href: "/admin/pagos", label: "Pagos" },
-  { href: "/admin/rrhh", label: "Recursos Humanos" },
-  { href: "/admin/auditoria", label: "Auditoría" },
-];
-import { usePathname } from "next/navigation";
 import Icon from "../ui/Icon";
 import { adminNavigation } from "./adminNavigation";
 
