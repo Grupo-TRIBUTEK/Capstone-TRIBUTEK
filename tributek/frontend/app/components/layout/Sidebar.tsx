@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { clearAuth } from "@/app/features/auth/auth-client";
 
 const menuItems = [
   { href: "/admin", label: "Inicio" },
@@ -14,6 +15,12 @@ const menuItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    clearAuth();
+    router.replace("/login");
+  }
 
   return (
     <aside className="w-full shrink-0 bg-[#252f46] p-6 text-white md:min-h-screen md:w-64">
@@ -57,6 +64,14 @@ export default function Sidebar() {
           })}
         </ul>
       </nav>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-8 w-full rounded-lg border border-white/50 px-4 py-3 text-left font-medium transition-colors hover:bg-white hover:text-[#252f46]"
+      >
+        Cerrar sesión
+      </button>
     </aside>
   );
 }

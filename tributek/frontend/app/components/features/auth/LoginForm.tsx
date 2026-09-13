@@ -1,12 +1,44 @@
+"use client";
+
+import { FormEvent, useState } from "react";
+import { useRouter } from "next/navigation";
 import Input from "../../ui/Input";
 import Button from "../../ui/Button";
+import { clearAuth, login } from "@/app/features/auth/auth-client";
 
 export default function LoginForm() {
+    const router = useRouter();
+    const [nombreUsuario, setNombreUsuario] = useState("");
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+        event.preventDefault();
+        setError("");
+        setIsSubmitting(true);
+
+        try {
+            const response = await login(nombreUsuario, password);
+
+            if (response.usuario.rolId !== "1") {
+                clearAuth();
+                setError("No tienes permisos para acceder al panel administrativo.");
+                return;
+            }
+
+            router.replace("/admin");
+        } catch {
+            setError("Usuario o contraseña incorrectos.");
+        } finally {
+            setIsSubmitting(false);
+        }
+    }
+
     return (
         <form
             className="flex w-full flex-col gap-4 rounded-[2rem] border border-slate-400 bg-white px-10 py-8 text-black shadow-sm"
-            method="POST"
-            action="/api/auth/login"
+            onSubmit={handleSubmit}
         >
             <img
                 src="/images/tras-TRIBUTEK.svg"
@@ -26,16 +58,18 @@ export default function LoginForm() {
 
             <label
                 className="font-semibold text-[#252f46]"
-                htmlFor="email"
+                htmlFor="nombreUsuario"
             >
                 Usuario
             </label>
 
             <Input
-                id="email"
-                name="email"
-                type="email"
+                id="nombreUsuario"
+                name="nombreUsuario"
+                type="text"
                 placeholder="Ingrese su usuario"
+                value={nombreUsuario}
+                onChange={(event) => setNombreUsuario(event.target.value)}
                 required
             />
 
@@ -51,6 +85,8 @@ export default function LoginForm() {
                 name="password"
                 type="password"
                 placeholder="Ingrese su contraseña"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
                 required
             />
 
@@ -61,11 +97,18 @@ export default function LoginForm() {
                 Olvidé mi contraseña
             </a>
 
+            {error && (
+                <p className="text-center text-sm font-medium text-red-700" role="alert">
+                    {error}
+                </p>
+            )}
+
             <Button
                 className="mx-auto mt-2 w-3/4"
                 type="submit"
+                disabled={isSubmitting}
             >
-                INICIAR SESIÓN
+                {isSubmitting ? "VALIDANDO..." : "INICIAR SESIÓN"}
             </Button>
         </form>
     );

@@ -1,8 +1,17 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
-
-// controller recibe la petición del frontend y delega la autenticación al service: 
+import { JwtAuthGuard } from './jwt-auth.guard.js';
+// roles
+import { Roles } from './decorators/roles.decorator.js';
+import { RolesGuard } from './roles.guard.js';
 
 @Controller('auth')
 export class AuthController {
@@ -12,4 +21,21 @@ export class AuthController {
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('perfil')
+  perfil() {
+    return {
+      mensaje: 'Acceso autorizado',
+    };
+  }
+
+  @Roles(1)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Get('admin')
+admin() {
+  return {
+    mensaje: 'Acceso autorizado para ADMIN',
+  };
+}
 }
