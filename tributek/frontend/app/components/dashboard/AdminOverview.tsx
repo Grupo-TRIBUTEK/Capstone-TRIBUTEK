@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import EmptyState from "../ui/EmptyState";
+import Icon from "../ui/Icon";
+import { adminNavigation } from "../layout/adminNavigation";
 
 const months = [
   "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
@@ -16,11 +18,7 @@ const indicators = [
   { title: "Próximo vencimiento", detail: "Siguiente fecha por atender" },
 ];
 
-const shortcuts = [
-  { href: "/admin/documentos", title: "Documentos", detail: "Antecedentes de clientes" },
-  { href: "/admin/f29", title: "Proyección F29", detail: "Resumen y proyección" },
-  { href: "/admin/pagos", title: "Pagos", detail: "Cobros y abonos" },
-];
+const shortcuts = adminNavigation.filter((item) => item.href !== "/admin");
 
 export default function AdminOverview() {
   // Período inicial de demostración. Todavía no se consultan datos del backend.
@@ -86,8 +84,8 @@ export default function AdminOverview() {
         <div className="grid gap-4 md:grid-cols-3">
           {shortcuts.map((shortcut) => (
             <Link key={shortcut.href} href={shortcut.href} className="rounded-xl border border-slate-200 p-5 transition-colors hover:border-[#b98b7b] hover:bg-[#faf5f3] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#252f46]">
-              <span className="font-semibold text-[#252f46]">{shortcut.title} <span aria-hidden="true">→</span></span>
-              <span className="mt-2 block text-sm text-slate-600">{shortcut.detail}</span>
+              <span className="flex items-center gap-3 font-semibold text-[#252f46]"><Icon name={shortcut.icon} />{shortcut.label} <span aria-hidden="true">→</span></span>
+              <span className="mt-2 block text-sm text-slate-600">Explorar la sección · En preparación</span>
             </Link>
           ))}
         </div>
