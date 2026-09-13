@@ -25,7 +25,7 @@ const section: AdminSectionProps = {
     },
     {
       "title": "Consulta del historial",
-      "description": "Esta vista permitirá revisar eventos; no editar ni borrar el historial desde el listado."
+      "description": "Esta vista permitirá revisar eventos, no editar ni borrar el historial desde el listado."
     }
   ],
   "related": [
