@@ -1,12 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { clearAuth } from "@/app/features/auth/auth-client";
+
+const menuItems = [
+  { href: "/admin", label: "Inicio" },
+  { href: "/admin/documentos", label: "Documentos" },
+  { href: "/admin/f29", label: "Proyección F29" },
+  { href: "/admin/pagos", label: "Pagos" },
+  { href: "/admin/rrhh", label: "Recursos Humanos" },
+  { href: "/admin/auditoria", label: "Auditoría" },
+];
 import { usePathname } from "next/navigation";
 import Icon from "../ui/Icon";
 import { adminNavigation } from "./adminNavigation";
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  function handleLogout() {
+    clearAuth();
+    router.replace("/login");
+  }
 
   return (
     <aside className="w-full shrink-0 bg-[#252f46] p-5 text-white md:min-h-screen md:w-64">
@@ -35,6 +52,14 @@ export default function Sidebar() {
           </div>
         ))}
       </nav>
+
+      <button
+        type="button"
+        onClick={handleLogout}
+        className="mt-8 w-full rounded-lg border border-white/50 px-4 py-3 text-left font-medium transition-colors hover:bg-white hover:text-[#252f46]"
+      >
+        Cerrar sesión
+      </button>
     </aside>
   );
 }

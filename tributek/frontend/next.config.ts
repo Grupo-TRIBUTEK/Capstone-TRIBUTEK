@@ -3,6 +3,14 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.23"],
+  async rewrites() {
+    return [
+      {
+        source: "/auth/:path*",
+        destination: "http://localhost:3001/auth/:path*",
+      },
+    ];
+  },
   turbopack: {
     root: path.resolve(__dirname),
   },
