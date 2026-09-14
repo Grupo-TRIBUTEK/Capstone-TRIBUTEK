@@ -44,7 +44,13 @@ export async function login(nombreUsuario: string, password: string) {
   });
 
   if (!response.ok) {
-    throw new Error("Usuario o contraseña incorrectos");
+    const errorData = (await response.json().catch(() => null)) as
+      | { message?: string | string[] }
+      | null;
+    const message = Array.isArray(errorData?.message)
+      ? errorData.message.join(" ")
+      : errorData?.message;
+    throw new Error(message || "Usuario o contraseña incorrectos");
   }
 
   const data = (await response.json()) as LoginResponse;

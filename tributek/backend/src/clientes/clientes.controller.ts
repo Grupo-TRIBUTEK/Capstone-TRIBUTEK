@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -10,7 +12,7 @@ import { ClientesService } from './clientes.service.js';
 import { CreateClienteDto } from './dto/create-cliente.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 
-// Exponemos los endpoints que recibirán y consultarán los datos de clientes.
+// Exponemos los endpoints que recibirï¿½n y consultarï¿½n los datos de clientes.
 
 @Controller('clientes')
 export class ClientesController {
@@ -22,9 +24,21 @@ export class ClientesController {
     return this.clientesService.crearCliente(datos);
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  actualizarCliente(@Param('id') id: string, @Body() datos: CreateClienteDto) {
+    return this.clientesService.actualizarCliente(id, datos);
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard)
   obtenerClientes(@Query('buscar') buscar?: string) {
     return this.clientesService.obtenerClientes(buscar);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  obtenerCliente(@Param('id') id: string) {
+    return this.clientesService.obtenerCliente(id);
   }
 }

@@ -28,8 +28,12 @@ export default function LoginForm() {
             }
 
             router.replace("/admin");
-        } catch {
-            setError("Usuario o contraseña incorrectos.");
+        } catch (loginError) {
+            setError(
+                loginError instanceof Error
+                    ? loginError.message
+                    : "No se pudo iniciar sesión.",
+            );
         } finally {
             setIsSubmitting(false);
         }
