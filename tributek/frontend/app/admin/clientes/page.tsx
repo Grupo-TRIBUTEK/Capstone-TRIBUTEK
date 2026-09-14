@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
+import { authenticatedFetch } from "@/app/features/auth/auth-client";
+
 import Header from "../../components/layout/Header";
 import Icon from "../../components/ui/Icon";
 import ClientCreateModal, {
@@ -14,10 +16,31 @@ export default function Page() {
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
 
-  function handleCreated(client: ClientRecord) {
-    setClients((current) => [...current, client]);
-    setSuccessMessage("Cliente creado correctamente.");
-  }
+  // Get clientes
+
+  useEffect(() => {
+    async function cargarClientes() {
+      try {
+        const response = await authenticatedFetch("/clientes");
+
+        if (!response.ok) {
+          throw new Error("No se pudieron obtener los clientes.");
+        }
+
+        const data: ClientRecord[] = await response.json();
+        setClients(data);
+      } catch (error) {
+        console.error("Error al cargar clientes:", error);
+      }
+    }
+
+    cargarClientes();
+  }, []);
+
+ function handleCreated(client: ClientRecord) {
+  setClients((current) => [...current, client]);
+  setSuccessMessage("Cliente creado correctamente.");
+}
 
   return (
     <main className="relative space-y-6">
