@@ -1,5 +1,6 @@
 "use client";
 import { useSyncExternalStore } from "react";
+import { mergeClients } from "./mergeClients";
 import { emptyData, parseData, type Data } from "./model";
 const KEY = "tributek:ficha-ensayo:v1";
 const initial = { data: emptyData, ready: false, error: "" };
@@ -60,3 +61,10 @@ const getServerSnapshot = () => initial;
 export function useData() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
+
+export function syncRemoteClients(records: import('./mergeClients').RemoteClient[]) {
+  if (!snapshot.ready || snapshot.error) throw new Error('La ficha local no está disponible.');
+  const next = mergeClients(snapshot.data, records);
+  if (next !== snapshot.data) persist(next, snapshot.data.revision);
+}
+
