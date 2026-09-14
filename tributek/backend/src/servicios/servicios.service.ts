@@ -3,6 +3,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import 'temporal-polyfill/global';
+import 'temporal-polyfill/types/global';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateAsignacionServicioDto } from './dto/create-asignacion-servicio.dto.js';
 import { CreateServicioDto } from './dto/create-servicio.dto.js';
@@ -86,8 +88,8 @@ export class ServiciosService {
     return this.prisma.db.orm.public.ClienteServicio.create({
       clienteId: BigInt(datos.clienteId),
       servicioId: BigInt(datos.servicioId),
-      fechaInicio: datos.fechaInicio ? new Date(datos.fechaInicio) : null,
-      fechaTermino: datos.fechaTermino ? new Date(datos.fechaTermino) : null,
+      fechaInicio: datos.fechaInicio ? Temporal.PlainDate.from(datos.fechaInicio) : null,
+      fechaTermino: datos.fechaTermino ? Temporal.PlainDate.from(datos.fechaTermino) : null,
       estado: datos.estado,
     } as any);
   }
@@ -102,9 +104,21 @@ export class ServiciosService {
     return this.prisma.db.orm.public.ClienteServicio.where({ id: BigInt(id) }).update({
       clienteId: BigInt(datos.clienteId),
       servicioId: BigInt(datos.servicioId),
-      fechaInicio: datos.fechaInicio ? new Date(datos.fechaInicio) : null,
-      fechaTermino: datos.fechaTermino ? new Date(datos.fechaTermino) : null,
+      fechaInicio: datos.fechaInicio ? Temporal.PlainDate.from(datos.fechaInicio) : null,
+      fechaTermino: datos.fechaTermino ? Temporal.PlainDate.from(datos.fechaTermino) : null,
       estado: datos.estado,
+    } as any);
+  }
+
+  async finalizarAsignacion(id: string) {
+    const asignacion = await this.prisma.db.orm.public.ClienteServicio.where({
+      id: BigInt(id),
+    }).first();
+    if (!asignacion) throw new NotFoundException('Asignación no encontrada.');
+
+    return this.prisma.db.orm.public.ClienteServicio.where({ id: BigInt(id) }).update({
+      estado: 'FINALIZADO',
+      fechaTermino: Temporal.Now.plainDateISO('America/Santiago'),
     } as any);
   }
 

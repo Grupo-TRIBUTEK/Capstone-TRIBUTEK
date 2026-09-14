@@ -41,6 +41,7 @@ export default function Page() {
   const [assignments, setAssignments] = useState<Asignacion[]>([]);
   const [serviceForm, setServiceForm] = useState(emptyService);
   const [editingService, setEditingService] = useState<Servicio | null>(null);
+  const [assignmentToFinish, setAssignmentToFinish] = useState<Asignacion | null>(null);
   const [assignmentForm, setAssignmentForm] = useState({
     clienteId: "",
     servicioId: "",
@@ -162,25 +163,21 @@ export default function Page() {
   async function finishAssignment(assignment: Asignacion) {
     setError("");
     setMessage("");
+    setSaving(true);
 
     try {
-      const response = await authenticatedFetch(`/servicios/asignaciones/${assignment.id}`, {
+      const response = await authenticatedFetch(`/servicios/asignaciones/${assignment.id}/finalizar`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          clienteId: assignment.clienteId,
-          servicioId: assignment.servicioId,
-          fechaInicio: assignment.fechaInicio?.slice(0, 10),
-          fechaTermino: assignment.fechaTermino?.slice(0, 10) || new Date().toISOString().slice(0, 10),
-          estado: "FINALIZADO",
-        }),
       });
 
       if (!response.ok) throw new Error("No se pudo actualizar la contratación.");
       setMessage("Contratación finalizada.");
       await loadData();
+      setAssignmentToFinish(null);
     } catch (requestError) {
       setError(requestError instanceof Error ? requestError.message : "No se pudo actualizar la contratación.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -236,8 +233,48 @@ export default function Page() {
 
       <section className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-labelledby="contracts-title">
         <div className="border-b border-slate-200 p-5"><h2 id="contracts-title" className="text-xl font-bold text-[#252f46]">Contrataciones</h2><p className="mt-1 text-sm text-slate-600">Vigencia y estado de los servicios contratados por cliente.</p></div>
-        <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#252f46] text-white"><tr>{["Cliente", "Servicio", "Inicio", "Término", "Estado", "Acción"].map((heading) => <th key={heading} className="px-5 py-4 font-medium">{heading}</th>)}</tr></thead><tbody>{assignments.map((assignment) => <tr key={assignment.id} className="border-b border-slate-100"><td className="px-5 py-4">{assignment.cliente?.nombreRazonSocial || "Cliente no disponible"}</td><td className="px-5 py-4">{assignment.servicio?.nombre || "Servicio no disponible"}</td><td className="px-5 py-4">{assignment.fechaInicio?.slice(0, 10) || "-"}</td><td className="px-5 py-4">{assignment.fechaTermino?.slice(0, 10) || "Sin término"}</td><td className="px-5 py-4">{assignment.estado}</td><td className="px-5 py-4">{assignment.estado === "ACTIVO" && <button type="button" onClick={() => void finishAssignment(assignment)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-[#252f46]">Finalizar</button>}</td></tr>)}</tbody></table>{!loading && assignments.length === 0 && <p className="p-6 text-center text-sm text-slate-600">No hay contrataciones registradas.</p>}</div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-[#252f46] text-white"><tr>{["Cliente", "Servicio", "Inicio", "Término", "Estado", "Acción"].map((heading) => <th key={heading} className="px-5 py-4 font-medium">{heading}</th>)}</tr></thead><tbody>{assignments.map((assignment) => <tr key={assignment.id} className="border-b border-slate-100"><td className="px-5 py-4">{assignment.cliente?.nombreRazonSocial || "Cliente no disponible"}</td><td className="px-5 py-4">{assignment.servicio?.nombre || "Servicio no disponible"}</td><td className="px-5 py-4">{assignment.fechaInicio?.slice(0, 10) || "-"}</td><td className="px-5 py-4">{assignment.fechaTermino?.slice(0, 10) || "Sin término"}</td><td className="px-5 py-4">{assignment.estado}</td><td className="px-5 py-4">{assignment.estado === "ACTIVO" && <button type="button" onClick={() => setAssignmentToFinish(assignment)} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-[#252f46]">Finalizar</button>}</td></tr>)}</tbody></table>{!loading && assignments.length === 0 && <p className="p-6 text-center text-sm text-slate-600">No hay contrataciones registradas.</p>}</div>
       </section>
+
+      {assignmentToFinish && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="finish-assignment-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4"
+          onClick={() => !saving && setAssignmentToFinish(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-6 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="finish-assignment-title" className="text-lg font-semibold text-[#252f46]">
+              ¿Finalizar servicio?
+            </h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Finalizarás “{assignmentToFinish.servicio?.nombre || "este servicio"}” para {assignmentToFinish.cliente?.nombreRazonSocial || "este cliente"}. Esta acción cambiará su estado a finalizado.
+            </p>
+            <div className="mt-6 flex justify-end gap-3">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setAssignmentToFinish(null)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => void finishAssignment(assignmentToFinish)}
+                className="rounded-lg bg-[#252f46] px-4 py-2 text-sm font-semibold text-white hover:bg-[#344463] disabled:opacity-50"
+              >
+                {saving ? "Finalizando…" : "Confirmar finalización"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section aria-labelledby="next-title">
         <h2 id="next-title" className="mb-4 font-semibold text-[#252f46]">Qué encontrarás en esta sección</h2>

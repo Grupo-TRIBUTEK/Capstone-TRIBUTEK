@@ -46,6 +46,11 @@ export class ServiciosController {
     return this.serviciosService.actualizarAsignacion(id, datos);
   }
 
+  @Patch('asignaciones/:id/finalizar')
+  finalizarAsignacion(@Param('id') id: string) {
+    return this.serviciosService.finalizarAsignacion(id);
+  }
+
   @Patch(':id')
   actualizarServicio(@Param('id') id: string, @Body() datos: CreateServicioDto) {
     return this.serviciosService.actualizarServicio(id, datos);

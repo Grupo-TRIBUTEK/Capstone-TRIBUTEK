@@ -11,10 +11,17 @@ import MonthlyWorkspace from "../../components/ficha/MonthlyWorkspace";
 import { persist, useData, syncRemoteClients } from "../../components/ficha/store";
 import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
+type ServiceAssignment = {
+  clienteId: string;
+  estado: string;
+  servicio?: { nombre: string } | null;
+};
+
 export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<ClientRecord | undefined>();
   const [clients, setClients] = useState<ClientRecord[]>([]);
+  const [serviceAssignments, setServiceAssignments] = useState<ServiceAssignment[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const fichaStore = useData();
   const [fichaWarning, setFichaWarning] = useState("");
@@ -28,22 +35,29 @@ export default function Page() {
     async function cargarClientes() {
       setLoading(true); setLoadError('');
       try {
-        const response = await authenticatedFetch('/clientes', {signal:controller.signal});
+        const [response, assignmentsResponse] = await Promise.all([
+          authenticatedFetch('/clientes', {signal:controller.signal}),
+          authenticatedFetch('/servicios/asignaciones', {signal:controller.signal}),
+        ]);
         if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Tu sesión no tiene acceso al listado. Vuelve a iniciar sesión.' : 'No se pudieron obtener los clientes.');
         const data: ClientRecord[] = await response.json();
+        const assignments: ServiceAssignment[] = assignmentsResponse.ok
+          ? await assignmentsResponse.json()
+          : [];
         if (controller.signal.aborted) return;
         if (!Array.isArray(data)) throw new Error('Respuesta de clientes inválida.');
         setClients(data);
+        setServiceAssignments(Array.isArray(assignments) ? assignments : []);
         try { syncRemoteClients(data); setFichaWarning(''); }
         catch { setFichaWarning('El listado está cargado, pero no se pudieron preparar las fichas locales. Tus datos locales se conservaron.'); }
       } catch(error) {
         if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : 'No se pudo cargar el listado.');
       } finally { if (!controller.signal.aborted) setLoading(false); }
     }
-  }
 
-  cargarClientes();
-}, []);
+    void cargarClientes();
+    return () => controller.abort();
+  }, [fichaStore.ready, reloadKey]);
 
   function handleSaved(client: ClientRecord) {
   setClients((current) => {
@@ -53,12 +67,6 @@ export default function Page() {
       : [...current, client];
   });
   setSuccessMessage(editingClient ? "Cliente actualizado correctamente." : "Cliente creado correctamente.");
-    void cargarClientes();
-    return () => controller.abort();
-  }, [fichaStore.ready,reloadKey]);
-  function handleCreated(client: ClientRecord) {
-  setClients((current) => [...current, client]);
-  setSuccessMessage("Cliente creado correctamente.");
   setFichaWarning("");
 
   if (!fichaStore.ready || fichaStore.error) {
@@ -205,13 +213,22 @@ export default function Page() {
           role="region"
           aria-label="Tabla de clientes"
         >
-          <table className="w-full min-w-[700px] text-left text-sm">
+          <table className="w-full min-w-[880px] table-fixed text-left text-sm">
+            <colgroup>
+              <col className="w-[25%]" />
+              <col className="w-[14%]" />
+              <col className="w-[18%]" />
+              <col className="w-[20%]" />
+              <col className="w-[13%]" />
+              <col className="w-[10%]" />
+            </colgroup>
             <thead className="bg-[#252f46] text-white">
               <tr>
                 {[
                   "Cliente / razón social",
                   "RUT",
                   "Contacto",
+                  "Servicio",
                   "Estado",
                   "Acciones",
                 ].map((column) => (
@@ -230,7 +247,7 @@ export default function Page() {
               {clients.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={6}
                     className="p-8 text-center text-slate-600"
                   >
                     {loading ? "Cargando clientes…" : loadError ? "No se pudo confirmar el listado. Usa Actualizar clientes para reintentar." : "No hay clientes registrados."}
@@ -251,7 +268,21 @@ export default function Page() {
                         client.emailContacto ||
                         "-"}
                     </td>
-                    <td className="px-5 py-4">{client.estado}</td>
+                    <td className="px-5 py-4">
+                      <ClientServices
+                        names={serviceAssignments
+                          .filter(
+                            (assignment) =>
+                              String(assignment.clienteId) === String(client.id) &&
+                              assignment.estado === "ACTIVO",
+                          )
+                          .map((assignment) => assignment.servicio?.nombre)
+                          .filter((name): name is string => Boolean(name))}
+                      />
+                    </td>
+                    <td className="px-5 py-4">
+                      <ClientStatus status={client.estado} />
+                    </td>
                     <td className="px-5 py-4">
                       <button
                         type="button"
@@ -298,5 +329,91 @@ function Metric({
       <dt className="text-sm text-slate-600">{label}</dt>
       <dd className="mt-3 font-semibold text-[#252f46]">{value}</dd>
     </div>
+  );
+}
+
+function ClientStatus({ status }: { status: string }) {
+  const normalizedStatus = status.trim().toLowerCase();
+  const className =
+    normalizedStatus === "activo"
+      ? "border-green-200 bg-green-50 text-green-800"
+      : normalizedStatus === "pendiente"
+        ? "border-amber-200 bg-amber-50 text-amber-800"
+        : "border-slate-200 bg-slate-50 text-slate-700";
+
+  return (
+    <span
+      className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${className}`}
+    >
+      {status}
+    </span>
+  );
+}
+
+function ClientServices({ names }: { names: string[] }) {
+  const [selectedServiceName, setSelectedServiceName] = useState<string | null>(null);
+  const previewLength = 20;
+
+  if (names.length === 0) {
+    return (
+      <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-700">
+        Sin servicio
+      </span>
+    );
+  }
+
+  return (
+    <>
+      <div className="flex flex-wrap gap-1.5">
+        {names.map((name) => {
+          const isLongName = name.length > previewLength;
+          const label = isLongName ? `${name.slice(0, previewLength)}…` : name;
+
+          return isLongName ? (
+            <button
+              key={name}
+              type="button"
+              onClick={() => setSelectedServiceName(name)}
+              className="inline-flex rounded-full border border-[#b98b7b] bg-[#faf5f3] px-2.5 py-1 text-left text-xs font-semibold text-[#735044] hover:bg-[#efe0da] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#735044]"
+              aria-label={`Ver nombre completo del servicio: ${name}`}
+            >
+              {label}
+            </button>
+          ) : (
+            <span
+              key={name}
+              className="inline-flex rounded-full border border-[#b98b7b] bg-[#faf5f3] px-2.5 py-1 text-xs font-semibold text-[#735044]"
+            >
+              {label}
+            </span>
+          );
+        })}
+      </div>
+
+      {selectedServiceName && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Nombre completo del servicio"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4"
+          onClick={() => setSelectedServiceName(null)}
+        >
+          <div
+            className="w-full max-w-md rounded-xl bg-white p-5 shadow-xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold text-[#252f46]">Servicio asociado</h2>
+            <p className="mt-3 break-words text-sm text-slate-700">{selectedServiceName}</p>
+            <button
+              type="button"
+              onClick={() => setSelectedServiceName(null)}
+              className="mt-5 rounded-lg bg-[#252f46] px-4 py-2 text-sm font-semibold text-white hover:bg-[#344463]"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
