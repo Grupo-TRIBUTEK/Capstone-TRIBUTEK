@@ -31,8 +31,10 @@ const box = "rounded-xl border border-slate-200 bg-white p-5";
 
 export default function MonthlyWorkspace({
   dashboard = false,
+  allowClientCreation = true,
 }: {
   dashboard?: boolean;
+  allowClientCreation?: boolean;
 }) {
   const store = useData();
   const [periodChoice, setPeriod] = useState("");
@@ -149,10 +151,8 @@ export default function MonthlyWorkspace({
   return (
     <div className="space-y-6 pt-6 text-[#252f46]">
       <aside className="rounded-xl border border-[#b98b7b] bg-[#faf5f3] p-4 text-sm leading-6">
-        <strong>Ensayo funcional local.</strong> Usa únicamente información
-        ficticia. Las fichas se guardan en este navegador y dirección, no en
-        PostgreSQL. No se comparten entre computadores ni se protegen por
-        usuario. No ingresar RUT reales, claves ni documentos privados.
+        <strong>Ensayo funcional local.</strong> Usa información ficticia
+        mientras se extraen datos reales.        
       </aside>
       {!store.ready && <p role="status">Cargando fichas…</p>}
       {(store.error || error) && (
@@ -201,6 +201,7 @@ export default function MonthlyWorkspace({
             ))}
           </select>
         </label>
+        {allowClientCreation && (
         <button
           type="button"
           disabled={!usable || !!selected || !!editingClient}
@@ -210,6 +211,7 @@ export default function MonthlyWorkspace({
           <Icon name="plus" />
           Nuevo cliente de ensayo
         </button>
+       )}
       </div>
       {usable && (
         <>
@@ -633,9 +635,10 @@ function MonthEditor({
               min={0}
               max={999999999}
               step={1}
-              required
+              inputMode="numeric"
+              placeholder="0"
               className={field}
-              value={draft.amounts[c]}
+              value={draft.amounts[c] === 0 ? "" : draft.amounts[c]}
               onChange={(e) =>
                 update({
                   amounts: {
@@ -759,8 +762,7 @@ function MonthEditor({
           Contacto realizado
         </label>
         <p className="text-xs text-slate-600">
-          Una fecha por cliente y período. Cambiarla reemplaza la anterior; no
-          hay historial de contactos en esta entrega.
+          Una fecha por cliente y período.
         </p>
       </fieldset>
       {error && (
