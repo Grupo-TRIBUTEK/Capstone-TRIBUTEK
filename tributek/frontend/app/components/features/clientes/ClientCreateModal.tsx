@@ -30,14 +30,16 @@ const emptyForm: ClientForm = {
 
 type ClientCreateModalProps = {
   onClose: () => void;
-  onCreated: (client: ClientRecord) => void;
+  onSaved: (client: ClientRecord) => void;
+  client?: ClientRecord;
 };
 
 export default function ClientCreateModal({
   onClose,
-  onCreated,
+  onSaved,
+  client,
 }: ClientCreateModalProps) {
-  const [form, setForm] = useState<ClientForm>(emptyForm);
+  const [form, setForm] = useState<ClientForm>(client ?? emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showDiscardConfirmation, setShowDiscardConfirmation] = useState(false);
@@ -77,18 +79,23 @@ export default function ClientCreateModal({
     setIsSubmitting(true);
 
     try {
-      const response = await authenticatedFetch("/clientes", {
-        method: "POST",
+      const response = await authenticatedFetch(
+        client ? `/clientes/${client.id}` : "/clientes",
+        {
+        method: client ? "PATCH" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
-      });
+        },
+      );
 
       if (!response.ok) {
-        throw new Error("No fue posible crear el cliente.");
+        throw new Error(
+          client ? "No fue posible actualizar el cliente." : "No fue posible crear el cliente.",
+        );
       }
 
       const responseClient = (await response.json()) as Partial<ClientRecord>;
-      onCreated({ ...form, ...responseClient, id: String(responseClient.id ?? Date.now()) });
+      onSaved({ ...form, ...responseClient, id: String(responseClient.id ?? client?.id ?? Date.now()) });
       onClose();
     } catch (submitError) {
       setError(
@@ -118,10 +125,10 @@ export default function ClientCreateModal({
         <header className="flex shrink-0 items-start justify-between border-b border-slate-200 px-6 py-5 sm:px-8">
           <div>
             <h2 id="new-client-title" className="text-xl font-bold text-[#252f46]">
-              Nuevo cliente
+              {client ? "Editar cliente" : "Nuevo cliente"}
             </h2>
             <p className="mt-1 text-sm text-slate-600">
-              Registra un nuevo cliente en TRIBUTEK.
+              {client ? "Actualiza los datos del cliente en TRIBUTEK." : "Registra un nuevo cliente en TRIBUTEK."}
             </p>
           </div>
           <button
@@ -178,7 +185,9 @@ export default function ClientCreateModal({
           <footer className="flex shrink-0 flex-col-reverse gap-3 border-t border-slate-200 bg-white px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
             <button type="button" onClick={requestClose} className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-[#252f46] hover:bg-slate-50">Cancelar</button>
             <button type="submit" disabled={isSubmitting} className="rounded-lg bg-[#252f46] px-5 py-3 text-sm font-semibold text-white hover:bg-[#344463] disabled:cursor-wait disabled:opacity-60">
-              {isSubmitting ? "Creando cliente..." : "Crear cliente"}
+              {isSubmitting
+                ? client ? "Guardando cambios..." : "Creando cliente..."
+                : client ? "Guardar cambios" : "Crear cliente"}
             </button>
           </footer>
         </form>

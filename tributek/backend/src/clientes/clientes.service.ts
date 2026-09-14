@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateClienteDto } from './dto/create-cliente.dto.js';
 
@@ -7,7 +7,17 @@ export class ClientesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async crearCliente(datos: CreateClienteDto) {
-    const clienteData = {
+    return this.prisma.db.orm.public.Cliente.create(this.clienteData(datos));
+  }
+
+  async actualizarCliente(id: string, datos: CreateClienteDto) {
+    return this.prisma.db.orm.public.Cliente.where({ id: BigInt(id) }).update(
+      this.clienteData(datos),
+    );
+  }
+
+  private clienteData(datos: CreateClienteDto) {
+    return {
       tipoCliente: datos.tipoCliente,
       rut: datos.rut,
       nombreRazonSocial: datos.nombreRazonSocial,
@@ -17,8 +27,6 @@ export class ClientesService {
       direccion: datos.direccion,
       estado: datos.estado,
     } as any;
-
-    return this.prisma.db.orm.public.Cliente.create(clienteData);
   }
 
   async obtenerClientes(buscar?: string) {
@@ -47,5 +55,17 @@ export class ClientesService {
     }
 
     return [...clientesUnicos.values()].sort((a, b) => Number(b.id) - Number(a.id));
+  }
+
+  async obtenerCliente(id: string) {
+    const cliente = await this.prisma.db.orm.public.Cliente
+      .where({ id: BigInt(id) })
+      .first();
+
+    if (!cliente) {
+      throw new NotFoundException('Cliente no encontrado.');
+    }
+
+    return cliente;
   }
 }

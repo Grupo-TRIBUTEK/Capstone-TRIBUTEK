@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  Param,
+  Patch,
   Post,
   Query,
   UseGuards,
@@ -25,10 +27,22 @@ export class ClientesController {
     return this.clientesService.crearCliente(datos);
   }
 
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  actualizarCliente(@Param('id') id: string, @Body() datos: CreateClienteDto) {
+    return this.clientesService.actualizarCliente(id, datos);
+  }
+
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(1)
   obtenerClientes(@Query('buscar') buscar?: string) {
     return this.clientesService.obtenerClientes(buscar);
+  }
+
+  @Get(':id')
+  @UseGuards(JwtAuthGuard)
+  obtenerCliente(@Param('id') id: string) {
+    return this.clientesService.obtenerCliente(id);
   }
 }

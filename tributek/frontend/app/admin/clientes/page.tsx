@@ -13,6 +13,7 @@ import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
 export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<ClientRecord | undefined>();
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const fichaStore = useData();
@@ -39,6 +40,19 @@ export default function Page() {
         if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : 'No se pudo cargar el listado.');
       } finally { if (!controller.signal.aborted) setLoading(false); }
     }
+  }
+
+  cargarClientes();
+}, []);
+
+  function handleSaved(client: ClientRecord) {
+  setClients((current) => {
+    const exists = current.some((currentClient) => currentClient.id === client.id);
+    return exists
+      ? current.map((currentClient) => currentClient.id === client.id ? client : currentClient)
+      : [...current, client];
+  });
+  setSuccessMessage(editingClient ? "Cliente actualizado correctamente." : "Cliente creado correctamente.");
     void cargarClientes();
     return () => controller.abort();
   }, [fichaStore.ready,reloadKey]);
@@ -62,11 +76,28 @@ export default function Page() {
     documentUrl: "",
   };
 
-  const alreadyExists = fichaStore.data.clients.some(
+  const existingFichaClient = fichaStore.data.clients.find(
     (current) => current.id === fichaClient.id,
   );
 
-  if (alreadyExists) return;
+  if (existingFichaClient && editingClient) {
+    try {
+      persist(
+        {
+          ...fichaStore.data,
+          clients: fichaStore.data.clients.map((current) =>
+            current.id === fichaClient.id ? { ...current, name: fichaClient.name, phone: fichaClient.phone } : current,
+          ),
+        },
+        fichaStore.data.revision,
+      );
+    } catch {
+      setFichaWarning("El cliente se actualizó, pero no se pudo actualizar la ficha local.");
+    }
+    return;
+  }
+
+  if (existingFichaClient) return;
 
   try {
     persist(
@@ -114,6 +145,7 @@ export default function Page() {
           type="button"
           onClick={() => {
             setSuccessMessage("");
+            setEditingClient(undefined);
             setIsModalOpen(true);
           }}
           className="inline-flex items-center gap-2 rounded-lg bg-[#252f46] px-4 py-3 text-sm font-semibold text-white hover:bg-[#344463] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#252f46]"
@@ -181,6 +213,7 @@ export default function Page() {
                   "RUT",
                   "Contacto",
                   "Estado",
+                  "Acciones",
                 ].map((column) => (
                   <th
                     key={column}
@@ -197,7 +230,7 @@ export default function Page() {
               {clients.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="p-8 text-center text-slate-600"
                   >
                     {loading ? "Cargando clientes…" : loadError ? "No se pudo confirmar el listado. Usa Actualizar clientes para reintentar." : "No hay clientes registrados."}
@@ -219,6 +252,19 @@ export default function Page() {
                         "-"}
                     </td>
                     <td className="px-5 py-4">{client.estado}</td>
+                    <td className="px-5 py-4">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingClient(client);
+                          setSuccessMessage("");
+                          setIsModalOpen(true);
+                        }}
+                        className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] hover:bg-slate-50"
+                      >
+                        Editar
+                      </button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -232,7 +278,8 @@ export default function Page() {
       {isModalOpen && (
         <ClientCreateModal
           onClose={() => setIsModalOpen(false)}
-          onCreated={handleCreated}
+          onSaved={handleSaved}
+          client={editingClient}
         />
       )}
     </main>
