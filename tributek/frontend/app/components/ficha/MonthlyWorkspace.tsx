@@ -58,9 +58,14 @@ export default function MonthlyWorkspace({
   const [accumulated, setAccumulated] = useState(false);
   const [copied, setCopied] = useState("");
   const [monthDirty, setMonthDirty] = useState(false);
-  const [registeredClients, setRegisteredClients] = useState<RegisteredClient[]>([]);
-  const [registeredClientsLoading, setRegisteredClientsLoading] = useState(false);
-  const [registeredClientsError, setRegisteredClientsError] = useState("");
+  const [clientSearchResult, setClientSearchResult] = useState<{
+    query: string;
+    clients: RegisteredClient[];
+    error: string;
+  } | null>(null);
+  const registeredClientsLoading = Boolean(search.trim()) && clientSearchResult?.query !== search;
+  const registeredClients = clientSearchResult?.query === search ? clientSearchResult.clients : [];
+  const registeredClientsError = clientSearchResult?.query === search ? clientSearchResult.error : "";
   const date = store.ready ? today() : "";
   const period = periodChoice || date.slice(0, 7);
   const usable = store.ready && !store.error && validPeriod(period);
@@ -86,16 +91,10 @@ export default function MonthlyWorkspace({
     if (!dashboard) return;
 
     const textoBusqueda = search.trim();
-    if (!textoBusqueda) {
-      setRegisteredClients([]);
-      setRegisteredClientsError("");
-      return;
-    }
+    if (!textoBusqueda) return;
 
     const controller = new AbortController();
     const timeout = window.setTimeout(async () => {
-      setRegisteredClientsLoading(true);
-      setRegisteredClientsError("");
 
       try {
         const response = await authenticatedFetch(
@@ -107,18 +106,20 @@ export default function MonthlyWorkspace({
           throw new Error("No se pudieron buscar los clientes registrados.");
         }
 
-        setRegisteredClients(await response.json());
+        const clients: RegisteredClient[] = await response.json();
+        if (!controller.signal.aborted) {
+          setClientSearchResult({ query: search, clients, error: "" });
+        }
       } catch (requestError) {
         if (!controller.signal.aborted) {
-          setRegisteredClientsError(
-            requestError instanceof Error
+          setClientSearchResult({
+            query: search,
+            clients: [],
+            error: requestError instanceof Error
               ? requestError.message
               : "No se pudieron buscar los clientes registrados.",
-          );
-          setRegisteredClients([]);
+          });
         }
-      } finally {
-        if (!controller.signal.aborted) setRegisteredClientsLoading(false);
       }
     }, 250);
 
