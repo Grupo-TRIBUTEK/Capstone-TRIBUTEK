@@ -1,3 +1,4 @@
+import 'temporal-polyfill/global';
 import 'dotenv/config'; // carga las variables del archivo .env en process.env
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module.js';
