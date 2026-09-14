@@ -8,7 +8,7 @@ import ClientCreateModal, {
   type ClientRecord,
 } from "../../components/features/clientes/ClientCreateModal";
 import MonthlyWorkspace from "../../components/ficha/MonthlyWorkspace";
-import { persist, useData } from "../../components/ficha/store";
+import { persist, useData, syncRemoteClients } from "../../components/ficha/store";
 import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
 export default function Page() {
@@ -17,26 +17,31 @@ export default function Page() {
   const [successMessage, setSuccessMessage] = useState("");
   const fichaStore = useData();
   const [fichaWarning, setFichaWarning] = useState("");
+  const [loadError,setLoadError] = useState("");
+  const [loading,setLoading] = useState(true);
+  const [reloadKey,setReloadKey] = useState(0);
 
   useEffect(() => {
-  async function cargarClientes() {
-    try {
-      const response = await authenticatedFetch("/clientes");
-
-      if (!response.ok) {
-        throw new Error("No se pudieron obtener los clientes.");
-      }
-
-      const data: ClientRecord[] = await response.json();
-      setClients(data);
-    } catch (error) {
-      console.error("Error al cargar clientes:", error);
+    if (!fichaStore.ready) return;
+    const controller = new AbortController();
+    async function cargarClientes() {
+      setLoading(true); setLoadError('');
+      try {
+        const response = await authenticatedFetch('/clientes', {signal:controller.signal});
+        if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? 'Tu sesión no tiene acceso al listado. Vuelve a iniciar sesión.' : 'No se pudieron obtener los clientes.');
+        const data: ClientRecord[] = await response.json();
+        if (controller.signal.aborted) return;
+        if (!Array.isArray(data)) throw new Error('Respuesta de clientes inválida.');
+        setClients(data);
+        try { syncRemoteClients(data); setFichaWarning(''); }
+        catch { setFichaWarning('El listado está cargado, pero no se pudieron preparar las fichas locales. Tus datos locales se conservaron.'); }
+      } catch(error) {
+        if (!controller.signal.aborted) setLoadError(error instanceof Error ? error.message : 'No se pudo cargar el listado.');
+      } finally { if (!controller.signal.aborted) setLoading(false); }
     }
-  }
-
-  cargarClientes();
-}, []);
-
+    void cargarClientes();
+    return () => controller.abort();
+  }, [fichaStore.ready,reloadKey]);
   function handleCreated(client: ClientRecord) {
   setClients((current) => [...current, client]);
   setSuccessMessage("Cliente creado correctamente.");
@@ -135,8 +140,13 @@ export default function Page() {
         </p>
       )}
 
+      <div className="flex items-center gap-3">
+        <button type="button" disabled={loading} onClick={()=>setReloadKey(key=>key+1)} className="rounded-lg border p-3 disabled:opacity-50">Actualizar clientes</button>
+        {loading && <p role="status">Cargando clientes…</p>}
+        {loadError && <p role="alert" className="text-red-700">{loadError}</p>}
+      </div>
       <dl className="grid gap-4 sm:grid-cols-3">
-        <Metric label="Clientes registrados" value={clients.length} />
+        <Metric label="Clientes registrados" value={loading || loadError ? "Sin confirmar" : clients.length} />
         <Metric label="Servicios vigentes" value="Pendiente" />
         <Metric label="Clientes con pendientes" value="Pendiente" />
       </dl>
@@ -190,7 +200,7 @@ export default function Page() {
                     colSpan={4}
                     className="p-8 text-center text-slate-600"
                   >
-                    Las fichas de clientes aparecerán aquí cuando se creen.
+                    {loading ? "Cargando clientes…" : loadError ? "No se pudo confirmar el listado. Usa Actualizar clientes para reintentar." : "No hay clientes registrados."}
                   </td>
                 </tr>
               ) : (
