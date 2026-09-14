@@ -1,11 +1,18 @@
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { ClientesService } from './clientes.service.js';
 import { CreateClienteDto } from './dto/create-cliente.dto.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
 
-// exponemos el endpoint que recibirá los datos del formulario.
+// Endpoints de consulta y registro de clientes.
 
 @Controller('clientes')
 export class ClientesController {
@@ -21,7 +28,7 @@ export class ClientesController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(1)
-  obtenerClientes() {
-    return this.clientesService.obtenerClientes();
+  obtenerClientes(@Query('buscar') buscar?: string) {
+    return this.clientesService.obtenerClientes(buscar);
   }
 }

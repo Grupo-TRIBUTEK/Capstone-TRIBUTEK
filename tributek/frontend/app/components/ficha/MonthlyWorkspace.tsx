@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, type FormEvent } from "react";
 import Icon from "../ui/Icon";
+import { authenticatedFetch } from "../../features/auth/auth-client";
 import { useData, persist } from "./store";
 import {
   concepts,
@@ -29,6 +30,15 @@ const secondary =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold hover:bg-slate-50 disabled:opacity-40";
 const box = "rounded-xl border border-slate-200 bg-white p-5";
 
+type RegisteredClient = {
+  id: string | number;
+  nombreRazonSocial: string;
+  rut: string;
+  contactoPrincipal?: string | null;
+  emailContacto?: string | null;
+  estado?: string | null;
+};
+
 export default function MonthlyWorkspace({
   dashboard = false,
   allowClientCreation = true,
@@ -48,6 +58,14 @@ export default function MonthlyWorkspace({
   const [accumulated, setAccumulated] = useState(false);
   const [copied, setCopied] = useState("");
   const [monthDirty, setMonthDirty] = useState(false);
+  const [clientSearchResult, setClientSearchResult] = useState<{
+    query: string;
+    clients: RegisteredClient[];
+    error: string;
+  } | null>(null);
+  const registeredClientsLoading = Boolean(search.trim()) && clientSearchResult?.query !== search;
+  const registeredClients = clientSearchResult?.query === search ? clientSearchResult.clients : [];
+  const registeredClientsError = clientSearchResult?.query === search ? clientSearchResult.error : "";
   const date = store.ready ? today() : "";
   const period = periodChoice || date.slice(0, 7);
   const usable = store.ready && !store.error && validPeriod(period);
@@ -69,6 +87,47 @@ export default function MonthlyWorkspace({
         .includes(search.toLocaleLowerCase("es")) &&
       (!state || r.status === state),
   );
+  useEffect(() => {
+    if (!dashboard) return;
+
+    const textoBusqueda = search.trim();
+    if (!textoBusqueda) return;
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(async () => {
+
+      try {
+        const response = await authenticatedFetch(
+          `/clientes?buscar=${encodeURIComponent(textoBusqueda)}`,
+          { signal: controller.signal },
+        );
+
+        if (!response.ok) {
+          throw new Error("No se pudieron buscar los clientes registrados.");
+        }
+
+        const clients: RegisteredClient[] = await response.json();
+        if (!controller.signal.aborted) {
+          setClientSearchResult({ query: search, clients, error: "" });
+        }
+      } catch (requestError) {
+        if (!controller.signal.aborted) {
+          setClientSearchResult({
+            query: search,
+            clients: [],
+            error: requestError instanceof Error
+              ? requestError.message
+              : "No se pudieron buscar los clientes registrados.",
+          });
+        }
+      }
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [dashboard, search]);
   const totals = rows.reduce(
     (s, r) => ({
       total: s.total + r.total,
@@ -213,6 +272,65 @@ export default function MonthlyWorkspace({
         </button>
        )}
       </div>
+      {dashboard && search.trim() && (
+        <section className={`${box} space-y-4`} aria-label="Clientes registrados">
+          <div>
+            <h2 className="text-xl font-bold">Clientes registrados</h2>
+            <p className="text-sm text-slate-600">
+              Resultados de la búsqueda en TRIBUTEK.
+            </p>
+          </div>
+          {registeredClientsLoading && (
+            <p role="status" className="text-sm text-slate-600">
+              Buscando clientes...
+            </p>
+          )}
+          {registeredClientsError && (
+            <p role="alert" className="rounded-lg bg-red-50 p-4 text-red-800">
+              {registeredClientsError}
+            </p>
+          )}
+          {!registeredClientsLoading && !registeredClientsError && (
+            registeredClients.length ? (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[650px] text-left text-sm">
+                  <thead>
+                    <tr>
+                      {["Cliente / razón social", "RUT", "Contacto", "Estado"].map(
+                        (column) => (
+                          <th key={column} className="border-b p-3 font-semibold">
+                            {column}
+                          </th>
+                        ),
+                      )}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {registeredClients.map((registeredClient) => (
+                      <tr key={registeredClient.id}>
+                        <td className="border-b p-3 font-semibold">
+                          {registeredClient.nombreRazonSocial}
+                        </td>
+                        <td className="border-b p-3">{registeredClient.rut}</td>
+                        <td className="border-b p-3">
+                          {registeredClient.contactoPrincipal ||
+                            registeredClient.emailContacto ||
+                            "-"}
+                        </td>
+                        <td className="border-b p-3">
+                          {registeredClient.estado || "-"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p>No hay clientes registrados que coincidan con la búsqueda.</p>
+            )
+          )}
+        </section>
+      )}
       {usable && (
         <>
           <dl className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">

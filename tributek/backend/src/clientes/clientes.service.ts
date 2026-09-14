@@ -21,9 +21,31 @@ export class ClientesService {
     return this.prisma.db.orm.public.Cliente.create(clienteData);
   }
 
-  async obtenerClientes() {
-    return this.prisma.db.orm.public.Cliente
-      .orderBy((cliente) => cliente.id.desc())
+  async obtenerClientes(buscar?: string) {
+    const textoBusqueda = buscar?.trim();
+
+    const baseQuery = this.prisma.db.orm.public.Cliente.orderBy((cliente) =>
+      cliente.id.desc(),
+    );
+
+    if (!textoBusqueda) {
+      return baseQuery.all();
+    }
+
+    const porNombre = await baseQuery
+      .where((cliente) => cliente.nombreRazonSocial.ilike(`%${textoBusqueda}%`))
       .all();
+
+    const porRut = await baseQuery
+      .where((cliente) => cliente.rut.ilike(`%${textoBusqueda}%`))
+      .all();
+
+    const clientesUnicos = new Map<string, any>();
+
+    for (const cliente of [...porNombre, ...porRut]) {
+      clientesUnicos.set(String(cliente.id), cliente);
+    }
+
+    return [...clientesUnicos.values()].sort((a, b) => Number(b.id) - Number(a.id));
   }
 }
