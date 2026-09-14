@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
         source: "/servicios/:path*",
         destination: "http://localhost:3001/servicios/:path*",
       },
+      {
+        source: "/documentos/:path*",
+        destination: "http://localhost:3001/documentos/:path*",
+      },
     ];
   },
   turbopack: {
