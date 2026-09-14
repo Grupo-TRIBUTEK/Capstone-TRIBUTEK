@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Header from "../../components/layout/Header";
 import Icon from "../../components/ui/Icon";
@@ -9,6 +9,7 @@ import ClientCreateModal, {
 } from "../../components/features/clientes/ClientCreateModal";
 import MonthlyWorkspace from "../../components/ficha/MonthlyWorkspace";
 import { persist, useData } from "../../components/ficha/store";
+import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
 export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +17,25 @@ export default function Page() {
   const [successMessage, setSuccessMessage] = useState("");
   const fichaStore = useData();
   const [fichaWarning, setFichaWarning] = useState("");
+
+  useEffect(() => {
+  async function cargarClientes() {
+    try {
+      const response = await authenticatedFetch("/clientes");
+
+      if (!response.ok) {
+        throw new Error("No se pudieron obtener los clientes.");
+      }
+
+      const data: ClientRecord[] = await response.json();
+      setClients(data);
+    } catch (error) {
+      console.error("Error al cargar clientes:", error);
+    }
+  }
+
+  cargarClientes();
+}, []);
 
   function handleCreated(client: ClientRecord) {
   setClients((current) => [...current, client]);
