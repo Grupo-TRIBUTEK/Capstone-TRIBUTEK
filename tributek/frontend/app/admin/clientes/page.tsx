@@ -2,44 +2,80 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { authenticatedFetch } from "@/app/features/auth/auth-client";
-
 import Header from "../../components/layout/Header";
 import Icon from "../../components/ui/Icon";
 import ClientCreateModal, {
   type ClientRecord,
 } from "../../components/features/clientes/ClientCreateModal";
 import MonthlyWorkspace from "../../components/ficha/MonthlyWorkspace";
+import { persist, useData } from "../../components/ficha/store";
+import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
 export default function Page() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [clients, setClients] = useState<ClientRecord[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
-
-  // Get clientes
+  const fichaStore = useData();
+  const [fichaWarning, setFichaWarning] = useState("");
 
   useEffect(() => {
-    async function cargarClientes() {
-      try {
-        const response = await authenticatedFetch("/clientes");
+  async function cargarClientes() {
+    try {
+      const response = await authenticatedFetch("/clientes");
 
-        if (!response.ok) {
-          throw new Error("No se pudieron obtener los clientes.");
-        }
-
-        const data: ClientRecord[] = await response.json();
-        setClients(data);
-      } catch (error) {
-        console.error("Error al cargar clientes:", error);
+      if (!response.ok) {
+        throw new Error("No se pudieron obtener los clientes.");
       }
+
+      const data: ClientRecord[] = await response.json();
+      setClients(data);
+    } catch (error) {
+      console.error("Error al cargar clientes:", error);
     }
+  }
 
-    cargarClientes();
-  }, []);
+  cargarClientes();
+}, []);
 
- function handleCreated(client: ClientRecord) {
+  function handleCreated(client: ClientRecord) {
   setClients((current) => [...current, client]);
   setSuccessMessage("Cliente creado correctamente.");
+  setFichaWarning("");
+
+  if (!fichaStore.ready || fichaStore.error) {
+    setFichaWarning(
+      "El cliente fue creado, pero la ficha mensual local no estaba disponible.",
+    );
+    return;
+  }
+
+  const fichaClient = {
+    id: String(client.id),
+    name: client.nombreRazonSocial,
+    phone: client.telefono ?? "",
+    note: "",
+    documentUrl: "",
+  };
+
+  const alreadyExists = fichaStore.data.clients.some(
+    (current) => current.id === fichaClient.id,
+  );
+
+  if (alreadyExists) return;
+
+  try {
+    persist(
+      {
+        ...fichaStore.data,
+        clients: [...fichaStore.data.clients, fichaClient],
+      },
+      fichaStore.data.revision,
+    );
+  } catch {
+    setFichaWarning(
+      "El cliente fue creado en TRIBUTEK, pero no se pudo agregar a la ficha mensual local.",
+    );
+  }
 }
 
   return (
@@ -88,6 +124,14 @@ export default function Page() {
           role="status"
         >
           {successMessage}
+        </p>
+      )}
+      {fichaWarning && (
+        <p
+          className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800"
+          role="status"
+        >
+          {fichaWarning}
         </p>
       )}
 
@@ -173,7 +217,7 @@ export default function Page() {
         </div>
       </section>
 
-      <MonthlyWorkspace />
+      <MonthlyWorkspace allowClientCreation={false} />
 
       {isModalOpen && (
         <ClientCreateModal
