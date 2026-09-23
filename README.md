@@ -8,7 +8,7 @@
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
 ![Estado](https://img.shields.io/badge/Estado-En_desarrollo-orange?style=for-the-badge)
 
-<img src="tributek/img/TRIBUTEK-capstone.png" alt="Presentación del proyecto TRIBUTEK" width="800">
+<img src="tributek/img/TRIBUTEK-capstone.png" alt="Presentación del proyecto TRIBUTEK" width="700">
 
 ## Índice
 

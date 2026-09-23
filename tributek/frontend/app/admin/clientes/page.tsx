@@ -347,6 +347,7 @@ function ClientStatus({ status }: { status: string }) {
     >
       {status}
     </span>
+
   );
 }
 

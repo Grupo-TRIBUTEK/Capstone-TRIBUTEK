@@ -1,45 +1,69 @@
-import AdminSection, { type AdminSectionProps } from "../../components/layout/AdminSection";
+"use client";
 
-const section: AdminSectionProps = {
-  "title": "Recursos Humanos",
-  "description": "Información laboral y antecedentes de las empresas clientes.",
-  "icon": "team",
-  "action": "Agregar trabajador",
-  "metrics": [
-    "Empresas con servicio",
-    "Trabajadores registrados",
-    "Documentos pendientes"
-  ],
-  "columns": [
-    "Empresa",
-    "Trabajador",
-    "Documentación",
-    "Estado"
-  ],
-  "emptyTitle": "Los antecedentes laborales estarán aquí",
-  "emptyDescription": "Las empresas, trabajadores y documentos se conectarán en una próxima entrega.",
-  "notes": [
-    {
-      "title": "Trabajadores por empresa",
-      "description": "Organización de los trabajadores asociados a cada empresa cliente."
-    },
-    {
-      "title": "Documentación laboral",
-      "description": "Revisión de antecedentes y pendientes del servicio de Recursos Humanos."
-    }
-  ],
-  "related": [
-    {
-      "href": "/admin/clientes",
-      "label": "Clientes"
-    },
-    {
-      "href": "/admin/documentos",
-      "label": "Documentos"
-    }
-  ]
-};
+import { FormEvent, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import Header from "../../components/layout/Header";
+import Icon from "../../components/ui/Icon";
+import { authenticatedFetch } from "../../features/auth/auth-client";
+
+type Worker = { id: string; rut: string; nombre: string; cargo: string; fechaIngreso: string; fechaTermino?: string | null; estado: string };
+type Company = { id: string; estado: string; cliente: { id: string; rut: string; nombreRazonSocial: string; estado: string }; trabajadores: Worker[] };
+type RrhhResponse = { resumen: { empresasConServicio: number; trabajadoresRegistrados: number; documentosPendientes: number }; empresas: Company[] };
+
+const inputClass = "h-10 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-[#252f46] focus:border-[#735044] focus:outline-none focus:ring-2 focus:ring-[#ead8d0]";
+const workerStates = ["ACTIVO", "INACTIVO", "TERMINADO"];
 
 export default function Page() {
-  return <AdminSection {...section} />;
+  const [data, setData] = useState<RrhhResponse | null>(null);
+  const [search, setSearch] = useState(""); const [clientId, setClientId] = useState(""); const [status, setStatus] = useState("");
+  const [expandedCompany, setExpandedCompany] = useState<string | null>(null); const [isModalOpen, setIsModalOpen] = useState(false); const [saving, setSaving] = useState(false); const [loading, setLoading] = useState(true); const [error, setError] = useState(""); const [notice, setNotice] = useState(""); const [reloadKey, setReloadKey] = useState(0);
+  const [form, setForm] = useState({ clienteId: "", rut: "", nombre: "", cargo: "", fechaIngreso: "", fechaTermino: "", estado: "ACTIVO" });
+  const query = useMemo(() => new URLSearchParams(Object.entries({ buscar: search, clienteId: clientId, estado: status }).filter(([, value]) => value)).toString(), [search, clientId, status]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    async function load() {
+      setLoading(true); setError("");
+      try {
+        const response = await authenticatedFetch(`/rrhh${query ? `?${query}` : ""}`, { signal: controller.signal });
+        if (!response.ok) throw new Error(response.status === 401 || response.status === 403 ? "Tu sesión no tiene acceso a Recursos Humanos." : "No se pudo cargar la información de Recursos Humanos.");
+        const result = await response.json() as RrhhResponse;
+        if (!controller.signal.aborted) setData(result);
+      } catch (requestError) { if (!controller.signal.aborted) setError(requestError instanceof Error ? requestError.message : "No se pudo cargar la información de Recursos Humanos."); }
+      finally { if (!controller.signal.aborted) setLoading(false); }
+    }
+    void load(); return () => controller.abort();
+  }, [query, reloadKey]);
+
+  const companies = data?.empresas ?? [];
+  function openWorkerModal(companyId?: string) { setError(""); setNotice(""); setForm({ clienteId: companyId ?? "", rut: "", nombre: "", cargo: "", fechaIngreso: "", fechaTermino: "", estado: "ACTIVO" }); setIsModalOpen(true); }
+  async function createWorker(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setSaving(true); setError("");
+    try {
+      const response = await authenticatedFetch("/rrhh/trabajadores", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) });
+      if (!response.ok) { const result = await response.json().catch(() => null) as { message?: string | string[] } | null; throw new Error(Array.isArray(result?.message) ? result.message.join(" ") : result?.message || "No se pudo registrar el trabajador."); }
+      setIsModalOpen(false); setNotice("Trabajador registrado correctamente."); setReloadKey((key) => key + 1);
+    } catch (requestError) { setError(requestError instanceof Error ? requestError.message : "No se pudo registrar el trabajador."); }
+    finally { setSaving(false); }
+  }
+
+  return <main className="relative space-y-6">
+    <Link href="/admin" className="inline-flex items-center gap-2 rounded text-sm font-medium text-[#735044] underline-offset-4 hover:underline"><Icon name="home" /> Volver al panel principal</Link>
+    <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-6"><div className="flex items-start gap-4"><span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#efe0da] text-[#735044]"><Icon name="team" className="h-6 w-6" /></span><Header title="Recursos Humanos" description="Organización de trabajadores y antecedentes laborales de empresas clientes." /></div><button type="button" onClick={() => openWorkerModal()} disabled={!companies.length} className="inline-flex items-center gap-2 rounded-lg bg-[#252f46] px-4 py-3 text-sm font-semibold text-white hover:bg-[#344463] disabled:cursor-not-allowed disabled:opacity-50"><Icon name="plus" /> Agregar trabajador</button></div>
+    <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"><strong>Documentación laboral pendiente.</strong> El registro de trabajadores ya está disponible; los documentos laborales por trabajador se incorporarán cuando se defina esa relación.</p>
+    {error && <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">{error}</p>}{notice && <p role="status" className="rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-800">{notice}</p>}
+    <dl className="grid gap-4 sm:grid-cols-3"><Metric label="Empresas con servicio" value={loading ? "…" : data?.resumen.empresasConServicio ?? 0} detail="Contratos de RR.HH." /><Metric label="Trabajadores registrados" value={loading ? "…" : data?.resumen.trabajadoresRegistrados ?? 0} detail="En empresas con servicio" /><Metric label="Documentos pendientes" value={loading ? "…" : data?.resumen.documentosPendientes ?? 0} detail="Pendiente de habilitar" /></dl>
+    <section className="rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="filters-title"><div className="flex flex-wrap items-center justify-between gap-3"><h2 id="filters-title" className="font-semibold text-[#252f46]">Buscar y filtrar</h2><button type="button" onClick={() => setReloadKey((key) => key + 1)} disabled={loading} className="text-sm font-medium text-[#735044] underline disabled:opacity-50">Actualizar</button></div><div className="mt-4 grid gap-3 md:grid-cols-3"><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Buscar empresa o trabajador" className={inputClass} /><select value={clientId} onChange={(event) => setClientId(event.target.value)} className={inputClass}><option value="">Empresa: todas</option>{companies.map((company) => <option key={company.cliente.id} value={company.cliente.id}>{company.cliente.nombreRazonSocial}</option>)}</select><select value={status} onChange={(event) => setStatus(event.target.value)} className={inputClass}><option value="">Estado: todos</option>{[...new Set(companies.map((company) => company.estado))].map((item) => <option key={item} value={item}>{formatStatus(item)}</option>)}</select></div></section>
+    <section className="overflow-hidden rounded-xl border border-slate-200 bg-white" aria-labelledby="companies-title"><div className="border-b border-slate-200 p-5"><h2 id="companies-title" className="font-semibold text-[#252f46]">Empresas con Recursos Humanos</h2><p className="mt-1 text-sm text-slate-600">Servicio laboral activo y trabajadores registrados.</p></div><div className="divide-y divide-slate-200">{loading ? <p className="p-8 text-center text-sm text-slate-600">Cargando empresas…</p> : companies.length === 0 ? <p className="p-8 text-center text-sm text-slate-600">No hay empresas con el servicio de Recursos Humanos que coincidan con los filtros.</p> : companies.map((company) => <CompanyCard key={company.id} company={company} expanded={expandedCompany === company.id} onToggle={() => setExpandedCompany((current) => current === company.id ? null : company.id)} onAddWorker={() => openWorkerModal(company.cliente.id)} />)}</div></section>
+    {isModalOpen && <div role="dialog" aria-modal="true" aria-labelledby="worker-title" onClick={() => !saving && setIsModalOpen(false)} className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4"><form onSubmit={createWorker} onClick={(event) => event.stopPropagation()} className="w-full max-w-2xl rounded-xl bg-white p-6 shadow-xl"><div className="flex items-start justify-between gap-4"><div><h2 id="worker-title" className="text-lg font-semibold text-[#252f46]">Agregar trabajador</h2><p className="mt-1 text-sm text-slate-600">Registra los antecedentes laborales básicos.</p></div><button type="button" onClick={() => setIsModalOpen(false)} disabled={saving} className="text-sm text-slate-600">Cerrar</button></div><div className="mt-5 grid gap-4 sm:grid-cols-2"><Field label="Empresa"><select required value={form.clienteId} onChange={(event) => setForm({ ...form, clienteId: event.target.value })} className={inputClass}><option value="">Selecciona una empresa</option>{companies.map((company) => <option key={company.cliente.id} value={company.cliente.id}>{company.cliente.nombreRazonSocial}</option>)}</select></Field><Field label="RUT"><input required value={form.rut} onChange={(event) => setForm({ ...form, rut: event.target.value })} className={inputClass} /></Field><Field label="Nombre completo"><input required value={form.nombre} onChange={(event) => setForm({ ...form, nombre: event.target.value })} className={inputClass} /></Field><Field label="Cargo"><input required value={form.cargo} onChange={(event) => setForm({ ...form, cargo: event.target.value })} className={inputClass} /></Field><Field label="Fecha de ingreso"><input required type="date" value={form.fechaIngreso} onChange={(event) => setForm({ ...form, fechaIngreso: event.target.value })} className={inputClass} /></Field><Field label="Fecha de término"><input type="date" value={form.fechaTermino} onChange={(event) => setForm({ ...form, fechaTermino: event.target.value })} className={inputClass} /></Field><Field label="Estado"><select value={form.estado} onChange={(event) => setForm({ ...form, estado: event.target.value })} className={inputClass}>{workerStates.map((item) => <option key={item} value={item}>{formatStatus(item)}</option>)}</select></Field></div><div className="mt-6 flex justify-end gap-3"><button type="button" disabled={saving} onClick={() => setIsModalOpen(false)} className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-[#252f46]">Cancelar</button><button type="submit" disabled={saving} className="rounded-lg bg-[#252f46] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{saving ? "Guardando…" : "Guardar trabajador"}</button></div></form></div>}
+  </main>;
 }
+
+function CompanyCard({ company, expanded, onToggle, onAddWorker }: { company: Company; expanded: boolean; onToggle: () => void; onAddWorker: () => void }) { return <article className="p-5"><div className="flex flex-wrap items-start justify-between gap-4"><div className="flex min-w-0 items-center gap-3"><span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#efe0da] text-sm font-bold text-[#735044]">{initials(company.cliente.nombreRazonSocial)}</span><div><div className="flex flex-wrap items-center gap-2"><h3 className="font-semibold text-[#252f46]">{company.cliente.nombreRazonSocial}</h3><Status value={company.estado} /></div><p className="mt-1 text-xs text-slate-500">RUT {company.cliente.rut}</p></div></div><div className="flex gap-2"><button type="button" onClick={onAddWorker} className="rounded-lg border border-slate-300 px-3 py-2 text-xs font-semibold text-[#252f46] hover:bg-slate-50">Agregar trabajador</button><button type="button" onClick={onToggle} className="rounded-lg bg-[#252f46] px-3 py-2 text-xs font-semibold text-white hover:bg-[#344463]">{expanded ? "Ocultar trabajadores" : "Ver trabajadores"}</button></div></div><dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3"><Datum label="Servicio" value="Recursos Humanos" /><Datum label="Trabajadores" value={`${company.trabajadores.length} registrado(s)`} /><Datum label="Documentación" value="Pendiente de habilitar" /></dl>{expanded && <div className="mt-5 overflow-x-auto rounded-lg border border-slate-200"><table className="w-full min-w-[620px] text-left text-sm"><thead className="bg-slate-50 text-slate-700"><tr>{["Trabajador", "RUT", "Cargo", "Ingreso", "Estado"].map((heading) => <th key={heading} className="px-4 py-3 font-medium">{heading}</th>)}</tr></thead><tbody>{company.trabajadores.length === 0 ? <tr><td colSpan={5} className="px-4 py-6 text-center text-slate-600">Aún no hay trabajadores registrados para esta empresa.</td></tr> : company.trabajadores.map((worker) => <tr key={worker.id} className="border-t border-slate-200"><td className="px-4 py-3 font-medium text-[#252f46]">{worker.nombre}</td><td className="px-4 py-3">{worker.rut}</td><td className="px-4 py-3">{worker.cargo}</td><td className="px-4 py-3">{formatDate(worker.fechaIngreso)}</td><td className="px-4 py-3"><Status value={worker.estado} /></td></tr>)}</tbody></table></div>}</article>; }
+function Metric({ label, value, detail }: { label: string; value: string | number; detail: string }) { return <div className="rounded-xl border border-slate-200 bg-white p-5"><dt className="text-sm text-slate-600">{label}</dt><dd className="mt-2 text-2xl font-semibold text-[#252f46]">{value}</dd><p className="mt-1 text-xs text-slate-500">{detail}</p></div>; }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className="text-sm font-medium text-[#252f46]">{label}<span className="mt-1 block">{children}</span></label>; }
+function Datum({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-medium uppercase tracking-wide text-slate-500">{label}</dt><dd className="mt-1 text-[#252f46]">{value}</dd></div>; }
+function Status({ value }: { value: string }) { const active = value === "ACTIVO" || value === "VIGENTE"; return <span className={`inline-flex rounded-full px-2 py-0.5 text-xs font-semibold ${active ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"}`}>{formatStatus(value)}</span>; }
+function initials(value: string) { return value.split(/\s+/).filter(Boolean).slice(0, 2).map((part) => part[0]).join("").toUpperCase(); }
+function formatStatus(value: string) { return value.replaceAll("_", " ").toLocaleLowerCase().replace(/(^|\s)\S/g, (letter) => letter.toLocaleUpperCase()); }
+function formatDate(value: string) { const date = new Date(`${value.slice(0, 10)}T12:00:00`); return Number.isNaN(date.getTime()) ? value : new Intl.DateTimeFormat("es-CL", { dateStyle: "medium" }).format(date); }

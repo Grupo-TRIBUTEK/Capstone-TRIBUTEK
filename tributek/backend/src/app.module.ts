@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module.js';
 import { ClientesModule } from './clientes/clientes.module.js';
 import { ServiciosModule } from './servicios/servicios.module.js';
 import { DocumentosModule } from './documentos/documentos.module.js';
+import { RrhhModule } from './rrhh/rrhh.module.js';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { DocumentosModule } from './documentos/documentos.module.js';
     ClientesModule,
     ServiciosModule,
     DocumentosModule,
+    RrhhModule,
   ],
   controllers: [AppController],
   providers: [AppService],

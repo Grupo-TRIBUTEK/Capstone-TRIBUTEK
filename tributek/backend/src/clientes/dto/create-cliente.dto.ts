@@ -10,4 +10,5 @@ export class CreateClienteDto {
   telefono?: string;
   direccion?: string;
   estado: string;
+  
 }
