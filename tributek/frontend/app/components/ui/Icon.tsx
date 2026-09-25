@@ -1,4 +1,7 @@
-export type IconName = "home" | "users" | "briefcase" | "calendar" | "calculator" | "file" | "wallet" | "team" | "message" | "shield" | "settings" | "search" | "plus" | "download";
+export type IconName = "home" | "users" | "briefcase" | "calendar" |
+                        "calculator" | "file" | "wallet" | "team" |
+                        "message" | "shield" | "settings" | "search" |
+                         "plus" | "download" | "sun" | "moon" | "menu" | "close";
 
 const paths: Record<IconName, string> = {
   home: "M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9",
@@ -15,6 +18,10 @@ const paths: Record<IconName, string> = {
   search: "M16 16l5 5M18 10a8 8 0 1 1-16 0 8 8 0 0 1 16 0",
   plus: "M12 4v16M4 12h16",
   download: "M12 3v12M7 10l5 5 5-5M4 16v5h16v-5",
+  sun: "M12 3v2M12 19v2M3 12h2M19 12h2M5.64 5.64l1.42 1.42M16.94 16.94l1.42 1.42M5.64 18.36l1.42-1.42M16.94 7.06l1.42-1.42M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0",
+  moon: "M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z",
+  menu: "M4 6h16M4 12h16M4 18h16",
+  close: "M18 6 6 18M6 6l12 12",
 };
 
 // Decorativos: el texto visible del enlace o botón proporciona el nombre accesible.
