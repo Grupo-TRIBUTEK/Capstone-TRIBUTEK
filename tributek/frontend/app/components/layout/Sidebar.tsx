@@ -23,24 +23,42 @@ export default function Sidebar() {
         <p className="mt-1 text-sm text-slate-300">Gestión administrativa</p>
       </div>
       <nav aria-label="Menú administrativo" className="mt-5 space-y-6">
-        {["Gestión", "Administración"].map((group) => (
-          <div key={group}>
-            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-slate-300">{group}</p>
+        {["Gestión"].map((group) => (
+          <details
+            key={group}
+            open={
+              group === "Gestión" ||
+              adminNavigation.some(
+                (i) => i.group === group && i.href === pathname,
+              )
+            }
+          >
+            <summary className="mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-slate-300">
+              {group === "Gestión" ? "Gestión mensual" : "Más herramientas"}
+            </summary>
             <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1">
-              {adminNavigation.filter((item) => item.group === group).map((item) => {
-                const isActive = pathname === item.href || (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
-                return (
-                  <li key={item.href}>
-                    <Link href={item.href} aria-current={isActive ? "page" : undefined}
-                      className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${isActive ? "bg-[#b98b7b] text-[#252f46]" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}>
-                      <Icon name={item.icon} />
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
+              {adminNavigation
+                .filter((item) => item.group === group)
+                .map((item) => {
+                  const isActive =
+                    pathname === item.href ||
+                    (item.href !== "/admin" &&
+                      pathname.startsWith(`${item.href}/`));
+                  return (
+                    <li key={item.href}>
+                      <Link
+                        href={item.href}
+                        aria-current={isActive ? "page" : undefined}
+                        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${isActive ? "bg-[#b98b7b] text-[#252f46]" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
+                      >
+                        <Icon name={item.icon} />
+                        {item.label}
+                      </Link>
+                    </li>
+                  );
+                })}
             </ul>
-          </div>
+          </details>
         ))}
       </nav>
 
