@@ -77,13 +77,13 @@ test("envío manual y pago parcial conservan ENVIADO", () => {
   );
   assert.equal(summary(d, sent).status, "ENVIADO");
 });
-test("rechaza sobrepago, negativos, fracciones y glosa vacía", () => {
+test("rechaza sobrepago, negativos, fracciones y glosa demasiado larga", () => {
   for (const patch of [
     { amount: 30001 },
     { amount: 0 },
     { amount: -1 },
     { amount: 1.5 },
-    { note: " " },
+    { note: "x".repeat(301) },
   ])
     assert.throws(() => addPayment(data, payment(patch)));
 });

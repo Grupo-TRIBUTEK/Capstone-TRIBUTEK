@@ -151,3 +151,11 @@ test("datos antiguos sin gestión adicional conservan saldos e historial", () =>
   assert.equal(m.debt(d, "a", "2026-08"), 200);
   assert.equal(m.extra(d).invoices.length, 0);
 });
+
+test("guarda y restaura pagos sin glosa conservando el método", () => {
+  for (const method of ["Transferencia", "Efectivo", "Otro"]) {
+    const d = m.allocatePayment(fixture(), { ...payment, note: "", method });
+    const restored = m.validateLedger(d);
+    assert.ok(restored.payments.every(p => p.note === "" && p.method === method));
+  }
+});

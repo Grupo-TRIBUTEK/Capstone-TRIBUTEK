@@ -151,13 +151,12 @@ export function PaymentForm({
       </div>
       <Field
         label={
-          method === "Otro" ? "Método y descripción" : "Glosa / referencia"
+          "Glosa / referencia (opcional)"
         }
       >
         <input
           name="note"
           defaultValue={first?.note || ""}
-          required
           maxLength={300}
           placeholder="Referencia que identifica el pago"
         />

@@ -207,8 +207,8 @@ export function addPayment(data: Data, payment: Payment): Data {
     throw new Error("El abono debe ser un monto entero mayor que cero.");
   if (!validDate(payment.date) || payment.date > today())
     throw new Error("Indica una fecha de pago válida, no futura.");
-  if (!payment.note.trim() || payment.note.length > 300)
-    throw new Error("Indica una glosa de hasta 300 caracteres.");
+  if (payment.note.length > 300)
+    throw new Error("La glosa admite hasta 300 caracteres.");
   if (
     payment.amount >
     month.amounts[payment.concept] -

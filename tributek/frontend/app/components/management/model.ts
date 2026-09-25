@@ -280,10 +280,9 @@ export function allocatePayment(data: Ledger, input: PaymentInput): Ledger {
     !Number.isSafeInteger(input.amount) ||
     input.amount <= 0 ||
     !validDate(input.date) ||
-    input.date > today() ||
-    !input.note.trim()
+    input.date > today()
   )
-    throw new Error("Completa monto, fecha y descripción del pago.");
+    throw new Error("Revisa el monto y la fecha del pago.");
   let remaining = input.amount;
   let next = data;
   const transferId = crypto.randomUUID();
