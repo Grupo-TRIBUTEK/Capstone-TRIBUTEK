@@ -2,6 +2,7 @@
 import { useSyncExternalStore } from "react";
 import { mergeClients } from "./mergeClients";
 import { emptyData, parseData, type Data } from "./model";
+import { validateLedger, type Ledger } from "../management/model";
 const KEY = "tributek:ficha-ensayo:v1";
 const initial = { data: emptyData, ready: false, error: "" };
 let snapshot = initial;
@@ -12,7 +13,7 @@ function emit() {
 function reload() {
   try {
     snapshot = {
-      data: parseData(localStorage.getItem(KEY)),
+      data: validateLedger(parseData(localStorage.getItem(KEY)) as Ledger),
       ready: true,
       error: "",
     };
@@ -51,7 +52,7 @@ export function persist(data: Data, revision: string) {
     );
   }
   const saved = { ...data, revision: crypto.randomUUID() };
-  parseData(JSON.stringify(saved));
+  validateLedger(saved as Ledger);
   localStorage.setItem(KEY, JSON.stringify(saved));
   snapshot = { data: saved, ready: true, error: "" };
   emit();

@@ -1,16 +1,15 @@
-//import { PrismaClient } from '@prisma/client';
-//import argon2 from 'argon2';
 import LoginForm from "@/app/components/features/auth/LoginForm";
-
-//Instance of PrismaClient to interact with the database
-//const prisma = new PrismaClient();
-
 export default function LoginPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center">
-      <section className="w-full max-w-md">
+    <div className="tk tk-login">
+      <aside>
+        <p className="tk-eyebrow">Gestión contable</p>
+        <h1>Tu trabajo mensual, en orden.</h1>
+        <p>Clientes, obligaciones y pagos en un mismo lugar.</p>
+      </aside>
+      <main>
         <LoginForm />
-      </section>
-    </main>
+      </main>
+    </div>
   );
 }
