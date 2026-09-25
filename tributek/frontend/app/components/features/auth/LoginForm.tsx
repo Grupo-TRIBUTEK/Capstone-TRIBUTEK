@@ -1,119 +1,89 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
-import Input from "../../ui/Input";
-import Button from "../../ui/Button";
 import { clearAuth, login } from "@/app/features/auth/auth-client";
 
 export default function LoginForm() {
-    const router = useRouter();
-    const [nombreUsuario, setNombreUsuario] = useState("");
-    const [password, setPassword] = useState("");
-    const [error, setError] = useState("");
-    const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const [nombreUsuario, setNombreUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-    async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-        event.preventDefault();
-        setError("");
-        setIsSubmitting(true);
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setIsSubmitting(true);
 
-        try {
-            const response = await login(nombreUsuario, password);
+    try {
+      const response = await login(nombreUsuario, password);
 
-            if (response.usuario.rolId !== "1") {
-                clearAuth();
-                setError("No tienes permisos para acceder al panel administrativo.");
-                return;
-            }
+      if (response.usuario.rolId !== "1") {
+        clearAuth();
+        setError("No tienes permisos para acceder al panel administrativo.");
+        return;
+      }
 
-            router.replace("/admin");
-        } catch (loginError) {
-            setError(
-                loginError instanceof Error
-                    ? loginError.message
-                    : "No se pudo iniciar sesión.",
-            );
-        } finally {
-            setIsSubmitting(false);
-        }
+      router.replace("/admin");
+    } catch (loginError) {
+      setError(
+        loginError instanceof Error
+          ? loginError.message
+          : "No se pudo iniciar sesión.",
+      );
+    } finally {
+      setIsSubmitting(false);
     }
+  }
 
-    return (
-        <form
-            className="flex w-full flex-col gap-4 rounded-[2rem] border border-slate-400 bg-white px-10 py-8 text-black shadow-sm"
-            onSubmit={handleSubmit}
-        >
-            <img
-                src="/images/tras-TRIBUTEK.svg"
-                alt="Logo TRIBUTEK"
-                className="mx-auto h-35 w-100 object-contain"
-            />
-
-            <div className="flex flex-col items-center justify-center text-center text-[#252f46]">
-                <h3 className="text-xl font-bold">BIENVENIDO/A</h3>
-                <h3 className="mt-2 text-2xl font-bold">
-                    INGRESA A TU CUENTA
-                </h3>
-                <p className="mt-1 text-xs text-slate-500">
-                    Accede con las credenciales asignadas por TRIBUTEK
-                </p>
-            </div>
-
-            <label
-                className="font-semibold text-[#252f46]"
-                htmlFor="nombreUsuario"
-            >
-                Usuario
-            </label>
-
-            <Input
-                id="nombreUsuario"
-                name="nombreUsuario"
-                type="text"
-                placeholder="Ingrese su usuario"
-                value={nombreUsuario}
-                onChange={(event) => setNombreUsuario(event.target.value)}
-                required
-            />
-
-            <label
-                className="font-semibold text-[#252f46]"
-                htmlFor="password"
-            >
-                Contraseña
-            </label>
-
-            <Input
-                id="password"
-                name="password"
-                type="password"
-                placeholder="Ingrese su contraseña"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-            />
-
-            <a
-                className="self-end text-sm text-[#b98b7b] underline"
-                href="#"
-            >
-                Olvidé mi contraseña
-            </a>
-
-            {error && (
-                <p className="text-center text-sm font-medium text-red-700" role="alert">
-                    {error}
-                </p>
-            )}
-
-            <Button
-                className="mx-auto mt-2 w-3/4"
-                type="submit"
-                disabled={isSubmitting}
-            >
-                {isSubmitting ? "VALIDANDO..." : "INICIAR SESIÓN"}
-            </Button>
-        </form>
-    );
+  return (
+    <form onSubmit={handleSubmit} className="tk-stack">
+      <Image
+        src="/images/tras-TRIBUTEK.svg"
+        alt="TRIBUTEK"
+        style={{ height: "auto" }}
+        width={180}
+        height={110}
+      />
+      <div>
+        <h1>Ingresa a tu cuenta</h1>
+        <p className="tk-subtle">Accede con tu usuario de TRIBUTEK.</p>
+      </div>
+      <label className="tk-field">
+        Usuario
+        <input
+          name="username"
+          autoComplete="username"
+          required
+          value={nombreUsuario}
+          onChange={(e) => setNombreUsuario(e.target.value)}
+        />
+      </label>
+      <label className="tk-field">
+        Contraseña
+        <input
+          name="password"
+          type="password"
+          autoComplete="current-password"
+          required
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </label>
+      {error && (
+        <p role="alert" className="tk-error">
+          {error}
+        </p>
+      )}
+      <button className="primary" disabled={isSubmitting}>
+        {isSubmitting ? "Validando…" : "Iniciar sesión"}
+      </button>
+      <Link href="/" className="tk-subtle">
+        Volver al inicio
+      </Link>
+    </form>
+  );
 }
