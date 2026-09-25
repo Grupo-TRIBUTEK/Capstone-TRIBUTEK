@@ -123,8 +123,8 @@ export function PaymentForm({
             }
           >
             <option value="Todos">Pago todo · deuda más antigua primero</option>
-            {concepts.map((c) => (
-              <option key={c}>{c}</option>
+            {concepts.filter((c) => c !== "Postergación" || data.months.some((m) => m.clientId === clientId && m.period <= period && m.amounts.Postergación > 0)).map((c) => (
+              <option key={c} value={c}>{c === "Postergación" ? "Postergación anterior" : c}</option>
             ))}
           </select>
         </Field>
@@ -325,7 +325,7 @@ export default function ClientSheet({
           <>
             <div className="tk-grid">
               <div>
-                {concepts.map((c) => (
+                {concepts.filter((c) => c !== "Postergación").map((c) => (
                   <label key={c} className="tk-line">
                     <span>{c}</span>
                     <input
@@ -347,6 +347,13 @@ export default function ClientSheet({
                     />
                   </label>
                 ))}
+                {existing.amounts.Postergación > 0 && (
+                  <details className="tk-panel">
+                    <summary>Postergación anterior · conservar historial</summary>
+                    <p>Monto original: <Money value={existing.amounts.Postergación} hidden={hidden} />. Saldo pendiente: <Money value={balance(data, existing, "Postergación")} hidden={hidden} />.</p>
+                    <p>Este registro anterior mantiene sus abonos. Para asignar un vencimiento al saldo, usa Postergar y selecciona Postergación anterior.</p>
+                  </details>
+                )}
               </div>
               <div className="tk-stack">
                 <section className="tk-panel tk-report">
@@ -578,9 +585,9 @@ export default function ClientSheet({
                 onChange={(e) => setPostponeConcept(e.target.value as Concept)}
               >
                 {concepts
-                  .filter((c) => !services.includes(c))
+                  .filter((c) => !services.includes(c) && (c !== "Postergación" || balance(data, existing, c) > 0))
                   .map((c) => (
-                    <option key={c}>{c}</option>
+                    <option key={c} value={c}>{c === "Postergación" ? "Postergación anterior" : c}</option>
                   ))}
               </select>
             </Field>

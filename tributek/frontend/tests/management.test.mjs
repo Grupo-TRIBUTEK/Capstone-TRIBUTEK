@@ -159,3 +159,23 @@ test("guarda y restaura pagos sin glosa conservando el método", () => {
     assert.ok(restored.payments.every(p => p.note === "" && p.method === method));
   }
 });
+
+test("impide ingresar Postergación como concepto nuevo", () => {
+  const d = fixture();
+  const month = { ...d.months[0], amounts: { ...d.months[0].amounts, Postergación: 500 } };
+  assert.throws(() => m.updateMonth(d, month), /Usa Postergar/);
+});
+
+test("conserva postergación antigua y abonos al editar otros conceptos", () => {
+  let d = fixture();
+  d.months[0].amounts.Postergación = 2000;
+  d = m.allocatePayment(d, { ...payment, concept: "Postergación", amount: 1500 });
+  const edited = { ...d.months[0], amounts: { ...d.months[0].amounts, Convenio: 50000 } };
+  d = m.updateMonth(d, edited);
+  assert.equal(m.balance(d, d.months[0], "Postergación"), 500);
+  d = m.postpone(d, { id: "legacy", clientId: "a", period: "2026-07", concept: "Postergación", amount: 500, due: "2026-10-20", note: "" });
+  assert.equal(m.balance(d, d.months[0], "Postergación"), 0);
+  assert.equal(m.deferralBalance(d, m.extra(d).deferrals[0]), 500);
+  assert.equal(d.payments[0].amount, 1500);
+  assert.equal(d.months[0].amounts.Postergación, 2000);
+});

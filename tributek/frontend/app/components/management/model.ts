@@ -238,6 +238,9 @@ export function validateLedger(data: Ledger): Ledger {
   return data;
 }
 export function updateMonth(data: Ledger, month: Month): Ledger {
+  const previous = getMonth(data, month.clientId, month.period);
+  if (month.amounts.Postergación !== previous.amounts.Postergación)
+    throw new Error("Usa Postergar para registrar una postergación. El concepto anterior conserva su historial.");
   return validateLedger(saveMonth(data, month) as Ledger);
 }
 export function postpone(data: Ledger, d: Deferral): Ledger {
