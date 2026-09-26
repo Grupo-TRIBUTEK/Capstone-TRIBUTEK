@@ -16,7 +16,7 @@ export default function Hero() {
             <a href="#servicios" className="font-semibold text-primary underline underline-offset-4">Conocer los servicios</a>
           </div>
         </div>
-        <div className="rounded-3xl border border-secondary-soft bg-white p-10 shadow-sm md:p-16">
+        <div className="rounded-3xl border border-secondary-soft bg-surface p-10 shadow-sm md:p-16">
           <Image src="/images/tras-TRIBUTEK.svg" alt="TRIBUTEK" width={420} height={280} priority className="mx-auto h-auto w-full max-w-sm" />
           <p className="mt-8 text-center text-sm tracking-wide text-text-muted">Gestión contable independiente</p>
         </div>
@@ -24,3 +24,4 @@ export default function Hero() {
     </section>
   );
 }
+

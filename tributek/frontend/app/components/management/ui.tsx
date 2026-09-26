@@ -170,7 +170,8 @@ export function printReport(
   if (!w)
     throw new Error("Permite la ventana de impresión para guardar el PDF.");
   w.document.write(
-    `<html lang="es"><head><title>${escapeHtml(title)}</title><style>body{font:16px Arial;color:#252f46;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:14px;border-bottom:1px solid #ddd;text-align:left}td:last-child{text-align:right}button{padding:12px}@media print{button{display:none}}</style></head><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p><table>${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td><td>${money(r.amount)}</td></tr>`).join("")}</table><h2>Total: ${money(total)}</h2><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`,
+    `<html lang="es"><head><title>${escapeHtml(title)}</title><style>html{color-scheme:light}body{background:#fff;font:16px Arial;color:#252f46;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:14px;border-bottom:1px solid #ddd;text-align:left}td:last-child{text-align:right}button{padding:12px}@media print{button{display:none}}</style></head><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p><table>${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td><td>${money(r.amount)}</td></tr>`).join("")}</table><h2>Total: ${money(total)}</h2><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`,
   );
   w.document.close();
 }
+

@@ -1,0 +1,72 @@
+:root { color-scheme: light; }
+body { transition: none; }
+:root.dark {
+  --background: #111827;
+  --surface: #1c2638;
+  --surface-muted: #263349;
+  --foreground: #edf1f7;
+  --text: #edf1f7;
+  --text-primary: #edf1f7;
+  --text-muted: #bac5d6;
+  --text-secundary: #deb6a8;
+  --border: #43516a;
+  --primary: #344967;
+  --primary-hover: #415b80;
+  --secondary: #cba294;
+  --secondary-strong: #ebc1b2;
+  --secondary-surface: #211f29;
+  --secondary-soft: #4a3534;
+  --success: #b1e9c8;
+  --success-surface: #183d31;
+  --error: #ffc4c8;
+  --error-surface: #49252e;
+  --warning: #ffe29a;
+  --warning-surface: #40331e;
+  color-scheme: dark;
+}
+.theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px Arial, sans-serif; }
+.theme-control select { min-height: 40px; max-width: 145px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--text-primary); cursor: pointer; font: inherit; }
+.theme-control select:focus-visible { outline: 3px solid #b98b7b; outline-offset: 3px; }
+.theme-control-sidebar { color: white; display: flex; justify-content: space-between; margin-top: 24px; }
+.theme-control-sidebar select { background: #252f46; color: white; border-color: #8a96ab; color-scheme: dark; }
+.login-theme { position: absolute; top: 18px; right: 20px; }
+.tk-login main { position: relative; padding-top: 85px; }
+
+@media screen {
+  .dark .tk-login, .dark .tk-login main { background: var(--background); }
+  .dark .tk { --navy: #edf1f7; --line: #43516a; --rose: #cba294; --rose-light: #4a3534; }
+  .dark .tk :is(button, .tk-button, input, select, textarea),
+  .dark :is(.tk-toolbar, .tk-metric, .tk-card, .tk-dialog, .tk-dialog-head) { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+  .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
+  .dark .tk :is(button.primary, .primary) { background: #cba294; border-color: #cba294; color: #172238; }
+  .dark .tk :is(button.primary:hover, .primary:hover) { background: #deb6a8; }
+  .dark .tk button.rose, .dark .tk-tabs button[aria-pressed="true"] { background: #4a3534; border-color: #cba294; color: #f3d5c9; }
+  .dark .tk button.danger { background: #49252e; color: #ffc4c8; }
+  .dark .tk :is(input, select, textarea) { background: #151e2d; }
+  .dark .tk input[type="checkbox"] { accent-color: #cba294; }
+  .dark .tk input::placeholder, .dark .tk textarea::placeholder { color: #9baac0; opacity: 1; }
+  .dark .tk th { background: #263349; color: #d4dce9; }
+  .dark .tk td { border-color: #35435a; }
+  .dark :is(.tk-subtle, .tk-empty, .tk-detail, .tk-privacy), .dark .tk td small, .dark .tk-metric > span { color: #bac5d6; }
+  .dark .tk-eyebrow { color: #deb6a8; }
+  .dark .tk-report { background: #2a252c; border-color: #66504c; }
+  .dark .tk-due { background: #40331e; color: #ffe29a; }
+  .dark .tk-progress { background: #43516a; }
+  .dark .tk-badge.green, .dark .tk-success { background: #183d31; color: #b1e9c8; }
+  .dark .tk-badge.red, .dark .tk-error { background: #49252e; color: #ffc4c8; }
+  .dark .tk-badge.amber { background: #40331e; color: #ffe29a; }
+  .dark .tk-badge.neutral { background: #35435a; color: #e0e7f2; }
+  .dark .tk-dialog::backdrop { background: #060b14b8; }
+  .dark .tk :is(button, a, input, select, textarea):focus-visible { outline-color: #deb6a8; }
+  .dark .text-brand-primary, .dark a.text-primary { color: #edf1f7; }
+  .dark img[src$="tras-TRIBUTEK.svg"] { background: #fff; padding: 8px; border-radius: 10px; }
+}
+@media (max-width: 400px) {
+  .theme-control { gap: 4px; }
+  .theme-control select { max-width: 120px; }
+}
+@media print {
+  .theme-control, .login-theme { display: none !important; }
+  html.dark { color-scheme: light; --background: white; --foreground: #171717; --surface: white; --text: #171717; --text-primary: #252f46; --text-muted: #52617a; --border: #ddd; }
+  body { background: white; color: #171717; }
+}
