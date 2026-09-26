@@ -37,14 +37,14 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   if (!isAuthorized) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-slate-50 text-sm text-slate-600">
+      <main className="flex min-h-screen items-center justify-center bg-background text-sm text-text-muted">
         Validando sesión...
       </main>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-slate-800 md:flex">
+    <div className="min-h-screen bg-background text-text-primary md:flex">
       <Sidebar />
 
       <div className="min-w-0 flex-1 p-6 md:p-8">
