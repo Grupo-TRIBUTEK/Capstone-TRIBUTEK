@@ -1,8 +1,10 @@
 //4: lógica del login.
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import * as argon2 from 'argon2';
+import 'temporal-polyfill/global';
+import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import { JwtService } from '@nestjs/jwt'; // Nueva importacion de JWT para tockens
 
 /**
@@ -25,6 +27,72 @@ constructor(
   private readonly prisma: PrismaService,
   private readonly jwtService: JwtService, // Agregamos JWTService para poder generar tokens de autenticación.
 ) {}
+
+  async activarCuenta(token: string, nombreUsuario: string | undefined, password: string, confirmarPassword: string) {
+    let payload: { sub?: string; purpose?: string };
+    try {
+      payload = await this.jwtService.verifyAsync(token);
+    } catch {
+      throw new UnauthorizedException('El enlace es inv?lido o expir?.');
+    }
+
+    const esInvitacion = payload.purpose === 'set-client-password';
+    const esRestablecimiento = payload.purpose === 'reset-client-password';
+    if ((!esInvitacion && !esRestablecimiento) || !payload.sub) {
+      throw new UnauthorizedException('El enlace no es v?lido.');
+    }
+    if (!password || password.length < 10) {
+      throw new BadRequestException('La contrase?a debe tener al menos 10 caracteres.');
+    }
+    if (password !== confirmarPassword) {
+      throw new BadRequestException('Las contrase?as no coinciden.');
+    }
+
+    const identificador = nombreUsuario?.trim();
+    const usuarioNombre = identificador?.includes('@')
+      ? identificador.toLowerCase()
+      : identificador;
+    if (esInvitacion && (!usuarioNombre || usuarioNombre.length > 80)) {
+      throw new BadRequestException('Ingresa un nombre de usuario v?lido de hasta 80 caracteres.');
+    }
+
+    const usuario = await this.prisma.db.orm.public.Usuario
+      .where({ id: BigInt(payload.sub) })
+      .first();
+    if (!usuario || (esInvitacion && usuario.activo) || (esRestablecimiento && !usuario.activo)) {
+      throw new UnauthorizedException('La cuenta no existe o el enlace ya no es v?lido.');
+    }
+
+    const clientesAsociados = await this.prisma.db.orm.public.UsuarioCliente
+      .where({ usuarioId: usuario.id })
+      .all();
+    if (!clientesAsociados.length) {
+      throw new UnauthorizedException('El acceso al portal fue revocado.');
+    }
+
+    if (usuarioNombre) {
+      const usuarioExistente = await this.prisma.db.orm.public.Usuario
+        .where({ nombreUsuario: usuarioNombre as Varchar<80> })
+        .first();
+      if (usuarioExistente && usuarioExistente.id !== usuario.id) {
+        throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
+      }
+    }
+
+    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+      ...(usuarioNombre ? { nombreUsuario: usuarioNombre as Varchar<80> } : {}),
+      passwordHash: (await argon2.hash(password)) as Varchar<255>,
+      activo: true,
+      actualizadoEn: Temporal.Now.instant(),
+    });
+
+    return {
+      mensaje: esInvitacion
+        ? 'Cuenta activada. Ya puedes iniciar sesi?n.'
+        : 'Contrase?a restablecida. Ya puedes iniciar sesi?n.',
+    };
+  }
+
   /**
    * Procesa la solicitud de inicio de sesión.
    *
@@ -37,14 +105,15 @@ constructor(
    */
   async login(loginDto: LoginDto) {
   // Se obtiene el nombre de usuario enviado desde el formulario de login.
-  const nombreUsuario = loginDto.nombreUsuario as any;
-
-  // Se busca el usuario en la base de datos.
-  const usuario = await this.prisma.db.orm.public.Usuario
-    .where({
-      nombreUsuario,
-    })
-    .first();
+  const identificador = loginDto.nombreUsuario?.trim();
+  const nombreUsuario = identificador?.includes('@')
+    ? identificador.toLowerCase()
+    : identificador;
+  const usuario = nombreUsuario
+    ? await this.prisma.db.orm.public.Usuario
+        .where({ nombreUsuario: nombreUsuario as Varchar<80> })
+        .first()
+    : null;
 
   // Si no existe el usuario, se rechaza la autenticación.
   if (!usuario) {
@@ -67,6 +136,11 @@ constructor(
     throw new UnauthorizedException('Usuario o contraseña incorrectos');
   }
 
+  const rol = await this.prisma.db.orm.public.Rol
+    .where({ id: usuario.rolId })
+    .first();
+  const rolNombre = String(rol?.nombre ?? '').toUpperCase();
+
   // Por ahora se devuelve información básica del usuario.
   // Posteriormente aquí se generará el token JWT.
 const payload = {
@@ -74,6 +148,7 @@ const payload = {
   sub: usuario.id.toString(),
   nombreUsuario: usuario.nombreUsuario,
   rolId: usuario.rolId.toString(),
+  rolNombre,
 };
 
 const accessToken = await this.jwtService.signAsync(payload);
@@ -87,6 +162,7 @@ return {
     id: usuario.id.toString(),
     nombreUsuario: usuario.nombreUsuario,
     rolId: usuario.rolId.toString(),
+    rolNombre,
   },
 };
 }

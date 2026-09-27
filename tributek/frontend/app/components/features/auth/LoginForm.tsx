@@ -21,13 +21,15 @@ export default function LoginForm() {
     try {
       const response = await login(nombreUsuario, password);
 
-      if (response.usuario.rolId !== "1") {
+      const rolNombre = response.usuario.rolNombre?.toUpperCase();
+      if (rolNombre === "ADMIN" || rolNombre === "ADMINISTRADOR" || response.usuario.rolId === "1") {
+        router.replace("/admin");
+      } else if (rolNombre === "CLIENTE") {
+        router.replace("/cliente");
+      } else {
         clearAuth();
-        setError("No tienes permisos para acceder al panel administrativo.");
-        return;
+        setError("Tu cuenta no tiene un rol habilitado para acceder a estos paneles.");
       }
-
-      router.replace("/admin");
     } catch (loginError) {
       setError(
         loginError instanceof Error
@@ -50,10 +52,10 @@ export default function LoginForm() {
       />
       <div>
         <h1>Ingresa a tu cuenta</h1>
-        <p className="tk-subtle">Accede con tu usuario de TRIBUTEK.</p>
+        <p className="tk-subtle">Accede con el nombre de usuario de tu cuenta TRIBUTEK.</p>
       </div>
       <label className="tk-field">
-        Usuario
+        Nombre de usuario
         <input
           name="username"
           autoComplete="username"
