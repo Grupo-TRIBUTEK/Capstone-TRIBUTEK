@@ -8,6 +8,7 @@ import {
 
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
+import { ActivarCuentaDto } from './dto/activar-cuenta.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 // roles
 import { Roles } from './decorators/roles.decorator.js';
@@ -22,6 +23,16 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('activar-cuenta')
+  activarCuenta(@Body() dto: ActivarCuentaDto) {
+    return this.authService.activarCuenta(
+      dto.token,
+      dto.nombreUsuario,
+      dto.password,
+      dto.confirmarPassword,
+    );
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get('perfil')
   perfil() {
@@ -30,7 +41,7 @@ export class AuthController {
     };
   }
 
-  @Roles(1)
+  @Roles('ADMIN', 1)
 @UseGuards(JwtAuthGuard, RolesGuard)
 @Get('admin')
 admin() {

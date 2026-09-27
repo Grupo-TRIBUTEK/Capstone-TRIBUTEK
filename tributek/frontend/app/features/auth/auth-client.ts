@@ -5,6 +5,7 @@ export type AuthUser = {
   id: string;
   nombreUsuario: string;
   rolId: string;
+  rolNombre?: string;
 };
 
 type LoginResponse = {
@@ -14,21 +15,6 @@ type LoginResponse = {
 
 export function getAccessToken() {
   return window.localStorage.getItem(TOKEN_KEY);
-}
-
-export function getStoredUser(): AuthUser | null {
-  const storedUser = window.localStorage.getItem(USER_KEY);
-
-  if (!storedUser) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(storedUser) as AuthUser;
-  } catch {
-    clearAuth();
-    return null;
-  }
 }
 
 export function clearAuth() {

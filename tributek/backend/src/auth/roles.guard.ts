@@ -12,7 +12,7 @@ export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<number[]>(
+    const roles = this.reflector.get<Array<number | string>>(
       ROLES_KEY,
       context.getHandler(),
     );
@@ -27,7 +27,15 @@ export class RolesGuard implements CanActivate {
     // Usuario obtenido después de validar el JWT.
     const usuario = request.user;
 
-    if (!usuario || !roles.includes(Number(usuario.rolId))) {
+    const permitido = usuario && roles.some((rol) => {
+      if (typeof rol === 'number') return Number(usuario.rolId) === rol;
+      const nombreRol = String(usuario.rolNombre ?? '').toUpperCase();
+      const rolRequerido = rol.toUpperCase();
+      return nombreRol === rolRequerido ||
+        (rolRequerido === 'ADMIN' && nombreRol === 'ADMINISTRADOR');
+    });
+
+    if (!permitido) {
       throw new ForbiddenException(
         'No tienes permisos para acceder a este recurso',
       );

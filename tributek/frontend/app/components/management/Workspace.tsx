@@ -1121,10 +1121,9 @@ export default function Workspace({ view }: { view: View }) {
         <ClientCreateModal
           client={clientModal === "new" ? undefined : clientModal}
           onClose={() => setClientModal(null)}
-          onSaved={() => {
-            setClientModal(null);
+          onSaved={(_client) => {
             setReload((n) => n + 1);
-            setNotice("Cliente guardado en el servidor.");
+            setNotice("Cliente guardado en el servidor. Comparte la invitación desde el formulario si se habilitó el portal.");
           }}
         />
       )}
