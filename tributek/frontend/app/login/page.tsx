@@ -1,4 +1,5 @@
 import LoginForm from "@/app/components/features/auth/LoginForm";
+import ThemeSelect from "@/app/components/layout/Theme";
 export default function LoginPage() {
   return (
     <div className="tk tk-login">
@@ -8,6 +9,7 @@ export default function LoginPage() {
         <p>Clientes, obligaciones y pagos en un mismo lugar.</p>
       </aside>
       <main>
+        <div className="login-theme"><ThemeSelect /></div>
         <LoginForm />
       </main>
     </div>

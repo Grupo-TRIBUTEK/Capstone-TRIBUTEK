@@ -228,7 +228,19 @@ export default function ClientSheet({
   const title = accumulated
     ? "Cobros pendientes acumulados"
     : "Obligación mensual";
-  const text = `Buen día.\n\n${title} · ${client.name}\n${periodLabel(period)}\n\n${rows.map((r) => `${periodLabel(r.period)} · ${r.concept}: ${money(r.amount)}`).join("\n") || "Sin saldos pendientes."}\n\nTotal pendiente: ${money(reportTotal)}${includePostponed && deferrals.length ? `\n\nPostergaciones (informativo):\n${deferrals.map((d) => `${d.concept} · ${d.period} · vence ${d.due}`).join("\n")}` : ""}\n\nSi ya realizó el pago, envíenos el comprobante. Muchas gracias.`;
+  const detail = rows.map((r) => {
+    const label = r.concept === "Honorarios"
+      ? "Honorarios mensuales"
+      : r.concept === "Impuestos" ? "Impuestos mensuales" : r.concept;
+    const origin = accumulated ? ` (${periodLabel(r.period)})` : "";
+    return `· *${label}${origin}:* ${money(r.amount)}`;
+  }).join("\n") || "Sin saldos pendientes.";
+  const postponedNote = includePostponed && deferrals.length
+    ? `\n\n⏳ *Postergaciones (informativo):*\n${deferrals.map((d) => `· ${d.concept} · ${d.period} · vence ${d.due}`).join("\n")}`
+    : "";
+  const text = accumulated
+    ? `Buen día 😊\n\nLe escribimos para recordarle que, según nuestros registros, aún se encuentra pendiente el pago de los siguientes conceptos:\n\n📌 *COBROS PENDIENTES ACUMULADOS*\n${client.name}\n\n${detail}\n\n💰 *SALDO PENDIENTE: ${money(reportTotal)}*${postponedNote}\n\nAgradecemos mucho su gestión. Si el pago ya fue realizado, por favor envíenos el comprobante para actualizar nuestros registros.\n\n¡Muchas gracias! 🙌`
+    : `Buen día 😊\n\nLe enviamos el detalle de sus obligaciones mensuales para el período de ${periodLabel(period)}:\n\n📋 *OBLIGACIÓN MENSUAL · ${periodLabel(period).toLocaleUpperCase("es-CL")}*\n${client.name}\n\n${detail}\n\n💰 *TOTAL A PAGAR: ${money(reportTotal)}*${postponedNote}\n\nPor favor, revise los montos indicados. Si tiene alguna duda, puede contactarnos.\n\nSaludos cordiales ✨`;
   function close() {
     if (!dirty || window.confirm("Hay cambios sin guardar. ¿Descartarlos?"))
       onClose();

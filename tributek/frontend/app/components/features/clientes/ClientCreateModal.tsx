@@ -224,15 +224,15 @@ export default function ClientCreateModal({
       <section
         aria-labelledby="new-client-title"
         aria-modal="true"
-        className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl bg-white shadow-2xl sm:max-h-[calc(100vh-4rem)]"
+        className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl sm:max-h-[calc(100vh-4rem)]"
         role="dialog"
       >
-        <header className="flex shrink-0 items-start justify-between border-b border-slate-200 px-6 py-5 sm:px-8">
+        <header className="flex shrink-0 items-start justify-between border-b border-border px-6 py-5 sm:px-8">
           <div>
-            <h2 id="new-client-title" className="text-xl font-bold text-[#252f46]">
+            <h2 id="new-client-title" className="text-xl font-bold text-text-primary">
               {client ? "Editar cliente" : "Nuevo cliente"}
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-text-muted">
               {client ? "Actualiza los datos del cliente en TRIBUTEK." : "Registra un nuevo cliente en TRIBUTEK."}
             </p>
           </div>
@@ -240,7 +240,7 @@ export default function ClientCreateModal({
             type="button"
             aria-label="Cerrar modal"
             onClick={requestClose}
-            className="rounded-lg p-2 text-2xl leading-none text-slate-500 hover:bg-slate-100 hover:text-[#252f46] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#252f46]"
+            className="rounded-lg p-2 text-2xl leading-none text-text-muted hover:bg-surface-muted hover:text-text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
           >
             <span aria-hidden="true">×</span>
           </button>
@@ -378,11 +378,11 @@ export default function ClientCreateModal({
 
       {showDiscardConfirmation && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
-          <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-xl bg-white p-6 shadow-2xl">
-            <h3 id="discard-title" className="text-lg font-bold text-[#252f46]">¿Deseas salir?</h3>
-            <p className="mt-2 text-sm text-slate-600">Los datos ingresados se perderán.</p>
+          <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-2xl">
+            <h3 id="discard-title" className="text-lg font-bold text-text-primary">¿Deseas salir?</h3>
+            <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>
             <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-[#252f46]">Continuar editando</button>
+              <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text-primary">Continuar editando</button>
               <button type="button" onClick={onClose} className="rounded-lg bg-[#252f46] px-4 py-2.5 text-sm font-semibold text-white">Salir</button>
             </div>
           </section>
@@ -392,12 +392,12 @@ export default function ClientCreateModal({
   );
 }
 
-const inputClassName = "h-11 w-full rounded-lg border border-slate-300 bg-white px-3 text-sm text-[#252f46] outline-none focus:border-[#252f46] focus:ring-2 focus:ring-[#252f46]";
+const inputClassName = "h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary outline-none focus:border-secondary focus:ring-2 focus:ring-secondary";
 
 function Field({ label, required, className = "", children }: { label: string; required?: boolean; className?: string; children: React.ReactNode }) {
   return (
-    <label className={`block text-sm font-medium text-[#252f46] ${className}`}>
-      <span>{label}{required && <span className="ml-1 text-red-700" aria-hidden="true">*</span>}</span>
+    <label className={`block text-sm font-medium text-text-primary ${className}`}>
+      <span>{label}{required && <span className="ml-1 text-error" aria-hidden="true">*</span>}</span>
       <span className="mt-1.5 block">{children}</span>
     </label>
   );

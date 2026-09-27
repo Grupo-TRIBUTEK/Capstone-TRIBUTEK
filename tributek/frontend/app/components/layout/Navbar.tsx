@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Icon from "../ui/Icon";
+import ThemeSelect from "./Theme";
 
 const links = [
   { href: "#nosotros", label: "Nosotros" },
@@ -42,6 +43,7 @@ export default function Navbar() {
         </Link>
 
         <div className="order-2 flex items-center gap-2 md:order-3">
+          <ThemeSelect />
           <Link
             href="/login"
             onClick={closeMenu}

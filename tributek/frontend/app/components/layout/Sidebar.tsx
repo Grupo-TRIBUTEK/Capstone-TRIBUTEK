@@ -6,6 +6,7 @@ import { clearAuth } from "@/app/features/auth/auth-client";
 
 import Icon from "../ui/Icon";
 import { adminNavigation } from "./adminNavigation";
+import ThemeSelect from "./Theme";
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -61,6 +62,7 @@ export default function Sidebar() {
           </details>
         ))}
       </nav>
+      <ThemeSelect sidebar />
 
       <button
         type="button"
