@@ -1,0 +1,45 @@
+.f29 { --f29-line: var(--border, #dce2ec); --f29-blue: #32508c; color: var(--text-primary, #243047); max-width: 1600px; margin: auto; }
+.f29 h1 { font: 700 32px Arial,sans-serif; margin: 8px 0; }
+.f29 h2 { font: 700 20px Arial,sans-serif; margin: 0; padding: 18px 20px; }
+.f29 h3 { font-size: 18px; font-weight: 700; margin-top: 20px; }
+.f29 p { line-height: 1.6; }
+.f29-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 20px; }
+.f29-eyebrow { color: var(--text-muted, #68564f); letter-spacing: .12em; font-size: 12px; font-weight: 700; }
+.f29 button { border: 1px solid var(--f29-line); background: var(--surface, #fff); border-radius: 9px; padding: 10px 15px; font-weight: 600; cursor: pointer; }
+.f29 button:disabled { opacity: .5; cursor: not-allowed; }
+.f29 button:hover:not(:disabled) { border-color: #b98c7a; }
+.f29 .f29-primary { background: #32508c; color: white; border-color: #32508c; }
+.f29 label { display: flex; flex-direction: column; gap: 8px; font-size: 14px; font-weight: 600; }
+.f29 input:not([type=checkbox]) { background: var(--surface, #fff); border: 1px solid var(--f29-line); padding: 11px; border-radius: 7px; color: inherit; width: 100%; }
+.f29 input[type=number] { max-width: 200px; min-width: 100px; text-align: right; }
+.f29 input:focus-visible,.f29 button:focus-visible { outline: 3px solid #bc947e; outline-offset: 2px; }
+.f29 .f29-check { display: flex; flex-direction: row; align-items: center; gap: 10px; margin: 18px 0; font-weight: 400; line-height: 1.5; }
+.f29-check input { width: 18px; height: 18px; accent-color: #32508c; flex-shrink: 0; }
+.f29-toolbar,.f29-folder { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; border: 1px solid var(--f29-line); border-radius: 14px; padding: 22px; background: var(--surface, #fff); margin: 22px 0; }
+.f29-grow { flex: 1; min-width: 230px; }.f29-folder>div { flex: 1; min-width: 230px; }
+.f29-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
+.f29-sticky { position: sticky; top: 0; z-index: 5; background: var(--background,#fff); padding: 12px 0; border-bottom: 1px solid var(--f29-line); }
+.f29-actions span { font-size: 12px; color: var(--text-muted,#65748b); }
+.f29-table-wrap { overflow-x: auto; border: 1px solid var(--f29-line); border-radius: 10px; }
+.f29 table { border-collapse: collapse; width: 100%; font-size: 14px; background: var(--surface,#fff); }
+.f29 th,.f29 td { padding: 13px 15px; border-bottom: 1px solid var(--f29-line); text-align: left; vertical-align: middle; }
+.f29 thead,.f29 tfoot { background: var(--background,#edf1f7); font-weight: 700; }
+.f29-sheet { border: 1px solid var(--f29-line); border-radius: 12px; margin: 24px 0; overflow: hidden; background: var(--surface,#fff); }
+.f29-sheet .f29-table-wrap { border-radius: 0; border-width: 1px 0 0; }
+.f29-sheet th { font-weight: 500; }.f29-sheet td { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.f29-sheet th,.f29-sheet td { border-right: 1px solid var(--f29-line); }
+.f29-sheet tfoot th,.f29-sheet tfoot td { font-weight: 700; }
+.f29-sheet thead th:not(:first-child) { text-align: right; }
+.f29-determination { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px 20px; }
+.f29-determination table { align-self: start; }.f29-determination .f29-check { font-size: 12px; }
+.f29-results { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin: 24px 0; }
+.f29-results>div { padding: 22px; border: 1px solid var(--f29-line); border-top: 3px solid #b98c7a; border-radius: 12px; background: var(--surface,#fff); }
+.f29-results strong { display: block; font-size: 26px; margin-top: 10px; }.f29-results span { font-size: 13px; }
+.f29-info { color: var(--text-muted,#52627b); font-size: 13px; }.f29-notice { background: var(--surface,#f1f7f3); border-left: 4px solid #4c8863; padding: 15px; white-space: pre-wrap; }.f29-error { background: var(--surface,#fff3f3); border-left: 4px solid #c05454; padding: 15px; }
+.f29 small { display: block; margin-top: 6px; }.f29-panel,.f29-backup { margin: 25px 0; padding: 20px; border: 1px solid var(--f29-line); border-radius: 12px; }.f29 summary { cursor: pointer; font-weight: 600; }.f29 pre { white-space: pre-wrap; font-family: inherit; line-height: 1.7; padding: 20px 0; }.f29-candidates { max-height: 320px; overflow: auto; padding: 16px 0; }.f29-candidates section { margin-bottom: 20px; }.f29-candidates li { overflow-wrap: anywhere; }.f29-report-preview { background: white; margin-bottom: 18px; }
+@media(max-width:1000px) { .f29-determination { grid-template-columns: 1fr; }.f29-results { grid-template-columns: 1fr 1fr; }.f29-sticky { position: static; } }
+@media(max-width:600px) { .f29-heading { align-items: start; flex-direction: column; }.f29 h1 { font-size: 26px; }.f29-results { grid-template-columns: 1fr; }.f29-determination { padding: 0 8px 8px; }.f29-determination th,.f29-determination td { padding: 8px; }.f29-actions button { flex: 1 1 45%; } }
+
+/* Las notas de crédito mantienen su signo y destacan en ambos temas. */
+.f29 .f29-negative { color: #b91c1c; font-weight: 700; }
+.dark .f29 .f29-negative { color: #ff9aa5; }
