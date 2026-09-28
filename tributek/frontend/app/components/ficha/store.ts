@@ -65,7 +65,15 @@ export function useData() {
 
 export function syncRemoteClients(records: import('./mergeClients').RemoteClient[]) {
   if (!snapshot.ready || snapshot.error) throw new Error('La ficha local no está disponible.');
-  const next = mergeClients(snapshot.data, records);
+  const remoteIds = new Set(records.map((record) => record.id));
+  const clients = snapshot.data.clients.filter((client) => remoteIds.has(client.id));
+  const months = snapshot.data.months.filter((month) => remoteIds.has(month.clientId));
+  const payments = snapshot.data.payments.filter((payment) => remoteIds.has(payment.clientId));
+  const pruned = clients.length !== snapshot.data.clients.length
+    || months.length !== snapshot.data.months.length
+    || payments.length !== snapshot.data.payments.length;
+  const source = pruned ? { ...snapshot.data, clients, months, payments } : snapshot.data;
+  const next = mergeClients(source, records);
   if (next !== snapshot.data) persist(next, snapshot.data.revision);
 }
 

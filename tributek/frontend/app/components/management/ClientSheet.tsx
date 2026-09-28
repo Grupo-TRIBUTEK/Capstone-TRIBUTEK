@@ -635,6 +635,7 @@ export default function ClientSheet({
           </form>
         )}
         {tab === "Datos" && (
+          <>
           <form
             className="tk-stack"
             onSubmit={(e) => {
@@ -733,6 +734,7 @@ export default function ClientSheet({
               <button className="primary">Guardar datos de gestión</button>
             </footer>
           </form>
+          </>
         )}
       </div>
     </Modal>

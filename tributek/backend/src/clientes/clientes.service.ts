@@ -48,6 +48,9 @@ export class ClientesService {
     const nombreUsuario = datos.accesoPortal?.nombreUsuario !== undefined
       ? await this.validarNombreUsuario(datos.accesoPortal.nombreUsuario, usuarioPortal?.id)
       : undefined;
+    const emailUsuario = datos.accesoPortal?.email !== undefined
+      ? await this.validarEmailUsuario(datos.accesoPortal.email, usuarioPortal?.id)
+      : undefined;
     const cliente = await this.prisma.db.orm.public.Cliente.where({ id: clienteId }).update(
       this.clienteData(datos),
     );
@@ -65,9 +68,10 @@ export class ClientesService {
       return cliente;
     }
 
-    if (usuarioPortal && nombreUsuario) {
+    if (usuarioPortal && (nombreUsuario || emailUsuario)) {
       await this.prisma.db.orm.public.Usuario.where({ id: usuarioPortal.id }).update({
-        nombreUsuario: nombreUsuario as Varchar<80>,
+        ...(nombreUsuario ? { nombreUsuario: nombreUsuario as Varchar<80> } : {}),
+        ...(emailUsuario ? { email: emailUsuario as Varchar<150> } : {}),
       });
     }
 
@@ -95,7 +99,9 @@ export class ClientesService {
     if (!usuario) return { tieneAcceso: false };
     return {
       tieneAcceso: true,
+      nombre: usuario.nombre,
       nombreUsuario: usuario.activo ? usuario.nombreUsuario : undefined,
+      email: usuario.email,
       activo: usuario.activo,
       activationUrl: usuario.activo ? undefined : await this.generarEnlaceActivacion(usuario.id),
     };
@@ -174,6 +180,20 @@ export class ClientesService {
       throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
     }
     return nombreUsuario;
+  }
+
+  private async validarEmailUsuario(email?: string, usuarioId?: bigint) {
+    const correo = email?.trim().toLowerCase();
+    if (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+      throw new BadRequestException('Ingresa un correo electrónico válido de hasta 150 caracteres.');
+    }
+    const usuarioExistente = await this.prisma.db.orm.public.Usuario
+      .where({ email: correo as Varchar<150> })
+      .first();
+    if (usuarioExistente && usuarioExistente.id !== usuarioId) {
+      throw new BadRequestException('Ese correo electrónico ya está asociado a otra cuenta.');
+    }
+    return correo;
   }
 
   private async crearCuentaInvitada(clienteId: bigint, nombre: string) {
