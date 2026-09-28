@@ -17,7 +17,7 @@ export type ClientRecord = {
 };
 
 type ClientForm = Omit<ClientRecord, "id" | "creadoEn">;
-type PortalAccess = { tieneAcceso: boolean; nombreUsuario?: string; activo?: boolean; activationUrl?: string };
+type PortalAccess = { tieneAcceso: boolean; nombre?: string; nombreUsuario?: string; email?: string | null; activo?: boolean; activationUrl?: string };
 
 const emptyForm: ClientForm = {
   tipoCliente: "Empresa",
@@ -49,6 +49,7 @@ export default function ClientCreateModal({
   const [revocarAccesoPortal, setRevocarAccesoPortal] = useState(false);
   const [portalAccess, setPortalAccess] = useState<PortalAccess | null>(null);
   const [nombreUsuario, setNombreUsuario] = useState("");
+  const [emailUsuario, setEmailUsuario] = useState("");
   const [activationUrl, setActivationUrl] = useState("");
   const [resetUrl, setResetUrl] = useState("");
   const [portalClientId, setPortalClientId] = useState(client?.id ?? "");
@@ -83,6 +84,7 @@ export default function ClientCreateModal({
         if (cancelled) return;
         setPortalAccess(access);
         setNombreUsuario(access.nombreUsuario ?? "");
+        setEmailUsuario(access.email ?? "");
       })
       .catch((loadError) => {
         if (!cancelled) setError(loadError instanceof Error ? loadError.message : "Error al consultar el acceso.");
@@ -110,6 +112,11 @@ export default function ClientCreateModal({
 
   function updateNombreUsuario(value: string) {
     setNombreUsuario(value);
+    setError("");
+  }
+
+  function updateEmailUsuario(value: string) {
+    setEmailUsuario(value);
     setError("");
   }
 
@@ -160,7 +167,7 @@ export default function ClientCreateModal({
         : !client
           ? crearAccesoPortal ? { invitar: true } : undefined
           : portalAccess?.tieneAcceso
-            ? portalAccess.activo && modificarUsuario ? { nombreUsuario } : undefined
+            ? portalAccess.activo && modificarUsuario ? { nombreUsuario, email: emailUsuario } : undefined
             : crearAccesoPortal ? { invitar: true } : undefined;
       const response = await authenticatedFetch(
         client ? `/clientes/${client.id}` : "/clientes",
@@ -256,7 +263,7 @@ export default function ClientCreateModal({
                 <p className="mt-2">Enlace de activaci&oacute;n (vence en 24 horas):</p>
                 <p className="mt-2 text-sm">El enlace está oculto. Usa <span className="font-semibold">Copiar enlace</span> para compartirlo.</p>
                 <button type="button" className="mt-3 rounded-lg border border-emerald-800 px-3 py-2 font-semibold" onClick={() => void copyInvitation(activationUrl)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
-                <button type="button" disabled={generandoEnlace} className="ml-2 mt-3 rounded-lg border border-emerald-800 px-3 py-2 font-semibold disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Generar nuevo enlace"}</button>
+                <button type="button" disabled={generandoEnlace} className="ml-2 mt-3 rounded-lg border border-emerald-800 px-3 py-2 font-semibold disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
               </section>
             )}
             {!activationUrl && (<>
@@ -310,12 +317,17 @@ export default function ClientCreateModal({
                     {portalAccess.activo ? (
                       <>
                         <p className="text-sm text-slate-700">Estado: <span className="font-semibold text-emerald-700">Activo</span></p>
-                        <p className="text-sm text-slate-700">Usuario: <span className="font-semibold">{portalAccess.nombreUsuario}</span></p>
+                        <p className="text-sm text-slate-700">Cuenta: <span className="font-semibold">{portalAccess.nombre || "-"}</span></p>
+                        <p className="text-sm text-slate-700">Nombre de usuario: <span className="font-semibold">{portalAccess.nombreUsuario}</span></p>
+                        <p className="text-sm text-slate-700">Correo: <span className="font-semibold">{portalAccess.email || "Sin correo registrado"}</span></p>
                         {modificarUsuario && <Field label="Nuevo nombre de usuario" required>
                           <input autoComplete="username" value={nombreUsuario} onChange={(event) => updateNombreUsuario(event.target.value)} className={inputClassName} required />
                         </Field>}
+                        {modificarUsuario && <Field label="Correo electrónico del usuario" required>
+                          <input type="email" autoComplete="email" maxLength={150} value={emailUsuario} onChange={(event) => updateEmailUsuario(event.target.value)} className={inputClassName} required />
+                        </Field>}
                         <div className="flex flex-wrap gap-2">
-                          <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => { setModificarUsuario((current) => !current); setNombreUsuario(portalAccess.nombreUsuario ?? ""); }}>{modificarUsuario ? "Cancelar modificación" : "Modificar usuario"}</button>
+                          <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => { setModificarUsuario((current) => !current); setNombreUsuario(portalAccess.nombreUsuario ?? ""); setEmailUsuario(portalAccess.email ?? ""); }}>{modificarUsuario ? "Cancelar cambios" : "Modificar usuario"}</button>
                           <button type="button" disabled={generandoEnlace} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-60" onClick={() => void generatePortalLink("reset")}>{generandoEnlace ? "Generando..." : "Generar enlace de restablecimiento"}</button>
                         </div>
                         {resetUrl && <div className="rounded-lg bg-slate-50 p-3 text-sm">
@@ -333,7 +345,7 @@ export default function ClientCreateModal({
                             <p className="text-sm text-slate-600">El enlace está oculto. Usa <span className="font-semibold">Copiar enlace</span> para compartirlo.</p>
                             <div className="flex flex-wrap gap-2">
                               <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => void copyInvitation(portalAccess.activationUrl!)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
-                              <button type="button" disabled={generandoEnlace} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Generar nuevo enlace"}</button>
+                              <button type="button" disabled={generandoEnlace} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
                             </div>
                           </div>
                         )}

@@ -5,6 +5,7 @@ export class PortalAccessDto {
   invitar?: boolean;
   revocar?: boolean;
   nombreUsuario?: string;
+  email?: string;
 }
 
 export class CreateClienteDto {
