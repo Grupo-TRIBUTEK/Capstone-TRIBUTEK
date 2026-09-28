@@ -52,10 +52,10 @@ export default function LoginForm() {
       />
       <div>
         <h1>Ingresa a tu cuenta</h1>
-        <p className="tk-subtle">Accede con el nombre de usuario de tu cuenta TRIBUTEK.</p>
+        <p className="tk-subtle">Accede con tu nombre de usuario o correo electrónico.</p>
       </div>
       <label className="tk-field">
-        Nombre de usuario
+        Correo o nombre de usuario
         <input
           name="username"
           autoComplete="username"

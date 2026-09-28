@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 export default function ActivarCuentaPage() {
   const [esRestablecimiento, setEsRestablecimiento] = useState(false);
   const [nombreUsuario, setNombreUsuario] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmacion, setConfirmacion] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -20,8 +21,8 @@ export default function ActivarCuentaPage() {
     event.preventDefault();
     setError("");
     setMensaje("");
-    if (!esRestablecimiento && !nombreUsuario.trim()) {
-      setError("Ingresa un nombre de usuario.");
+    if (!esRestablecimiento && (!nombreUsuario.trim() || !email.trim())) {
+      setError("Ingresa tu nombre de usuario y correo electrónico.");
       return;
     }
     if (password !== confirmacion) {
@@ -35,7 +36,7 @@ export default function ActivarCuentaPage() {
       const response = await fetch("/auth/activar-cuenta", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token, ...(esRestablecimiento ? {} : { nombreUsuario }), password, confirmarPassword: confirmacion }),
+        body: JSON.stringify({ token, ...(esRestablecimiento ? {} : { nombreUsuario, email }), password, confirmarPassword: confirmacion }),
       });
       const data = (await response.json().catch(() => null)) as { mensaje?: string; message?: string | string[] } | null;
       if (!response.ok) {
@@ -55,7 +56,7 @@ export default function ActivarCuentaPage() {
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4 py-10">
       <section className="w-full max-w-md rounded-2xl bg-white p-8 shadow-lg">
         <h1 className="text-2xl font-bold text-[#252f46]">{esRestablecimiento ? "Restablece tu contrase\u00f1a" : "Configura tu acceso al portal"}</h1>
-        <p className="mt-2 text-sm text-slate-600">{esRestablecimiento ? "Elige una contrase\u00f1a nueva para tu cuenta TRIBUTEK." : "Elige tu nombre de usuario y contrase\u00f1a para activar tu acceso al portal TRIBUTEK."}</p>
+        <p className="mt-2 text-sm text-slate-600">{esRestablecimiento ? "Elige una contrase\u00f1a nueva para tu cuenta TRIBUTEK." : "Completa tus datos y elige una contrase\u00f1a para activar tu acceso al portal TRIBUTEK."}</p>
         {activada ? (
           <div className="mt-6">
             <p role="status" className="text-sm text-emerald-800">{mensaje}</p>
@@ -64,10 +65,17 @@ export default function ActivarCuentaPage() {
         ) : (
           <form onSubmit={activar} className="mt-6 space-y-4">
             {!esRestablecimiento && (
+            <>
             <label className="block text-sm font-medium text-[#252f46]">
               Nombre de usuario
               <input type="text" autoComplete="username" minLength={1} maxLength={80} required value={nombreUsuario} onChange={(event) => setNombreUsuario(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-[#252f46] focus:ring-2 focus:ring-[#252f46]" />
             </label>
+            <label className="block text-sm font-medium text-[#252f46]">
+              Correo electrónico
+              <input type="email" autoComplete="email" maxLength={150} required value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-[#252f46] focus:ring-2 focus:ring-[#252f46]" />
+              
+            </label>
+            </>
             )}
             <label className="block text-sm font-medium text-[#252f46]">
               Contraseña

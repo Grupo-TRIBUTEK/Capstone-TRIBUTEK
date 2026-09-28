@@ -2,7 +2,7 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  allowedDevOrigins: ["192.168.1.23"],
+  allowedDevOrigins: ["192.168.1.23", "127.0.0.1"],
   async rewrites() {
     return [
       {
