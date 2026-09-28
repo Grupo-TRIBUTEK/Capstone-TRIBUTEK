@@ -32,7 +32,7 @@
 .f29-sheet thead th:not(:first-child) { text-align: right; }
 .f29-determination { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 0 20px 20px; }
 .f29-determination table { align-self: start; }.f29-determination .f29-check { font-size: 12px; }
-.f29-results { display: grid; grid-template-columns: repeat(4,1fr); gap: 15px; margin: 24px 0; }
+.f29-results { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 15px; margin: 24px 0; }
 .f29-results>div { padding: 22px; border: 1px solid var(--f29-line); border-top: 3px solid #b98c7a; border-radius: 12px; background: var(--surface,#fff); }
 .f29-results strong { display: block; font-size: 26px; margin-top: 10px; }.f29-results span { font-size: 13px; }
 .f29-info { color: var(--text-muted,#52627b); font-size: 13px; }.f29-notice { background: var(--surface,#f1f7f3); border-left: 4px solid #4c8863; padding: 15px; white-space: pre-wrap; }.f29-error { background: var(--surface,#fff3f3); border-left: 4px solid #c05454; padding: 15px; }
@@ -43,3 +43,13 @@
 /* Las notas de crédito mantienen su signo y destacan en ambos temas. */
 .f29 .f29-negative { color: #b91c1c; font-weight: 700; }
 .dark .f29 .f29-negative { color: #ff9aa5; }
+
+.f29-more { margin: 16px 0; border: 1px solid var(--f29-line); border-radius: 10px; padding: 14px 18px; }
+.f29-more summary:focus-visible { outline: 3px solid #bc947e; outline-offset: 4px; }
+.f29-more .f29-actions { margin-bottom: 0; }
+.f29 .f29-danger { color: #b91c1c; }
+.dark .f29 .f29-danger { color: #ff9aa5; }
+.f29-results .f29-result-main { background: #223559; color: #fff; border-color: #223559; border-top-color: #b98b7b; }
+.f29-results h2 { padding: 8px 0 0; font-size: 18px; }
+.f29-results strong span { font-size: inherit; }
+@media (min-width:601px) and (max-width:1000px) { .f29-result-main { grid-column: 1 / -1; } }

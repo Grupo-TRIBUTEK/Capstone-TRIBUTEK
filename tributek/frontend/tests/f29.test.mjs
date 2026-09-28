@@ -11,7 +11,7 @@ const source = result => ({...result, name:'prueba.csv', importedAt:'2026-09-26T
 test('referencia MARSEP: conserva netos exactos, remanente 26442 y otras obligaciones 150', () => {
  const p=m.newProjection('a','2026-09'); p.sales=source(sample('sales',[row()])); p.purchases=source(sample('purchases',[row(33,5437,1033,6470,'1'),row(33,183734,34909,218643,'2')]));
  const r=m.calculate(p); assert.equal(r.purchases.net,189171); assert.equal(r.credit,35942); assert.equal(r.remainder,26442); assert.equal(r.ppm,150); assert.equal(r.total,150);
- assert.match(m.message({name:'Ejemplo',rut:'78239603-K'},p),/Otras obligaciones estimadas a pagar: \$ 150/);
+ assert.match(m.message({name:'Ejemplo',rut:'78239603-K'},p),/Otras obligaciones estimadas a pagar:\*\n\$ 150/);
 });
 test('nota de crédito resta una vez tanto si CSV viene positivo como negativo',()=>{ for(const sign of [1,-1]) {const rows=sample('sales',[row(),row(61,10000*sign,1900*sign,11900*sign,'2')]).rows;assert.equal(m.sumRows(rows).iva,7600);assert.equal(m.sumRows(rows).net,40000);} });
 test('débito, factura exenta, boleta y factura de compra se incluyen en los totales',()=>{const s=sample('sales',[row(56),row(34,0,0,5000,'2'),row(39,100,19,119,'3'),row(46,200,38,238,'4')]); assert.equal(m.sumRows(s.rows).iva,9557);});
@@ -26,3 +26,31 @@ test('agrupa por RUT y no mezcla empresas con igual nombre',()=>{const rows=samp
 test('líneas adicionales de otros impuestos no duplican un documento RCV',()=>{const text='Nro;'+header('purchases')+';Valor Otro Impuesto\n1;'+row(33,42718,8116,52373,'58605887')+';660\n;33;77424695-9;Empresa de ejemplo;58605887;03/09/2026;;;;;879'; const p=m.parseRcv(text,'purchases','2026-09');assert.equal(p.rows.length,1);assert.equal(m.sumRows(p.rows).iva,8116);assert.equal(m.sumRows(p.rows).total,52373);assert.ok(p.warnings.some(w=>w.includes('línea adicional')));});
 test('respaldo rechaza montos de texto y signos que cambiarían una nota de crédito',()=>{const p=m.newProjection('a','2026-09');p.sales=source(sample('sales',[row()]));const db={version:1,revision:'',clients:[{id:'a',name:'Ejemplo',rut:'78239603-K'}],projections:[p]};p.sales.rows[0].net='50000';assert.throws(()=>m.validateDatabase(db),/inválido/);p.sales.rows[0].net=-50000;assert.throws(()=>m.validateDatabase(db),/inválido/);});
 test('persistencia verifica revisión entre pestañas y conserva todos los meses',async()=>{const modelUrl='data:text/javascript;base64,'+Buffer.from(code).toString('base64');const storageCode=ts.transpileModule(readFileSync(new URL('../app/components/f29/storage.ts',import.meta.url),'utf8'),{compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace('from \'./model\'',`from '${modelUrl}'`);const storage=await import('data:text/javascript;base64,'+Buffer.from(storageCode).toString('base64'));const values=new Map();globalThis.localStorage={getItem:k=>values.get(k)??null,setItem:(k,v)=>values.set(k,v)}; const first=storage.writeDatabase({...m.emptyDatabase},'');assert.equal(storage.readDatabase().revision,first.revision);assert.throws(()=>storage.writeDatabase(first,''),/otra pestaña/);delete globalThis.localStorage;});
+
+const modelUrl = 'data:text/javascript;base64,' + Buffer.from(code).toString('base64');
+const rcvCode = ts.transpileModule(readFileSync(new URL('../app/components/f29/rcv.ts', import.meta.url), 'utf8'), {compilerOptions:{module:ts.ModuleKind.ESNext,target:ts.ScriptTarget.ES2022}}).outputText.replace("from './model'", `from '${modelUrl}'`);
+const { importRcv } = await import('data:text/javascript;base64,' + Buffer.from(rcvCode).toString('base64'));
+const client = {id:'a', name:'Cliente de prueba', rut:'78239603-K'};
+const file = (kind, content, period='202609') => new File([content], `RCV_${kind === 'sales' ? 'VENTA' : 'COMPRA_REGISTRO'}_${client.rut}_${period}.csv`);
+test('importar compras desde un borrador conserva manuales, PPM y ventas sin duplicar', async()=>{
+ const p=m.newProjection('a','2026-09');p.sales=source(sample('sales',[row()]));p.manual.previousCredit=1234;p.manual.fees=15000;p.ppmOverride=0;p.reviewed=true;
+ const csv=file('purchases',header('purchases')+'\n'+row(33,10000,1900,11900));
+ const result=await importRcv(p,client,[csv]);assert.equal(result.manual.fees,15000);assert.equal(result.manual.previousCredit,1234);assert.equal(result.ppmOverride,0);assert.deepEqual(result.sales,p.sales);assert.equal(result.reviewed,false);assert.equal(p.purchases,undefined);
+ const again=await importRcv(result,client,[csv]);assert.equal(again.purchases.rows.length,1);
+});
+test('RCV inválido o de otro período no modifica el borrador aunque ventas sean válidas',async()=>{
+ const p=m.newProjection('a','2026-09');p.manual.fees=15000;const before=JSON.stringify(p);
+ await assert.rejects(importRcv(p,client,[file('sales',header('sales')+'\n'+row()),file('purchases','inválido')]),/columna/);
+ assert.equal(JSON.stringify(p),before);
+ await assert.rejects(importRcv(p,client,[file('sales',header('sales')+'\n'+row(),'202608')]),/período/);
+ assert.equal(JSON.stringify(p),before);
+});
+test('mensaje de impuesto replica la estructura solicitada sin identidad y usa compras netas',()=>{
+ const p=m.newProjection('a','2026-09');p.manual.voucherNet=800000;p.manual.previousCredit=127910;p.manual.fees=15000;
+ const value=m.message(client,p);assert.match(value,/\*Valor aproximado a pagar el próximo mes:\*\n\$ 41.490/);assert.match(value,/\$ 126.789/);assert.ok(!value.includes(client.name));assert.ok(!value.includes(client.rut));assert.ok(!value.includes('septiembre'));
+});
+test('mensaje de remanente no recomienda compras y conserva obligaciones; cero no promete devolución',()=>{
+ const p=m.newProjection('a','2026-09');p.manual.previousCredit=20000;p.manual.fees=15000;let value=m.message(client,p);
+ assert.match(value,/remanente de crédito fiscal/);assert.match(value,/Otras obligaciones estimadas a pagar:\*\n\$ 15.000/);assert.ok(!value.includes('compras con factura recomendado'));
+ p.manual.previousCredit=0;value=m.message(client,p);assert.match(value,/No se genera IVA a pagar/);assert.ok(!value.includes('remanente de crédito fiscal'));
+});
