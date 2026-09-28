@@ -25,6 +25,7 @@ export const adminNavigation: {
     group: "Gestión",
   },
   { href: "/admin/pagos", label: "Pagos", icon: "wallet", group: "Gestión" },
+  { href: "/admin/f29", label: "Proyección F29", icon: "file", group: "Gestión" },
   {
     href: "/admin/postergaciones",
     label: "Postergaciones",

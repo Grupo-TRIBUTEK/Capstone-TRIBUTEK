@@ -73,7 +73,7 @@ export default function ActivarCuentaPage() {
             <label className="block text-sm font-medium text-[#252f46]">
               Correo electrónico
               <input type="email" autoComplete="email" maxLength={150} required value={email} onChange={(event) => setEmail(event.target.value)} className="mt-1.5 h-11 w-full rounded-lg border border-slate-300 px-3 outline-none focus:border-[#252f46] focus:ring-2 focus:ring-[#252f46]" />
-              <span className="mt-1 block text-xs font-normal text-slate-500">Se guardará en tu cuenta; puede ser distinto al correo de contacto del cliente.</span>
+              
             </label>
             </>
             )}

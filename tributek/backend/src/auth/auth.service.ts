@@ -95,6 +95,9 @@ constructor(
     await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
       ...(usuarioNombre ? { nombreUsuario: usuarioNombre as Varchar<80> } : {}),
       ...(esInvitacion && correo ? { email: correo as Varchar<150> } : {}),
+
+    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+      ...(usuarioNombre ? { nombreUsuario: usuarioNombre as Varchar<80> } : {}),
       passwordHash: (await argon2.hash(password)) as Varchar<255>,
       activo: true,
       actualizadoEn: Temporal.Now.instant(),
