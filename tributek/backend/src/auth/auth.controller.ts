@@ -28,6 +28,7 @@ export class AuthController {
     return this.authService.activarCuenta(
       dto.token,
       dto.nombreUsuario,
+      dto.email,
       dto.password,
       dto.confirmarPassword,
     );

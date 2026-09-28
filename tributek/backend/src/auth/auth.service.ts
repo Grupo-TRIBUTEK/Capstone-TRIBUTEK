@@ -28,7 +28,7 @@ constructor(
   private readonly jwtService: JwtService, // Agregamos JWTService para poder generar tokens de autenticación.
 ) {}
 
-  async activarCuenta(token: string, nombreUsuario: string | undefined, password: string, confirmarPassword: string) {
+  async activarCuenta(token: string, nombreUsuario: string | undefined, email: string | undefined, password: string, confirmarPassword: string) {
     let payload: { sub?: string; purpose?: string };
     try {
       payload = await this.jwtService.verifyAsync(token);
@@ -56,6 +56,11 @@ constructor(
       throw new BadRequestException('Ingresa un nombre de usuario v?lido de hasta 80 caracteres.');
     }
 
+    const correo = email?.trim().toLowerCase();
+    if (esInvitacion && (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))) {
+      throw new BadRequestException('Ingresa un correo electrónico válido de hasta 150 caracteres.');
+    }
+
     const usuario = await this.prisma.db.orm.public.Usuario
       .where({ id: BigInt(payload.sub) })
       .first();
@@ -78,9 +83,18 @@ constructor(
         throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
       }
     }
+    if (correo) {
+      const usuarioConCorreo = await this.prisma.db.orm.public.Usuario
+        .where({ email: correo as Varchar<150> })
+        .first();
+      if (usuarioConCorreo && usuarioConCorreo.id !== usuario.id) {
+        throw new BadRequestException('Ese correo electrónico ya está asociado a otra cuenta.');
+      }
+    }
 
     await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
       ...(usuarioNombre ? { nombreUsuario: usuarioNombre as Varchar<80> } : {}),
+      ...(esInvitacion && correo ? { email: correo as Varchar<150> } : {}),
       passwordHash: (await argon2.hash(password)) as Varchar<255>,
       activo: true,
       actualizadoEn: Temporal.Now.instant(),
@@ -109,11 +123,16 @@ constructor(
   const nombreUsuario = identificador?.includes('@')
     ? identificador.toLowerCase()
     : identificador;
-  const usuario = nombreUsuario
+  let usuario = nombreUsuario
     ? await this.prisma.db.orm.public.Usuario
         .where({ nombreUsuario: nombreUsuario as Varchar<80> })
         .first()
     : null;
+  if (!usuario && nombreUsuario?.includes('@')) {
+    usuario = await this.prisma.db.orm.public.Usuario
+      .where({ email: nombreUsuario as Varchar<150> })
+      .first();
+  }
 
   // Si no existe el usuario, se rechaza la autenticación.
   if (!usuario) {

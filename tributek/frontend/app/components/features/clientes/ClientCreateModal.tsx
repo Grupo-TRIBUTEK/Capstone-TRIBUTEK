@@ -13,9 +13,10 @@ export type ClientRecord = {
   telefono?: string;
   direccion?: string;
   estado: string;
+  creadoEn?: string | null;
 };
 
-type ClientForm = Omit<ClientRecord, "id">;
+type ClientForm = Omit<ClientRecord, "id" | "creadoEn">;
 type PortalAccess = { tieneAcceso: boolean; nombreUsuario?: string; activo?: boolean; activationUrl?: string };
 
 const emptyForm: ClientForm = {

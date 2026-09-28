@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import { randomBytes } from 'node:crypto';
+import 'temporal-polyfill/global';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { CreateClienteDto } from './dto/create-cliente.dto.js';
 
@@ -14,7 +15,10 @@ export class ClientesService {
   ) {}
 
   async crearCliente(datos: CreateClienteDto) {
-    const cliente = await this.prisma.db.orm.public.Cliente.create(this.clienteData(datos));
+    const cliente = await this.prisma.db.orm.public.Cliente.create({
+      ...this.clienteData(datos),
+      creadoEn: Temporal.Now.instant(),
+    });
     if (!datos.accesoPortal?.invitar) return cliente;
     const usuario = await this.crearCuentaInvitada(
       cliente.id,
@@ -185,6 +189,7 @@ export class ClientesService {
       nombreUsuario: `invitacion_${randomBytes(16).toString('hex')}` as Varchar<80>,
       passwordHash: (await argon2.hash(randomBytes(32).toString('hex'))) as Varchar<255>,
       activo: false,
+      creadoEn: Temporal.Now.instant(),
     });
     await this.prisma.db.orm.public.UsuarioCliente.create({
       usuarioId: usuario.id,

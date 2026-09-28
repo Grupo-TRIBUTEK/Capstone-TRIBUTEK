@@ -538,6 +538,7 @@ export default function Workspace({ view }: { view: View }) {
                 <thead>
                   <tr>
                     <th>Cliente</th>
+                    {view === "clientes" && <th>Creado en</th>}
                     <th>Máquina de pago</th>
                     <th>Estado del mes</th>
                     <th>
@@ -557,6 +558,7 @@ export default function Workspace({ view }: { view: View }) {
                   {visible.map((c) => {
                     const m = getMonth(data, c.id, period),
                       t = totals(data, m);
+                    const creadoEn = remote.find((r) => r.id === c.id)?.creadoEn;
                     const cs = (
                       view === "clientes" ? services : concepts
                     ).filter((k) => !concept || k === concept);
@@ -576,6 +578,16 @@ export default function Workspace({ view }: { view: View }) {
                             Ir al SII
                           </a>
                         </td>
+                        {view === "clientes" && (
+                          <td>
+                            {creadoEn
+                              ? new Intl.DateTimeFormat("es-CL", {
+                                  dateStyle: "short",
+                                  timeStyle: "short",
+                                }).format(new Date(creadoEn))
+                              : "-"}
+                          </td>
+                        )}
                         <td>{c.machine || "—"}</td>
                         <td>
                           <Badge>
