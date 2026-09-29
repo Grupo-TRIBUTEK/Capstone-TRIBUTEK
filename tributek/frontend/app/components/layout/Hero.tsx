@@ -1,9 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
+import BrandLogo from "./BrandLogo";
 
 export default function Hero() {
   return (
-    <section id="inicio" className="bg-secondary-surface py-16 md:py-24">
+    <section id="inicio" className="bg-background py-16 md:py-24">
       <div className="mx-auto grid max-w-7xl items-center gap-12 px-6 md:grid-cols-2">
         <div>
           <p className="mb-5 text-sm font-semibold uppercase tracking-widest text-secondary-strong">Contabilidad que impulsa tu futuro</p>
@@ -17,7 +17,7 @@ export default function Hero() {
           </div>
         </div>
         <div className="rounded-3xl border border-secondary-soft bg-surface p-10 shadow-sm md:p-16">
-          <Image src="/images/tras-TRIBUTEK.svg" alt="TRIBUTEK" width={420} height={280} priority className="mx-auto h-auto w-full max-w-sm" />
+          <BrandLogo width={420} height={280} priority className="mx-auto h-auto w-full max-w-sm" />
           <p className="mt-8 text-center text-sm tracking-wide text-text-muted">Gestión contable independiente</p>
         </div>
       </div>

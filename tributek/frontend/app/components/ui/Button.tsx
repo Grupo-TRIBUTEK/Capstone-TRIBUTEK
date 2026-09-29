@@ -12,7 +12,7 @@ export default function Button({
     <button
       {...props}
       type={type}
-      className={`inline-flex items-center justify-center rounded-xl bg-[#252f46] px-6 py-4 text-lg font-bold text-white transition-colors hover:bg-[#344463] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#252f46] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#252f46] ${className}`}
+      className={`inline-flex items-center justify-center rounded-xl bg-primary px-6 py-4 text-lg font-bold text-white transition-colors hover:bg-primary-strong-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-primary ${className}`}
     >
       {children}
     </button>
