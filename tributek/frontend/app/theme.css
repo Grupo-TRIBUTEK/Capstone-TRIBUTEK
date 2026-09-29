@@ -1,34 +1,8 @@
-:root { color-scheme: light; }
-body { transition: none; }
-:root.dark {
-  --background: #111827;
-  --surface: #1c2638;
-  --surface-muted: #263349;
-  --foreground: #edf1f7;
-  --text: #edf1f7;
-  --text-primary: #edf1f7;
-  --text-muted: #bac5d6;
-  --text-secundary: #deb6a8;
-  --border: #43516a;
-  --primary: #344967;
-  --primary-hover: #415b80;
-  --secondary: #cba294;
-  --secondary-strong: #ebc1b2;
-  --secondary-surface: #211f29;
-  --secondary-soft: #4a3534;
-  --success: #b1e9c8;
-  --success-surface: #183d31;
-  --error: #ffc4c8;
-  --error-surface: #49252e;
-  --warning: #ffe29a;
-  --warning-surface: #40331e;
-  color-scheme: dark;
-}
 .theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px Arial, sans-serif; }
 .theme-control select { min-height: 40px; max-width: 145px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--text-primary); cursor: pointer; font: inherit; }
 .theme-control select:focus-visible { outline: 3px solid #b98b7b; outline-offset: 3px; }
 .theme-control-sidebar { color: white; display: flex; justify-content: space-between; margin-top: 24px; }
-.theme-control-sidebar select { background: #252f46; color: white; border-color: #8a96ab; color-scheme: dark; }
+.theme-control-sidebar select { background: var(--primary); color: white; border-color: #8a96ab; color-scheme: dark; }
 .login-theme { position: absolute; top: 18px; right: 20px; }
 .tk-login main { position: relative; padding-top: 85px; }
 
@@ -59,7 +33,6 @@ body { transition: none; }
   .dark .tk-dialog::backdrop { background: #060b14b8; }
   .dark .tk :is(button, a, input, select, textarea):focus-visible { outline-color: #deb6a8; }
   .dark .text-brand-primary, .dark a.text-primary { color: #edf1f7; }
-  .dark img[src$="tras-TRIBUTEK.svg"] { background: #fff; padding: 8px; border-radius: 10px; }
 }
 @media (max-width: 400px) {
   .theme-control { gap: 4px; }

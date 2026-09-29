@@ -1,10 +1,10 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Icon from "../ui/Icon";
 import ThemeSelect from "./Theme";
+import BrandLogo from "./BrandLogo";
 
 const links = [
   { href: "#nosotros", label: "Nosotros" },
@@ -15,16 +15,25 @@ const links = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const updateScrollState = () => setIsScrolled(window.scrollY > 8);
+
+    updateScrollState();
+    window.addEventListener("scroll", updateScrollState, { passive: true });
+    return () => window.removeEventListener("scroll", updateScrollState);
+  }, []);
 
   function closeMenu() {
     setMenuOpen(false);
   }
 
   return (
-    <header className="relative z-20 border-b border-border  bg-background text-foreground transition-colors">
+    <header className={`bg-surface sticky top-0 z-20 w-full border-b border-border text-foreground transition-all duration-200 ${isScrolled ? "bg-background/80 shadow-sm backdrop-blur-md" : "bg-background"}`}>
       <nav
+        className="relative  mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-y-3 px-4 py-2 sm:px-6"
         aria-label="Navegación principal"
-        className="relative mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-y-3 px-4 py-2 sm:px-6"
       >
         <Link
           href="/"
@@ -32,9 +41,7 @@ export default function Navbar() {
           aria-label="TRIBUTEK, inicio"
           onClick={closeMenu}
         >
-          <Image
-            src="/images/tras-TRIBUTEK.svg"
-            alt="TRIBUTEK"
+          <BrandLogo
             width={90}
             height={40}
             priority

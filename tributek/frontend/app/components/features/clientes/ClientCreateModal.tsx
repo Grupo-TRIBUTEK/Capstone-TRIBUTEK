@@ -378,9 +378,9 @@ export default function ClientCreateModal({
             {error && <p className="sm:col-span-2 text-sm font-medium text-red-700" role="alert">{error}</p>}
           </div>
 
-          <footer className="flex shrink-0 flex-col-reverse gap-3 border-t border-slate-200 bg-white px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
-            <button type="button" onClick={requestClose} className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-[#252f46] hover:bg-slate-50">{activationUrl ? "Cerrar" : "Cancelar"}</button>
-            <button type="submit" disabled={isSubmitting || Boolean(activationUrl)} className="rounded-lg bg-[#252f46] px-5 py-3 text-sm font-semibold text-white hover:bg-[#344463] disabled:cursor-wait disabled:opacity-60">
+          <footer className="flex shrink-0 flex-col-reverse gap-3 border-t border-border bg-surface px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
+            <button type="button" onClick={requestClose} className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-text-primary hover:bg-background-subtle">{activationUrl ? "Cerrar" : "Cancelar"}</button>
+            <button type="submit" disabled={isSubmitting || Boolean(activationUrl)} className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-strong-hover disabled:cursor-wait disabled:opacity-60">
               {activationUrl ? "Invitación creada" : isSubmitting
                 ? client ? "Guardando cambios..." : "Creando cliente..."
                 : client ? "Guardar cambios" : "Crear cliente"}
@@ -396,7 +396,7 @@ export default function ClientCreateModal({
             <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text-primary">Continuar editando</button>
-              <button type="button" onClick={onClose} className="rounded-lg bg-[#252f46] px-4 py-2.5 text-sm font-semibold text-white">Salir</button>
+              <button type="button" onClick={onClose} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white">Salir</button>
             </div>
           </section>
         </div>

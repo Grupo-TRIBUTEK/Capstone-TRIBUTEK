@@ -22,7 +22,7 @@ export default function RootLayout({ children }: {children: React.ReactNode}) {
       <head>
         <script id="tributek-theme-init" dangerouslySetInnerHTML={{ __html: `(function(){var t='system';try{t=localStorage.getItem('tributek-theme')||'system';}catch(e){}var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.classList.toggle('dark',d);document.documentElement.style.colorScheme=d?'dark':'light';})();` }} />
       </head>
-      <body className="min-h-full flex flex-col"><ThemeManager />{children}</body>
+      <body className="min-h-full flex flex-col" suppressHydrationWarning><ThemeManager />{children}</body>
     </html>
   );
 }

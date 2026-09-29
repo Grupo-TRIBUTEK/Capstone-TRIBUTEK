@@ -18,7 +18,7 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className="w-full shrink-0 bg-[#252f46] p-5 text-white md:min-h-screen md:w-64">
+    <aside className="w-full shrink-0 bg-primary p-5 text-white md:min-h-screen md:w-64">
       <div className="border-b border-white/20 pb-5">
         <p className="text-2xl font-bold tracking-wide">TRIBUTEK</p>
         <p className="mt-1 text-sm text-slate-300">Gestión administrativa</p>
@@ -50,7 +50,7 @@ export default function Sidebar() {
                       <Link
                         href={item.href}
                         aria-current={isActive ? "page" : undefined}
-                        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${isActive ? "bg-[#b98b7b] text-[#252f46]" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
+                        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${isActive ? "bg-secondary text-text-primary" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
                       >
                         <Icon name={item.icon} />
                         {item.label}

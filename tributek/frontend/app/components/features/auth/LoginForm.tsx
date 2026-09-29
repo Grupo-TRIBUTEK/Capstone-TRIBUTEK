@@ -2,9 +2,9 @@
 
 import { FormEvent, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { clearAuth, login } from "@/app/features/auth/auth-client";
+import BrandLogo from "@/app/components/layout/BrandLogo";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -43,13 +43,7 @@ export default function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} className="tk-stack">
-      <Image
-        src="/images/tras-TRIBUTEK.svg"
-        alt="TRIBUTEK"
-        style={{ height: "auto" }}
-        width={180}
-        height={110}
-      />
+      <BrandLogo width={180} height={110} className="h-auto" />
       <div>
         <h1>Ingresa a tu cuenta</h1>
         <p className="tk-subtle">Accede con tu nombre de usuario o correo electrónico.</p>
