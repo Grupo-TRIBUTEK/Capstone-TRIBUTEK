@@ -19,13 +19,13 @@ export class ClientesService {
       ...this.clienteData(datos),
       creadoEn: Temporal.Now.instant(),
     });
-    if (!datos.accesoPortal?.invitar) return cliente;
+    if (!datos.accesoPortal?.invitar) return this.serializarCliente(cliente);
     const usuario = await this.crearCuentaInvitada(
       cliente.id,
       datos.contactoPrincipal?.trim() || datos.nombreRazonSocial,
     );
     return {
-      ...cliente,
+      ...this.serializarCliente(cliente),
       accesoPortal: { activationUrl: await this.generarEnlaceActivacion(usuario.id) },
     };
   }
@@ -65,7 +65,7 @@ export class ClientesService {
       if (!otrosVinculos.length && usuarioPortal) {
         await this.prisma.db.orm.public.Usuario.where({ id: usuarioPortal.id }).update({ activo: false });
       }
-      return cliente;
+      return this.serializarCliente(cliente);
     }
 
     if (usuarioPortal && (nombreUsuario || emailUsuario)) {
@@ -81,17 +81,17 @@ export class ClientesService {
         datos.contactoPrincipal?.trim() || datos.nombreRazonSocial,
       );
       return {
-        ...cliente,
+        ...this.serializarCliente(cliente),
         accesoPortal: { activationUrl: await this.generarEnlaceActivacion(usuario.id) },
       };
     }
     if (datos.accesoPortal?.invitar && usuarioPortal && !usuarioPortal.activo) {
       return {
-        ...cliente,
+        ...this.serializarCliente(cliente),
         accesoPortal: { activationUrl: await this.generarEnlaceActivacion(usuarioPortal.id) },
       };
     }
-    return cliente;
+    return this.serializarCliente(cliente);
   }
 
   async obtenerAccesoPortal(id: string) {
@@ -241,13 +241,20 @@ export class ClientesService {
     } as any;
   }
 
+  private serializarCliente(cliente: any) {
+    return { ...cliente, id: String(cliente.id) };
+  }
+
   async obtenerClientes(buscar?: string) {
     const textoBusqueda = buscar?.trim();
     const baseQuery = this.prisma.db.orm.public.Cliente.orderBy((cliente) =>
       cliente.id.desc(),
     );
 
-    if (!textoBusqueda) return baseQuery.all();
+    if (!textoBusqueda) {
+      const clientes = await baseQuery.all();
+      return clientes.map((cliente) => ({ ...cliente, id: String(cliente.id) }));
+    }
 
     const porNombre = await baseQuery
       .where((cliente) => cliente.nombreRazonSocial.ilike(`%${textoBusqueda}%`))
@@ -259,7 +266,9 @@ export class ClientesService {
     for (const cliente of [...porNombre, ...porRut]) {
       clientesUnicos.set(String(cliente.id), cliente);
     }
-    return [...clientesUnicos.values()].sort((a, b) => Number(b.id) - Number(a.id));
+    return [...clientesUnicos.values()]
+      .sort((a, b) => Number(b.id) - Number(a.id))
+      .map((cliente) => ({ ...cliente, id: String(cliente.id) }));
   }
 
   async obtenerCliente(id: string) {

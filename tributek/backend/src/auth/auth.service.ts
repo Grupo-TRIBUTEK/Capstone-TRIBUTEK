@@ -173,7 +173,7 @@ const payload = {
 const accessToken = await this.jwtService.signAsync(payload);
 
 return {
-    // Error corregido: Eñ id se devuelven como strign y no como BigInit por temas de error con JSON
+    // Error corregido: En id se devuelven como strign y no como BigInit por temas de error con JSON
 
   mensaje: 'Inicio de sesión exitoso',
   access_token: accessToken,
