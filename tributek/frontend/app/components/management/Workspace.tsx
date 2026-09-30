@@ -96,14 +96,25 @@ export default function Workspace({ view }: { view: View }) {
         const r = await authenticatedFetch("/clientes", {
           signal: controller.signal,
         });
-        if (!r.ok) throw new Error("No se pudo cargar el directorio.");
+        if (!r.ok) {
+          const body = await r.json().catch(() => null) as { message?: string | string[] } | null;
+          const message = Array.isArray(body?.message) ? body.message.join(" ") : body?.message;
+          throw new Error(message || `No se pudo cargar el directorio (HTTP ${r.status}).`);
+        }
         const rows: ClientRecord[] = await r.json();
         if (controller.signal.aborted) return;
         if (!Array.isArray(rows)) throw new Error("Directorio inválido.");
         const normalized = rows.map((c) => ({ ...c, id: String(c.id) }));
-        syncRemoteClients(normalized);
         setRemote(normalized);
         setLoad("ready");
+        setError("");
+        try {
+          syncRemoteClients(normalized);
+        } catch (syncError) {
+          setError(syncError instanceof Error
+            ? `Directorio cargado; no se pudieron sincronizar los datos locales: ${syncError.message}`
+            : "Directorio cargado; no se pudieron sincronizar los datos locales.");
+        }
       } catch (e) {
         if (!controller.signal.aborted) {
           setLoad("error");
@@ -118,17 +129,35 @@ export default function Workspace({ view }: { view: View }) {
     void getClients();
     return () => controller.abort();
   }, [store.ready, store.error, reload]);
-  const clients: ClientView[] = data.clients.map((c) => {
-    const r = remote.find((r) => r.id === c.id);
-    const p = meta.profiles[c.id];
-    return {
-      ...c,
-      rut: r?.rut || p?.rut || "",
-      machine: p?.machine || "",
-      fee: p?.fee || 0,
-      active: r ? r.estado.toLowerCase() !== "inactivo" : (p?.active ?? true),
-    };
-  });
+  // El directorio de clientes tiene como fuente de verdad el backend. Los
+  // datos locales guardan pagos y períodos; nunca deben inventar filas aquí.
+  const clients: ClientView[] = view === "clientes"
+    ? remote.map((r) => {
+        const local = data.clients.find((c) => c.id === r.id);
+        const profile = meta.profiles[r.id];
+        return {
+          id: r.id,
+          name: r.nombreRazonSocial,
+          phone: r.telefono || "",
+          note: local?.note || "",
+          documentUrl: local?.documentUrl || "",
+          rut: r.rut,
+          machine: profile?.machine || "",
+          fee: profile?.fee || 0,
+          active: r.estado.toLowerCase() !== "inactivo",
+        };
+      })
+    : data.clients.map((c) => {
+        const r = remote.find((r) => r.id === c.id);
+        const profile = meta.profiles[c.id];
+        return {
+          ...c,
+          rut: r?.rut || profile?.rut || "",
+          machine: profile?.machine || "",
+          fee: profile?.fee || 0,
+          active: r ? r.estado.toLowerCase() !== "inactivo" : (profile?.active ?? true),
+        };
+      });
   const visible = clients.filter(
     (c) =>
       `${c.name} ${c.rut}`
@@ -300,7 +329,7 @@ export default function Workspace({ view }: { view: View }) {
         </p>
       )}
       {error && (
-        <p role="alert" className="tk-error">
+        <div role="alert" className="tk-error">
           {error}{" "}
           <button
             onClick={() => {
@@ -311,7 +340,7 @@ export default function Workspace({ view }: { view: View }) {
           >
             Reintentar
           </button>
-        </p>
+        </div>
       )}
       {notice && (
         <p role="status" className="tk-success">
@@ -670,7 +699,7 @@ export default function Workspace({ view }: { view: View }) {
                 </tbody>
               </table>
             </div>
-            {!visible.length && (
+            {!visible.length && load === "ready" && (
               <Empty>
                 {search || status || concept
                   ? "No hay clientes para estos filtros."
@@ -1133,7 +1162,12 @@ export default function Workspace({ view }: { view: View }) {
         <ClientCreateModal
           client={clientModal === "new" ? undefined : clientModal}
           onClose={() => setClientModal(null)}
-          onSaved={(_client) => {
+          onSaved={(client) => {
+            setRemote((current) => [
+              ...current.filter((item) => item.id !== client.id),
+              client,
+            ]);
+            setLoad("ready");
             setReload((n) => n + 1);
             setNotice("Cliente guardado en el servidor. Comparte la invitación desde el formulario si se habilitó el portal.");
           }}
