@@ -10,7 +10,7 @@ export default function Footer() {
           <p className="mt-3 text-sm text-text-muted">Contabilidad que impulsa tu futuro.</p>
         </div>
         <nav aria-label="Navegación del pie de página" className="flex flex-wrap gap-6 text-sm text-text-primary">
-          <a href="#nosotros">Nosotros</a><a href="#servicios">Servicios</a><Link href="/login">Iniciar sesión</Link>
+          <a href="#nosotros">Nosotros</a><a href="#servicios">Servicios</a><a href="#contacto">Contacto</a><Link href="/login">Iniciar sesión</Link>
         </nav>
         <p className="w-full border-t border-border pt-5 text-xs text-text-muted">© {new Date().getFullYear()} TRIBUTEK. Todos los derechos reservados.</p>
       </div>

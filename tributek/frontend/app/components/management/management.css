@@ -529,8 +529,10 @@
 }
 .tk-login form button.primary {
   width: 100%;
-  min-height: 50px;
-  border-radius: 10px;
+  min-height: 48px;
+  padding: 12px 24px;
+  border: 1px solid var(--primary);
+  border-radius: var(--control-radius);
   font-size: 15px;
 }
 .tk-login form > a {

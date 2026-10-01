@@ -10,6 +10,7 @@ const links = [
   { href: "#nosotros", label: "Nosotros" },
   { href: "#servicios", label: "Servicios" },
   { href: "#preguntas", label: "Preguntas frecuentes" },
+  { href: "#contacto", label: "Contacto" },
 
 ];
 
@@ -30,7 +31,7 @@ export default function Navbar() {
   }
 
   return (
-    <header className={`bg-surface sticky top-0 z-20 w-full border-b border-border text-foreground transition-all duration-200 ${isScrolled ? "bg-background/80 shadow-sm backdrop-blur-md" : "bg-background"}`}>
+    <header className={`sticky top-0 z-20 w-full border-b border-border/70 bg-background/85 text-foreground shadow-sm backdrop-blur-md transition-all duration-200 ${isScrolled ? "" : "shadow-none"}`}>
       <nav
         className="relative  mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-y-3 px-4 py-2 sm:px-6"
         aria-label="Navegación principal"

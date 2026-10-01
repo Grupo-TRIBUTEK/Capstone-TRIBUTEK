@@ -1,8 +1,15 @@
 .theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px Arial, sans-serif; }
-.theme-control select { min-height: 40px; max-width: 145px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; background: var(--surface); color: var(--text-primary); cursor: pointer; font: inherit; }
-.theme-control select:focus-visible { outline: 3px solid #b98b7b; outline-offset: 3px; }
+.theme-select-menu { position: relative; }
+.theme-select-menu summary { display: inline-flex; min-height: 40px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: var(--surface); color: var(--text-primary); cursor: pointer; list-style: none; }
+.theme-select-menu summary::-webkit-details-marker { display: none; }
+.theme-select-menu summary:focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
+.theme-select-chevron { width: 7px; height: 7px; margin: -4px 0 0 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
+.theme-select-options { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; display: grid; min-width: 144px; gap: 2px; padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-primary); box-shadow: 0 10px 28px rgb(15 23 42 / 18%); }
+.theme-select-options button { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; border: 0; border-radius: 6px; padding: 8px 10px; background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
+.theme-select-options button:hover, .theme-select-options button[aria-pressed="true"] { background: var(--secondary-surface); color: var(--text-primary); }
+.theme-select-options button:focus-visible { outline: 2px solid var(--secondary); outline-offset: 1px; }
 .theme-control-sidebar { color: white; display: flex; justify-content: space-between; margin-top: 24px; }
-.theme-control-sidebar select { background: var(--primary); color: white; border-color: #8a96ab; color-scheme: dark; }
+.theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: white; border-color: #8a96ab; }
 .login-theme { position: absolute; top: 18px; right: 20px; }
 .tk-login main { position: relative; padding-top: 85px; }
 
@@ -14,6 +21,8 @@
   .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
   .dark .tk :is(button.primary, .primary) { background: #cba294; border-color: #cba294; color: #172238; }
   .dark .tk :is(button.primary:hover, .primary:hover) { background: #deb6a8; }
+  .dark .tk-login form button.primary { background: var(--primary); border-color: var(--primary); color: white; }
+  .dark .tk-login form button.primary:hover { background: var(--primary-hover); }
   .dark .tk button.rose, .dark .tk-tabs button[aria-pressed="true"] { background: #4a3534; border-color: #cba294; color: #f3d5c9; }
   .dark .tk button.danger { background: #49252e; color: #ffc4c8; }
   .dark .tk :is(input, select, textarea) { background: #151e2d; }
@@ -36,7 +45,7 @@
 }
 @media (max-width: 400px) {
   .theme-control { gap: 4px; }
-  .theme-control select { max-width: 120px; }
+  .theme-select-menu summary { gap: 5px; padding: 8px; }
 }
 @media print {
   .theme-control, .login-theme { display: none !important; }

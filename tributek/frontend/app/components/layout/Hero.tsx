@@ -12,8 +12,8 @@ export default function Hero() {
           </h1>
           <p className="my-7 max-w-lg text-lg leading-relaxed text-text-muted">Acompañamiento contable para organizar tus obligaciones, mantener tus pagos al día y dar el siguiente paso con tu empresa.</p>
           <div className="flex flex-wrap items-center gap-5">
-            <Link href="/login" className="rounded-control bg-primary px-6 py-3 font-semibold text-white hover:bg-primary-hover">Acceder a mi cuenta</Link>
-            <a href="#servicios" className="font-semibold text-primary underline underline-offset-4">Conocer los servicios</a>
+            <Link href="/login" className="inline-flex min-h-12 items-center rounded-control border border-primary bg-primary px-6 py-3 font-semibold text-white transition-colors hover:bg-primary-hover">Acceder a mi cuenta</Link>
+            <a href="#servicios" className="inline-flex min-h-12 items-center rounded-control border border-primary px-6 py-3 font-semibold text-primary transition-colors hover:bg-primary hover:text-white">Conocer los servicios</a>
           </div>
         </div>
         <div className="rounded-3xl border border-secondary-soft bg-surface p-10 shadow-sm md:p-16">
