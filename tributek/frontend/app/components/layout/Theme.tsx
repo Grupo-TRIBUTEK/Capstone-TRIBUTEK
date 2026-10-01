@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useSyncExternalStore } from "react";
+import Icon, { type IconName } from "../ui/Icon";
 
 type Theme = "light" | "dark" | "system";
 const KEY = "tributek-theme";
@@ -47,14 +48,39 @@ export function ThemeManager() {
 
 export default function ThemeSelect({ sidebar = false }: { sidebar?: boolean }) {
   const theme = useSyncExternalStore(subscribe, preference, () => "system" as Theme);
+  const themeIcon: IconName = theme === "light" ? "sun" : theme === "dark" ? "moon" : "monitor";
+  const themes: { value: Theme; label: string; icon: IconName }[] = [
+    { value: "light", label: "Claro", icon: "sun" },
+    { value: "dark", label: "Oscuro", icon: "moon" },
+    { value: "system", label: "Sistema", icon: "monitor" },
+  ];
   return (
-    <label className={`theme-control${sidebar ? " theme-control-sidebar" : ""}`}>
+    <div className={`theme-control${sidebar ? " theme-control-sidebar" : ""}`}>
       <span>Tema</span>
-      <select aria-label="Tema de la página" value={theme} onChange={e => selectTheme(e.target.value as Theme)}>
-        <option value="light">☀️ Claro</option>
-        <option value="dark">🌙 Oscuro</option>
-        <option value="system">💻 Sistema</option>
-      </select>
-    </label>
+      <details className="theme-select-menu">
+        <summary aria-label={`Tema actual: ${themes.find(option => option.value === theme)?.label}`}>
+          <Icon name={themeIcon} className="h-4 w-4" />
+          {themes.find(option => option.value === theme)?.label}
+          <span aria-hidden="true" className="theme-select-chevron" />
+        </summary>
+        <div className="theme-select-options" role="group" aria-label="Seleccionar tema">
+          {themes.map(option => (
+            <button
+              key={option.value}
+              type="button"
+              aria-pressed={theme === option.value}
+              onClick={event => {
+                selectTheme(option.value);
+                const menu = event.currentTarget.closest("details");
+                if (menu) menu.open = false;
+              }}
+            >
+              <Icon name={option.icon} className="h-4 w-4" />
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </details>
+    </div>
   );
 }

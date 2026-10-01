@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authenticatedFetch, clearAuth, getAccessToken } from "@/app/features/auth/auth-client";
 
@@ -61,6 +62,9 @@ export default function PortalHome() {
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">TRIBUTEK</p>
             <p className="mt-1 text-sm font-semibold text-text-primary">Portal de clientes</p>
           </div>
+          <Link href="/" className="rounded-lg px-3 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted">
+            Página principal
+          </Link>
           <button type="button" onClick={logout} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted">
             Cerrar sesión
           </button>
@@ -104,8 +108,8 @@ export default function PortalHome() {
         <section className="mt-12" aria-labelledby="tutoriales-title">
           <div className="max-w-2xl">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6254]">Centro de recursos</p>
-            <h2 id="tutoriales-title" className="mt-2 text-2xl font-bold text-[#252f46]">Tutoriales y presentaciones</h2>
-            <p className="mt-2 text-slate-600">Material visual y guías breves para ayudarte a usar los servicios de TRIBUTEK. Las presentaciones de Canva se podrán abrir desde aquí.</p>
+            <h2 id="tutoriales-title" className="mt-2 text-2xl font-bold text-[#252f46]">Presentaciones</h2>
+            <p className="mt-2 text-slate-600">Consulta en esta sección las presentaciones informativas disponibles para clientes.</p>
           </div>
 
           <article className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm md:grid md:grid-cols-[1.1fr_1fr]">
@@ -113,16 +117,16 @@ export default function PortalHome() {
               <span className="w-fit rounded-full border border-white/30 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide">Presentación destacada</span>
               <div>
                 <div aria-hidden="true" className="mb-4 flex size-12 items-center justify-center rounded-full bg-white/15 text-xl">▶</div>
-                <p className="text-sm text-white/80">Canva · Servicios para clientes</p>
-                <h3 className="mt-1 text-2xl font-bold">Asesorías para tu empresa</h3>
+                <p className="text-sm text-white/80">Material informativo · TRIBUTEK</p>
+                <h3 className="mt-1 text-2xl font-bold">Presentación para clientes</h3>
               </div>
             </div>
             <div className="flex flex-col items-start justify-center p-6 md:p-8">
               <p className="text-sm font-semibold text-[#8b6254]">Próximamente</p>
-              <p className="mt-2 leading-relaxed text-slate-600">Aquí podrás ver una presentación sobre la gestión mensual, la formalización y las asesorías que TRIBUTEK ofrece a sus clientes.</p>
-              <button type="button" disabled className="mt-5 cursor-not-allowed rounded-lg bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-500" aria-label="Presentación de Canva próximamente">
-                Presentación en preparación
-              </button>
+              <p className="mt-2 leading-relaxed text-slate-600">Aquí podrás consultar el material de la presentación disponible en el portal.</p>
+              <Link href="/cliente/presentaciones" className="mt-5 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                Ver presentación
+              </Link>
             </div>
           </article>
 
@@ -130,33 +134,30 @@ export default function PortalHome() {
 
         <section className="mt-12" aria-labelledby="portal-futuro-title">
           <div className="max-w-3xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6254]">Propuesta de futuras funciones</p>
-            <h2 id="portal-futuro-title" className="mt-2 text-2xl font-bold text-[#252f46]">Lo que podr&aacute;s hacer en el portal</h2>
-            <p className="mt-2 text-slate-600">El portal podr&aacute; reunir tus antecedentes y el seguimiento de tus solicitudes en un solo lugar. Estas funciones son informativas y se incorporar&iacute;an en una etapa futura.</p>
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6254]">Portal de clientes</p>
+            <h2 id="portal-futuro-title" className="mt-2 text-2xl font-bold text-[#252f46]">Funciones en preparación</h2>
+            <p className="mt-2 text-slate-600">Estamos preparando nuevas herramientas para consultar documentos y hacer seguimiento de solicitudes desde este portal.</p>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
             <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
               <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Documentos</span>
               <h3 className="mt-3 text-lg font-bold text-text-primary">Entrega y consulta de antecedentes</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Podr&aacute;s cargar los documentos solicitados y consultar o descargar los que la Administradora habilite para tu cuenta.</p>
-              <button type="button" disabled className="mt-4 cursor-not-allowed rounded-md border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">Por habilitar</button>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Este espacio permitir&aacute; revisar los documentos solicitados y consultar los antecedentes habilitados para tu cuenta.</p>
+              <span className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">En preparación</span>
             </article>
             <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
               <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Seguimiento</span>
               <h3 className="mt-3 text-lg font-bold text-text-primary">Solicitudes y vencimientos</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Podr&aacute;s consultar gestiones, observaciones y fechas importantes. La Administradora gestionar&aacute; los estados y las revisiones.</p>
-              <button type="button" disabled className="mt-4 cursor-not-allowed rounded-md border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">Por habilitar</button>
-            </article>
-            <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
-              <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Privacidad</span>
-              <h3 className="mt-3 text-lg font-bold text-text-primary">Acceso solo a tu informaci&oacute;n</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Cada cliente consultar&aacute; solo la informaci&oacute;n y los archivos asociados a su cuenta que hayan sido habilitados por TRIBUTEK.</p>
-              <button type="button" disabled className="mt-4 cursor-not-allowed rounded-md border border-slate-300 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-500">Por habilitar</button>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Este espacio permitir&aacute; revisar el estado de tus solicitudes, sus observaciones y fechas importantes.</p>
+              <span className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">En preparación</span>
             </article>
           </div>
 
-          
+          <aside className="mt-6 rounded-xl border border-border bg-surface-muted p-5" aria-label="Privacidad de la información">
+            <h3 className="font-semibold text-text-primary">Tu información</h3>
+            <p className="mt-1 text-sm leading-relaxed text-text-muted">El portal muestra la información de los clientes vinculados a tu cuenta.</p>
+          </aside>
         </section>
       </main>
       <footer className="mt-10 border-t border-border bg-surface">

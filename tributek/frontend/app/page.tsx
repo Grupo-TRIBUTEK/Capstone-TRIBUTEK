@@ -35,6 +35,13 @@ export default function Home() {
           <h2 id="faq-title" className="mb-8 font-display text-3xl">Preguntas frecuentes</h2>
           {questions.map(q => <details key={q.title} className="border-b border-border py-5"><summary className="cursor-pointer text-lg font-semibold">{q.title}</summary><p className="mt-4 leading-relaxed text-text-muted">{q.text}</p></details>)}
         </section>
+        <section id="contacto" aria-labelledby="contact-title" className="scroll-mt-6 border-t border-border bg-surface px-6 py-16 md:py-20">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="text-sm font-semibold uppercase tracking-widest text-secondary-strong">Contacto</p>
+            <h2 id="contact-title" className="mt-3 font-display text-3xl md:text-4xl">¿Hablemos de tu negocio?</h2>
+            <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-text-muted">Si ya eres cliente, comunícate con tu administradora por el canal habitual. Para consultas sobre nuestros servicios, pronto habilitaremos más vías de contacto.</p>
+          </div>
+        </section>
       </main>
       <Footer />
     </>
