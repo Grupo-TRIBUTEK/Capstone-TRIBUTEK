@@ -1,101 +1,71 @@
-# Guía visual de TRIBUTEK
+# Sistema visual Frontend TRIBUTEK
 
-Esta guía resume la dirección visual que se observa en el frontend y sus mockups. Sirve como punto de partida compartido; la paleta todavía no está aprobada como manual de marca definitivo.
+Guía rápida para mantener una interfaz clara, elegante y consistente en la landing page y componentes principales.
 
-## Dirección visual
+## 1) Tipografía
 
-TRIBUTEK debe sentirse como una herramienta contable clara, confiable y ordenada. El azul marino estructura la navegación y las acciones; el terracota aporta acentos; las superficies claras dejan que los datos sean el centro.
+| Elemento | HTML | Fuente | Tamaño | Peso | Interlineado | Uso |
+| --- | --- | --- | ---: | --- | ---: | --- |
+| Título principal | H1 | Georgia | 46–78 px | Regular | 0.99 | Propuesta principal del hero |
+| Título de sección | H2 | Georgia | 35–55 px | Regular | — | Servicios, método, bloques principales |
+| Título de servicio | H3 | Georgia | 25 px | Regular | — | Nombre de cada servicio |
+| Subtítulo interno | — | Arial | 16–20 px | Bold | — | Reforzar ideas dentro de la sección |
+| Párrafo principal | p | Arial | 16–17 px | Regular | 1.75 | Explicación de servicios y beneficios |
+| Párrafo secundario | p | Arial | 14 px | Regular | 1.75 | Descripciones breves |
+| Eyebrow / etiqueta | — | Arial | 11 px | Bold | — | Categorías y chips |
+| Navegación | — | Arial | 13 px | Bold | — | Inicio, servicios, contacto |
+| Botón / CTA | — | Arial | 12 px | Bold | — | Acciones primarias |
+| Dato / métrica | — | Arial | 36 px | Bold | — | Porcentajes, montos, resultados |
+| Texto de apoyo | — | Arial | 11–12 px | Regular | — | Notas, aclaraciones |
+| Footer | — | Arial | 9 px | Bold | — | Texto secundario |
 
-## Paleta actual
+### Reglas recomendadas
 
-Los siguientes valores se conservan en `app/globals.css` y reflejan decisiones ya presentes en el proyecto.
+- Usar Georgia en títulos para dar un aire más editorial y premium.
+- Mantener Arial para textos de lectura para mayor legibilidad.
+- Evitar mezclas excesivas entre fuentes: una principal para titulares y una para cuerpo.
+- Mantener una sola jerarquía visual clara por sección.
 
-| Token o uso | Valor | Aplicación |
+---
+
+## 2) Paleta de colores
+
+| Nombre | Hex | Uso |
 | --- | --- | --- |
-| `primary` | `#203457` | Acción principal y navbar |
-| `primary-hover` | `#1F2842` | Hover de la acción principal |
-| `primary-strong` | `#252F46` | Navegación administrativa y títulos existentes |
-| `primary-strong-hover` | `#344463` | Hover usado por botones existentes |
-| `secondary` | `#B98B7B` | Acento y selección |
-| `secondary-strong` | `#735044` | Texto de acento sobre fondos claros |
-| `secondary-surface` | `#FAF5F3` | Fondo suave para avisos |
-| `secondary-soft` | `#EFE0DA` | Acento suave |
-| Fondo claro | `#FAF9F6` | Fondo general |
-| Superficie | `#FFFFFF` | Tarjetas y formularios |
-| Texto | `#171717` | Texto principal actual |
-| Texto secundario | `#64748B` | Ayuda y metadatos |
-| Borde | `#E2E8F0` | Separadores y contenedores |
+| Primary | `#b98b7b` | Acciones principales, CTA, foco visual |
+| Primary hover | `#a77a6b` | Hover de botones primarios |
+| Secondary strong | `#7a4d4a` | Destacados, etiquetas, énfasis |
+| Secondary soft | `#f3e6e3` | Fondos suaves, badges, resaltados |
+| Background | `#f7f5f2` | Fondo general de la página |
+| Surface | `#ffffff` | Tarjetas y paneles principales |
+| Border | `#e7e0db` | Bordes sutiles y separadores |
+| Text primary | `#1f2330` | Texto principal |
+| Text muted | `#5d6472` | Texto secundario |
+| White | `#ffffff` | Elementos de alta legibilidad |
 
-Hay dos tonos de azul marino porque el proyecto ya los usaba en lugares distintos. Los tokens los hacen explícitos sin cambiar sus valores; consolidarlos es una decisión de diseño pendiente.
+### Uso recomendado
 
-## Tema oscuro
+- Primary para CTAs y elementos con mayor prioridad.
+- Secondary strong para mensajes de marca o etiquetas premium.
+- Background + Surface para mantener equilibrio visual y orden.
+- Border para separar contenido sin cargar la composición.
 
-La clase `.dark` se aplica al elemento `<html>`. Solo cambian el fondo, las superficies, el texto principal y el borde:
+---
 
-| Token | Claro | Oscuro |
-| --- | --- | --- |
-| `background` | `#FAF9F6` | `#111827` |
-| `surface` | `#FFFFFF` | `#1F2937` |
-| `surface-muted` | `#F1F5F9` | `#374151` |
-| `text` | `#171717` | `#F1F5F9` |
-| `border` | `#E2E8F0` | `#374151` |
+## 3) Principios visuales
 
-El navbar guarda la elección del usuario; si no existe una preferencia guardada, toma la preferencia del sistema. Al crear componentes que admitan el modo oscuro, usa tokens de fondo, superficie, texto y borde, en vez de fijar `bg-white` o `text-black`.
+- Simplicidad: menos ruido visual, mayor legibilidad.
+- Jerarquía clara: cada sección debe tener un punto focal definido.
+- Consistencia: mantener mismo estilo en botones, cards y etiquetas.
+- Equilibrio: fondo neutro + colores suaves + acentos puntuales.
 
-## Tipografía
+## 4) Estado sugerido de la landing
 
-- `--font-body` y `--font-heading` conservan Arial, Helvetica y sans-serif, que corresponden al estilo aplicado actualmente.
-- `--font-mono` usa Geist Mono, disponible para códigos o cifras tabulares.
-- Geist Sans también está cargada en `app/layout.tsx`, pero no es la fuente aplicada a `body`. Cambiar la fuente de interfaz debe tratarse como una decisión visual explícita.
-- Usa las utilidades tipográficas de Tailwind para jerarquía, peso, tamaño e interlineado; no hacen falta clases CSS por título.
+La landing debe sentirse:
 
-## Bordes y superficies
+- premium pero cercana,
+- clara y profesional,
+- con espacio generoso entre secciones,
+- y con foco en la propuesta principal del negocio.
 
-- Radios disponibles: `rounded-control` para controles, `rounded-card` para tarjetas y `rounded-dialog` para diálogos.
-- Usa bordes finos y neutrales para dividir contenido; reserva sombras de Tailwind para elementos elevados como menús o diálogos.
-- Evita mezclar radios muy distintos en componentes del mismo nivel. En pantallas existentes aparecen desde `rounded-lg` hasta `rounded-[2rem]`.
-
-## Componentes y estados
-
-- Acción primaria: azul marino y texto blanco.
-- Acción secundaria: superficie, borde neutral y texto principal.
-- Estado seleccionado: puede usar terracota, acompañado por texto o icono para no depender solo del color.
-- Estados semánticos disponibles: `success`, `warning` y `error`, cada uno con color, superficie y borde.
-- Conserva indicadores `focus-visible` y nombres accesibles para controles interactivos.
-- Reutiliza `app/components/ui/Icon.tsx` y mantiene coherentes tamaño y trazo.
-
-## Responsive
-
-Diseña primero para móvil y amplía con los breakpoints de Tailwind (`sm`, `md`, `lg`). En tablas anchas, permite desplazamiento horizontal si reducir columnas dañaría la lectura. Mantén controles fáciles de tocar y evita posiciones fijas que se desplacen en pantallas estrechas.
-
-## Uso de tokens en Tailwind
-
-Los tokens semánticos se mapean desde `@theme inline` en `app/globals.css`:
-
-```tsx
-<main className="bg-background text-text">
-  <section className="rounded-card border border-border bg-surface p-5">
-    <p className="text-text-muted">Resumen del período</p>
-    <button className="rounded-control bg-primary px-4 py-2 text-white hover:bg-primary-hover">
-      Guardar
-    </button>
-  </section>
-</main>
-```
-
-Estados semánticos usan `text-success`, `bg-success-surface` y `border-success-border` (con equivalentes `warning` y `error`). El espaciado continúa usando la escala nativa de Tailwind, por ejemplo `p-4`, `px-6` y `gap-4`.
-
-## Archivos de referencia
-
-- `app/globals.css`: tokens, temas e integración con Tailwind.
-- `app/layout.tsx`: fuentes Next.js y estructura raíz.
-- `app/components/ui/`: controles reutilizables.
-- `app/components/layout/`: navegación y estructura de página.
-- `Fase 1/Evidencias grupales/Mockups/`: referencia visual inicial.
-
-## Pendiente de decisión
-
-- Aprobar la paleta y decidir si los dos azules principales se consolidan.
-- Decidir si Geist Sans reemplazará Arial en la interfaz.
-- Definir colores específicos para gráficos y estados del negocio.
-- Revisar contraste de todos los pares de texto y superficie en ambos temas.
+Este sistema visual busca comunicar confianza, orden y acompañamiento contable sin saturar la experiencia.

@@ -449,7 +449,7 @@
   min-height: 100svh;
   display: grid;
   grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
-  background: #fbf9f8;
+  background: var(--background);
   color: var(--text-primary);
   font-family: var(--font-body);
 }

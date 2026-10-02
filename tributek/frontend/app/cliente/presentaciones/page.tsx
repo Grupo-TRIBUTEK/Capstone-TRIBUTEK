@@ -1,10 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
-import BrandLogo from "@/app/components/layout/BrandLogo";
-import ThemeSelect from "@/app/components/layout/Theme";
 import {
   authenticatedFetch,
   clearAuth,
@@ -54,52 +51,8 @@ export default function PresentacionesPage() {
     };
   }, [router]);
 
-  function logout() {
-    clearAuth();
-    router.replace("/login");
-  }
-
   return (
-    <div className="flex min-h-screen flex-col bg-background-subtle">
-      <header className="border-b border-border bg-surface">
-        <nav
-          aria-label="Navegación del portal de clientes"
-          className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-4 px-6 py-4"
-        >
-          <Link href="/cliente" aria-label="TRIBUTEK, panel cliente">
-            <BrandLogo width={112} height={52} priority className="h-auto w-28" />
-          </Link>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/"
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted"
-            >
-              Página principal
-            </Link>
-            <Link
-              href="/cliente"
-              className="rounded-lg px-3 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted"
-            >
-              Panel cliente
-            </Link>
-            <span
-              aria-current="page"
-              className="rounded-lg bg-secondary-surface px-3 py-2 text-sm font-semibold text-secondary-strong"
-            >
-              Presentaciones
-            </span>
-            <ThemeSelect />
-            <button
-              type="button"
-              onClick={logout}
-              className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted"
-            >
-              Cerrar sesión
-            </button>
-          </div>
-        </nav>
-      </header>
-
+    <div className="flex min-h-screen flex-col bg-background">
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10 md:py-14">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-secondary-strong">
           Centro de recursos

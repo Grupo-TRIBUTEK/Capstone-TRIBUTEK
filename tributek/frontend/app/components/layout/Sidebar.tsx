@@ -79,7 +79,8 @@ export default function Sidebar() {
           </details>
         ))}
       </nav>
-      <div className={collapsed ? "md:hidden" : ""}>
+      <div className={`mt-6 flex w-full items-center justify-between gap-3 ${collapsed ? "md:hidden" : ""}`}>
+        <span className="text-sm font-medium text-white">Tema</span>
         <ThemeSelect sidebar />
       </div>
 

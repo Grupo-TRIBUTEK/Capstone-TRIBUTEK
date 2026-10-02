@@ -4,12 +4,12 @@
 
 :root {
   /* Fondos */
-  --background: #faf9f6;            /* Fondo principal */
-  --background-subtle: #f8fafc;     /* Fondo secundario */
+  --background:  #F7F8FA;         /* Fondo principal */
+  --background-subtle: #EEF2F6;  /* Fondo secundario */
 
   /* Superficies */
-  --surface: #ffffff;               /* Tarjetas y paneles */
-  --surface-muted: #f1f5f9;         /* Superficies secundarias */
+  --surface: #FFFFFF;             /* Tarjetas y paneles */
+  --surface-muted: #F1F4F7;       /* Superficies secundarias */
 
   /* Texto */
   --foreground: #171717;            /* Texto principal */
@@ -26,6 +26,7 @@
   --primary-hover: #1f2842;         /* Estado hover */
   --primary-strong: #252f46;        /* Énfasis principal */
   --primary-strong-hover: #344463;  /* Hover del énfasis */
+  --navy: #10254A;
 
   --secondary: #b98b7b;             /* Acento secundario */
   --secondary-strong: #735044;      /* Acento destacado */
@@ -56,6 +57,23 @@
   /* Fuente monoespaciada para código o datos técnicos.
      Está disponible como `font-code`, aunque no se usa hoy en los componentes. */
   --font-mono: Consolas, ui-monospace, monospace;
+
+  /* Títulos y subtítulos: H1, H2, H3 */
+  --font-size-display: clamp(2.875rem, 6vw, 4.875rem);
+  --font-size-h2: clamp(2.188rem, 4vw, 3.438rem);
+  --font-size-h3: 1.563rem;
+
+  /* Contenido: párrafos y elementos de texto */
+  --font-size-body-lg: 1.063rem;
+  --font-size-body: 1rem;
+  --font-size-body-sm: 0.875rem;
+
+  /* Interfaz como: botones, etiquetas, navegación */
+  --font-size-subtitle: 1.125rem; /*este se usa para los subtítulos */
+  --font-size-label: 0.65rem; /*este se usa para las etiquetas */
+  --font-size-nav: 0.813rem; /*este se usa para la navegación */
+  --font-size-button: 0.80rem;
+
 
   /* Radios usados en controles, tarjetas y diálogos */
   --control-radius: 0.5rem;
@@ -163,6 +181,18 @@
   --font-display: var(--font-heading);
   --font-code: var(--font-mono);
 
+  /* tamaño de texto */
+  --text-display: var(--font-size-display);
+  --text-h2: var(--font-size-h2);
+  --text-h3: var(--font-size-h3);
+  --text-body-lg: var(--font-size-body-lg);
+  --text-body: var(--font-size-body);
+  --text-body-sm: var(--font-size-body-sm);
+  --text-subtitle: var(--font-size-subtitle);
+  --text-label: var(--font-size-label);
+  --text-nav: var(--font-size-nav);
+  --text-button: var(--font-size-button);
+
   /* Bordes redondeados */
   --radius-control: var(--control-radius);
   --radius-card: var(--card-radius);
@@ -180,4 +210,71 @@ body {
   background-color: var(--background);
   color: var(--text);
   transition: none;
+}
+
+::selection {
+  background-color: var(--navy);
+  color: #fff;
+}
+
+.hero-left-shadow {
+  background-image: radial-gradient(ellipse 100% 45% at top left, color-mix(in srgb, var(--secondary) 12%, transparent), transparent 100%),
+  radial-gradient(ellipse 100% 45% at bottom , color-mix(in srgb, var(--primary) 11%, transparent), transparent 100%);
+  
+}
+
+.hero-right-shadow {
+  background-image: radial-gradient(ellipse 100% 45% at bottom, color-mix(in srgb, var(--primary) 11%, transparent), transparent 100%);
+}
+
+.hero-gradient-hover:hover {
+  background-size: 220% 100%;
+  animation: hero-gradient-flow 7s ease-in-out infinite alternate;
+}
+
+.hero-gradient-hover:hover {
+  background-image: linear-gradient(120deg, var(--primary), var(--primary-hover));
+}
+
+.hero-label-gradient {
+  color: transparent;
+  background-image: linear-gradient(270deg, var(--primary), var(--secondary-strong));
+  background-size: 220% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: hero-label-gradient-flow 7s linear infinite;
+}
+
+:root.dark .hero-label-gradient {
+  background-image: linear-gradient(270deg, var(--secondary), var(--secondary-strong));
+}
+
+.hero-badge-dot {
+  background-color: var(--secondary-strong);
+  box-shadow: 0 0 7px 1px color-mix(in srgb, var(--secondary-strong) 35%, transparent);
+  animation: hero-dot-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes hero-gradient-flow {
+  to { background-position: 100% 50%; }
+}
+
+@keyframes hero-label-gradient-flow {
+  from { background-position: 100% 50%; }
+  to { background-position: 0% 50%; }
+}
+
+@keyframes hero-dot-pulse {
+  0%, 100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-gradient-hover:hover,
+  .hero-label-gradient,
+  .hero-badge-dot { animation: none; }
 }

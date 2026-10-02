@@ -56,7 +56,6 @@ export default function ThemeSelect({ sidebar = false }: { sidebar?: boolean }) 
   ];
   return (
     <div className={`theme-control${sidebar ? " theme-control-sidebar" : ""}`}>
-      <span>Tema</span>
       <details className="theme-select-menu">
         <summary aria-label={`Tema actual: ${themes.find(option => option.value === theme)?.label}`}>
           <Icon name={themeIcon} className="h-4 w-4" />

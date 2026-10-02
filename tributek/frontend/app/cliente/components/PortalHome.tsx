@@ -49,28 +49,8 @@ export default function PortalHome() {
     return () => { cancelled = true; };
   }, [router]);
 
-  function logout() {
-    clearAuth();
-    router.replace("/login");
-  }
-
   return (
-    <div className="flex min-h-screen flex-col bg-background-subtle">
-      <header className="border-b border-border bg-surface">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">TRIBUTEK</p>
-            <p className="mt-1 text-sm font-semibold text-text-primary">Portal de clientes</p>
-          </div>
-          <Link href="/" className="rounded-lg px-3 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted">
-            Página principal
-          </Link>
-          <button type="button" onClick={logout} className="rounded-lg border border-border px-4 py-2 text-sm font-semibold text-text-primary hover:bg-surface-muted">
-            Cerrar sesión
-          </button>
-        </div>
-      </header>
-
+    <div className="flex min-h-screen flex-col bg-background">
       <main className="mx-auto w-full max-w-6xl flex-1 px-6 py-10">
         <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Panel cliente</p>
         <h1 className="mt-2 text-3xl font-bold text-text-primary">
@@ -100,6 +80,7 @@ export default function PortalHome() {
                     {cliente.telefono && <div><dt className="inline text-slate-500">Teléfono: </dt><dd className="inline text-slate-800">{cliente.telefono}</dd></div>}
                   </dl>
                 )}
+
               </article>
             ))}
           </section>
@@ -132,31 +113,35 @@ export default function PortalHome() {
 
         </section>
 
-        <section className="mt-12" aria-labelledby="portal-futuro-title">
+        <section id="documentos" className="mt-12 scroll-mt-24" aria-labelledby="portal-futuro-title">
           <div className="max-w-3xl">
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-[#8b6254]">Portal de clientes</p>
-            <h2 id="portal-futuro-title" className="mt-2 text-2xl font-bold text-[#252f46]">Funciones en preparación</h2>
-            <p className="mt-2 text-slate-600">Estamos preparando nuevas herramientas para consultar documentos y hacer seguimiento de solicitudes desde este portal.</p>
+            <h2 id="portal-futuro-title" className="mt-2 text-2xl font-bold text-[#252f46]">Obtener y subir documentos</h2>
+            <p className="mt-2 text-slate-600">Accede a tus documentos disponibles y sube respaldos o antecedentes asociados a cada cliente.</p>
           </div>
 
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
               <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Documentos</span>
-              <h3 className="mt-3 text-lg font-bold text-text-primary">Entrega y consulta de antecedentes</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Este espacio permitir&aacute; revisar los documentos solicitados y consultar los antecedentes habilitados para tu cuenta.</p>
-              <span className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">En preparación</span>
+              <h3 className="mt-3 text-lg font-bold text-text-primary">Obtener documentos</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Consulta y descarga los antecedentes que la administradora haya dejado disponibles para revisión.</p>
+              <Link href="/cliente/documentos/obtener" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                Obtener documentos
+              </Link>
             </article>
             <article className="rounded-xl border border-border bg-surface p-5 shadow-sm">
-              <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Seguimiento</span>
-              <h3 className="mt-3 text-lg font-bold text-text-primary">Solicitudes y vencimientos</h3>
-              <p className="mt-2 text-sm leading-relaxed text-slate-600">Este espacio permitir&aacute; revisar el estado de tus solicitudes, sus observaciones y fechas importantes.</p>
-              <span className="mt-4 inline-flex rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-600">En preparación</span>
+              <span className="inline-flex rounded-full bg-secondary-surface px-3 py-1 text-xs font-semibold text-secondary-strong">Carga</span>
+              <h3 className="mt-3 text-lg font-bold text-text-primary">Subir documentos</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-600">Adjunta respaldos, comprobantes o antecedentes para cada cliente y período.</p>
+              <Link href="/cliente/documentos/subir" className="mt-4 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary">
+                Subir documentos
+              </Link>
             </article>
           </div>
 
           <aside className="mt-6 rounded-xl border border-border bg-surface-muted p-5" aria-label="Privacidad de la información">
             <h3 className="font-semibold text-text-primary">Tu información</h3>
-            <p className="mt-1 text-sm leading-relaxed text-text-muted">El portal muestra la información de los clientes vinculados a tu cuenta.</p>
+            <p className="mt-1 text-sm leading-relaxed text-text-muted">El portal muestra la información de los clientes vinculados a tu cuenta y permite gestionar la documentación asociada.</p>
           </aside>
         </section>
       </main>
