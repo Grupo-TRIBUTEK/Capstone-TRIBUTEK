@@ -1,15 +1,25 @@
 @import "tailwindcss";
 /* --- Tokens del tema claro --- */
-/* Aplicando las mejores practicas para definir el diseño del sistema, mas facil, mas intuitivo. A medida que crece el proyecto se hace mas complejo la mantencion a futuro.*/
+/* Aplicando las mejores practicas para definir el diseño del sistema. A medida que el proyecto crece, se hace mas complejo la mantencion a futuro. Tomar en cuenta que el proyecto sufre modificaciones constantemente*/
+/*Puede convivir el uso de talwind y global.css index.css etc*/
+
+/* 
+Tareas pendiente en global
+
+ - limpiar y definir los colores de hover y seprarlo bien en 
+ - definir los movimientos de hover y animaciones de los elementos en .global.css (Verificar si hay que aplicarlo)
+ - definir los bordes de cada elemento y su radio de borde (Verificar si hay que aplicarlo)
+ - definir espaciado en los textos (no se como se llama realmente pero a mi no me da mucha gana hacer eso)
+*/
 
 :root {
   /* Fondos */
-  --background:  #F7F8FA;         /* Fondo principal */
-  --background-subtle: #EEF2F6;  /* Fondo secundario */
+  --background:  #F7F8FA;           /* Fondo principal */
+  --background-subtle: #EEF2F6;     /* Fondo secundario */
 
   /* Superficies */
-  --surface: #FFFFFF;             /* Tarjetas y paneles */
-  --surface-muted: #F1F4F7;       /* Superficies secundarias */
+  --surface: #FFFFFF;               /* Tarjetas y paneles */
+  --surface-muted: #F1F4F7;         /* Superficies secundarias */
 
   /* Texto */
   --foreground: #171717;            /* Texto principal */
@@ -59,7 +69,7 @@
   --font-mono: Consolas, ui-monospace, monospace;
 
   /* Títulos y subtítulos: H1, H2, H3 */
-  --font-size-display: clamp(2.875rem, 6vw, 4.875rem);
+  --font-size-display: clamp(2.875rem, 6vw, 4.500rem);  /* 4.875rem */
   --font-size-h2: clamp(2.188rem, 4vw, 3.438rem);
   --font-size-h3: 1.563rem;
 
@@ -70,7 +80,7 @@
 
   /* Interfaz como: botones, etiquetas, navegación */
   --font-size-subtitle: 1.125rem; /*este se usa para los subtítulos */
-  --font-size-label: 0.65rem; /*este se usa para las etiquetas */
+  --font-size-label: 0.70rem; /*este se usa para las etiquetas */
   --font-size-nav: 0.813rem; /*este se usa para la navegación */
   --font-size-button: 0.80rem;
 
@@ -88,7 +98,8 @@
 
 :root.dark {
   /* Fondos */
-  --background: #101a2d;            /* Fondo principal */
+    /*Color original #101a2d;   */
+  --background: #091426;           /* Fondo principal */
   --background-subtle: #263349;     /* Fondo secundario */
 
   /* Superficies */
@@ -218,15 +229,27 @@ body {
 }
 
 .hero-left-shadow {
-  background-image: radial-gradient(ellipse 100% 45% at top left, color-mix(in srgb, var(--secondary) 12%, transparent), transparent 100%),
-  radial-gradient(ellipse 100% 45% at bottom , color-mix(in srgb, var(--primary) 11%, transparent), transparent 100%);
-  
+  background-image: 
+  radial-gradient(ellipse 90% 45% at top left, 
+  color-mix(in srgb, var(--secondary) 14%, transparent), transparent 100%),
+
+  /* radial-gradient(ellipse 100% 45% at bottom , color-mix(in srgb, var(--primary) 10%, transparent), transparent 100%), */
+
+  radial-gradient(circle 0px at left center, 
+  color-mix(in srgb, var(--primary) 14%, transparent), transparent 100%),
+ 
+  radial-gradient(circle 250px at left center, 
+  color-mix(in srgb, var(--primary) 20%, transparent), transparent 100%);
+
 }
 
-.hero-right-shadow {
-  background-image: radial-gradient(ellipse 100% 45% at bottom, color-mix(in srgb, var(--primary) 11%, transparent), transparent 100%);
+/*Bordeer bottom en hero */
+
+.hero-section {
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 65%, transparent);
 }
 
+/* no se que era esto */
 .hero-gradient-hover:hover {
   background-size: 220% 100%;
   animation: hero-gradient-flow 7s ease-in-out infinite alternate;
@@ -236,17 +259,29 @@ body {
   background-image: linear-gradient(120deg, var(--primary), var(--primary-hover));
 }
 
+/* Inicio del diseño visual de la etiqueta "Contabilidad que impulsa tu futuro". */
 .hero-label-gradient {
   color: transparent;
-  background-image: linear-gradient(270deg, var(--primary), var(--secondary-strong));
-  background-size: 220% 100%;
+  background-image: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    var(--secondary) 50%,
+    var(--primary) 100%
+  );
+  background-size: 200% 100%;
+  background-position: 0% 50%;
   background-clip: text;
   -webkit-background-clip: text;
-  animation: hero-label-gradient-flow 7s linear infinite;
+  animation: hero-label-gradient-flow 4s ease-in-out infinite alternate;
 }
 
 :root.dark .hero-label-gradient {
-  background-image: linear-gradient(270deg, var(--secondary), var(--secondary-strong));
+  background-image: linear-gradient(
+    90deg,
+    var(--primary) 0%,
+    var(--secondary) 50%,
+    var(--primary) 100%
+  );
 }
 
 .hero-badge-dot {
@@ -260,8 +295,8 @@ body {
 }
 
 @keyframes hero-label-gradient-flow {
-  from { background-position: 100% 50%; }
-  to { background-position: 0% 50%; }
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
 }
 
 @keyframes hero-dot-pulse {
@@ -273,8 +308,45 @@ body {
   }
 }
 
+
+
 @media (prefers-reduced-motion: reduce) {
   .hero-gradient-hover:hover,
   .hero-label-gradient,
   .hero-badge-dot { animation: none; }
+
+  .presentation-card {
+    transition: none;
+  }
+
+  .presentation-card:hover {
+    transform: none;
+  }
+}
+
+/* Fondo del panel de login: círculos concéntricos sutiles (esquina inferior derecha). */
+.tk-login aside.login-panel-rings {
+  background-image: repeating-radial-gradient(
+    circle at 0% 118%,
+    transparent 0 75px,
+    color-mix(in srgb, #ffffff 5%, transparent) 74px 76px
+  );
+}
+
+/*Animaciones Hover*/
+/* es mejor tener diferentes efectos hover según el tipo de elemento */
+
+/*Hover por defecto para card div presentacion (panel cliente)*/
+
+.presentation-card {
+  transition:
+    transform 220ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease;
+}
+
+.presentation-card:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--secondary) 55%, var(--border));
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--primary) 14%, transparent);
 }

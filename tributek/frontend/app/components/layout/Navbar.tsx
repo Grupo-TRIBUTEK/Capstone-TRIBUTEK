@@ -22,7 +22,8 @@ export default function Navbar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-background/85 text-foreground backdrop-blur-md">
+    <header className="sticky top-0 z-20 w-full border-b border-border/70 bg-background/75 text-foreground backdrop-blur-md">
+      {/* solo decorativo */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-[linear-gradient(90deg,var(--primary)_0%,var(--secondary)_35%,var(--secondary-strong)_65%,var(--primary)_100%)]"

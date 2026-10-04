@@ -8,6 +8,9 @@
 .theme-select-options button { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; border: 0; border-radius: 6px; padding: 8px 10px; background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
 .theme-select-options button:hover, .theme-select-options button[aria-pressed="true"] { background: var(--secondary-surface); color: var(--text-primary); }
 .theme-select-options button:focus-visible { outline: 2px solid var(--secondary); outline-offset: 1px; }
+/* Los iconos del selector de tema (claro/oscuro/sistema) usan el color secundario. */
+.theme-select-menu summary svg,
+.theme-select-options button svg { color: var(--secondary); }
 .theme-control-sidebar { color: white; display: flex; width: 100%; justify-content: space-between; }
 .theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: white; border-color: #8a96ab; }
 .login-theme { position: absolute; top: 18px; right: 20px; }

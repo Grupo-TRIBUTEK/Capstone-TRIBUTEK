@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { clearAuth, login } from "@/app/features/auth/auth-client";
 import BrandLogo from "@/app/components/layout/BrandLogo";
+import Icon from "@/app/components/ui/Icon";
 
 export default function LoginForm() {
   const router = useRouter();
@@ -45,6 +46,7 @@ export default function LoginForm() {
     <form onSubmit={handleSubmit} className="tk-stack">
       <BrandLogo width={180} height={110} className="h-auto" />
       <div>
+        <p className="tk-login-welcome">Bienvenido de nuevo</p>
         <h1>Ingresa a tu cuenta</h1>
         <p className="tk-subtle">Accede con tu nombre de usuario o correo electrónico.</p>
       </div>
@@ -54,6 +56,7 @@ export default function LoginForm() {
           name="username"
           autoComplete="username"
           required
+          placeholder="usuario@correo.cl"
           value={nombreUsuario}
           onChange={(e) => setNombreUsuario(e.target.value)}
         />
@@ -65,6 +68,7 @@ export default function LoginForm() {
           type="password"
           autoComplete="current-password"
           required
+          placeholder="••••••••"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
@@ -75,9 +79,11 @@ export default function LoginForm() {
         </p>
       )}
       <button className="primary" disabled={isSubmitting}>
-        {isSubmitting ? "Validando…" : "Iniciar sesión"}
+        <Icon name="login" className="h-4 w-4" />
+        {isSubmitting ? "Validando…" : "Entrar a mi cuenta"}
       </button>
       <Link href="/" className="tk-subtle">
+        <Icon name="arrowLeft" className="h-4 w-4" />
         Volver al inicio
       </Link>
     </form>
