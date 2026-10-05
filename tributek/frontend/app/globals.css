@@ -308,10 +308,13 @@ body {
   }
 }
 
+
+
 @media (prefers-reduced-motion: reduce) {
   .hero-gradient-hover:hover,
   .hero-label-gradient,
   .hero-badge-dot { animation: none; }
+
   .presentation-card {
     transition: none;
   }
@@ -331,7 +334,6 @@ body {
 }
 
 /*Animaciones Hover*/
-
 /* es mejor tener diferentes efectos hover según el tipo de elemento */
 
 /*Hover por defecto para card div presentacion (panel cliente)*/

@@ -103,8 +103,6 @@ export default function Hero() {
               />
           </div>
         </div> */}
-<!--    Esto era la integracion de un slider dinamico pero mejor una card  :p    -->
-<!--         <HeroShowcase></HeroShowcase> -->
       </div>
     </section>
   );
