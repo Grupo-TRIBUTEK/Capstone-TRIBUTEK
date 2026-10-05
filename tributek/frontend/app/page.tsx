@@ -25,7 +25,7 @@ export default function Home() {
           <p className="text-label font-semibold uppercase tracking-widest text-secondary-strong">Nuestros servicios</p>
           <h2 id="services-title" className="mt-3 font-[Georgia,serif] text-h2 font-normal leading-tight text-text-primary">Más claridad para tu negocio.</h2>
           <div className="mt-9 grid gap-6 md:grid-cols-3">
-            {services.map((service, index) => <article key={service.title} className="rounded-card border border-border bg-surface p-7"><span className="text-label font-semibold text-secondary-strong">0{index+1}</span><h3 className="mt-5 text-h3 font-semibold">{service.title}</h3><p className="mt-3 text-body leading-relaxed text-text-muted">{service.text}</p></article>)}
+            {services.map((service, index) => <article key={service.title} className="service-card rounded-card border border-border p-7"><span className="text-label font-semibold text-secondary-strong">0{index+1}</span><h3 className="mt-5 text-h3 font-semibold">{service.title}</h3><p className="mt-3 text-body leading-relaxed text-text-muted">{service.text}</p></article>)}
           </div>
         </section>
 

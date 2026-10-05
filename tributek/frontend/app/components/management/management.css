@@ -464,17 +464,43 @@
 }
 .tk-login aside h1 {
   max-width: 510px;
-  font-size: clamp(40px, 4.4vw, 58px);
+  font-size: var(--font-size-h2);
+  font-weight: 400;
   font-family: var(--font-heading);
   line-height: 1.08;
-  letter-spacing: -1.8px;
+  letter-spacing: -0.03em;
   margin: 0;
+}
+.tk-login aside h1 .tk-title-primary {
+  color: #ffffff;
+}
+.tk-login aside h1 .tk-title-secondary {
+  color: var(--secondary);
 }
 .tk-login aside p {
   max-width: 390px;
-  color: #ddd0cb;
+  color: var(--text-muted);
   font-size: 17px;
   line-height: 1.7;
+}
+/* Etiqueta del panel de login: solo texto + punto, en color secundario y
+   tamaño etiqueta (sin fondo ni borde), adaptada al fondo navy. */
+.tk-login-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: flex-start;
+  padding: 0;
+  color: var(--secondary);
+  font-size: var(--font-size-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+}
+.tk-login aside .hero-badge-dot {
+  background-color: var(--secondary);
+  box-shadow: 0 0 7px 1px color-mix(in srgb, var(--secondary) 45%, transparent);
+  animation: none;
 }
 .tk-login main {
   display: flex;
@@ -486,24 +512,38 @@
   width: 100%;
   max-width: 440px;
   padding: 0;
-  gap: 22px;
+  gap: 20px;
 }
 .tk-login form > img {
+  align-self: center;
   width: 158px;
   height: auto;
-  margin: 0 auto 2px;
+  margin: 0 0 2px;
+}
+.tk-login form > div {
+  text-align: center;
 }
 .tk-login form > div h1 {
-  margin: 0 0 7px;
+  margin: 0 0 8px;
   font-size: 30px;
+  font-weight: 400;
   font-family: var(--font-heading);
   line-height: 1.2;
-  letter-spacing: -0.7px;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
 }
 .tk-login form > div p {
   font-size: 14px;
+  font-weight: 400;
   line-height: 1.55;
+}
+.tk-login form .tk-login-welcome {
+  margin: 0 0 8px;
+  color: var(--secondary);
+  font-size: var(--font-size-label);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
 }
 .tk-login form h1 {
   font-size: 30px;
@@ -521,6 +561,7 @@
   border-color: var(--border-muted);
   border-radius: 10px;
   font-size: 16px;
+  font-weight: 400;
 }
 .tk-login form input:focus-visible {
   border-color: var(--secondary);
@@ -530,12 +571,16 @@
 .tk-login form button.primary {
   width: 100%;
   min-height: 48px;
+  margin-top: 4px;
   padding: 12px 24px;
   border: 1px solid var(--primary);
   border-radius: var(--control-radius);
-  font-size: 15px;
+  font-size: var(--font-size-body-sm);
 }
 .tk-login form > a {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   align-self: center;
   font-size: 14px;
   text-decoration: none;
