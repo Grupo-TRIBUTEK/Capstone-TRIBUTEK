@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import Icon, { type IconName } from "../ui/Icon";
 
@@ -90,6 +91,20 @@ export default function Hero() {
             </p>
           </div>
         </div>
+        {/* <div className="w-full">
+          <div className="w-full rounded-[28px] border border-border  p-4 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
+              <Image
+                src="/images/tras-TRIBUTEK.svg"
+                alt="TRIBUTEK"
+                width={1200}
+                height={900}
+                priority
+                className="h-[420px] w-full object-cover"
+              />
+          </div>
+        </div> */}
+<!--    Esto era la integracion de un slider dinamico pero mejor una card  :p    -->
+<!--         <HeroShowcase></HeroShowcase> -->
       </div>
     </section>
   );
