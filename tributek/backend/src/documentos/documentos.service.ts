@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { LocalDocumentStorageService } from './document-storage.service.js';
+import { CargarDocumentoDto } from './dto/cargar-documento.dto.js';
 
 const DEFAULT_DOCUMENT_TYPES = [
   'Boletas de gasto',
@@ -41,9 +42,13 @@ export class DocumentosService {
     }).filter((documento) => this.matchesFilters(documento, filters));
   }
 
+  // QUÉ HACE: valida archivo + datos, crea período/tipo si faltan y guarda el registro.
+  // ERROR INICIAL: `data` era un objeto anónimo copiado a mano del controller.
+  // SOLUCIÓN: usa el mismo `CargarDocumentoDto`; si el controller cambia, esto avisa.
+  // EVITAR: no duplicar la forma del body aquí; importar el DTO.
   async cargar(
     file: { originalname: string; mimetype: string; size: number; buffer: Buffer } | undefined,
-    data: { clienteId?: string; periodo?: string; tipo?: string; estado?: string; observacion?: string },
+    data: CargarDocumentoDto,
     usuarioId: string,
   ) {
     if (!file) throw new BadRequestException('Debes seleccionar un archivo.');
@@ -91,6 +96,7 @@ export class DocumentosService {
         tamanoBytes: BigInt(file.size),
         estado: data.estado || 'RECIBIDO',
         observacion: data.observacion?.trim() || null,
+        // Solo el admin lo ve en el portal del cliente hasta que se habilite (Paso B).
         visibleCliente: false,
       } as any);
     } catch (error) {

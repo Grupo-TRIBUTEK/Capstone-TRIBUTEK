@@ -809,6 +809,13 @@
                   }
                 }
               },
+              "fecha": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/date-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "fechaVencimiento": {
                 "nullable": true,
                 "type": {
@@ -818,6 +825,20 @@
               },
               "id": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "orden": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "parentId": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/int8@1",
                   "kind": "scalar"
@@ -903,6 +924,36 @@
                   "namespace": "public"
                 }
               },
+              "hijos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "parentId"
+                  ]
+                },
+                "to": {
+                  "model": "Gestion",
+                  "namespace": "public"
+                }
+              },
+              "parent": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "parentId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Gestion",
+                  "namespace": "public"
+                }
+              },
               "periodo": {
                 "cardinality": "N:1",
                 "on": {
@@ -969,11 +1020,20 @@
                 "estado": {
                   "column": "estado"
                 },
+                "fecha": {
+                  "column": "fecha"
+                },
                 "fechaVencimiento": {
                   "column": "fecha_vencimiento"
                 },
                 "id": {
                   "column": "id"
+                },
+                "orden": {
+                  "column": "orden"
+                },
+                "parentId": {
+                  "column": "parent_id"
                 },
                 "periodoId": {
                   "column": "periodo_id"
@@ -2904,6 +2964,11 @@
                     "length": 30
                   }
                 },
+                "fecha": {
+                  "codecId": "pg/date-temporal@1",
+                  "nativeType": "date",
+                  "nullable": true
+                },
                 "fecha_vencimiento": {
                   "codecId": "pg/date-temporal@1",
                   "nativeType": "date",
@@ -2917,6 +2982,16 @@
                   },
                   "nativeType": "int8",
                   "nullable": false
+                },
+                "orden": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": true
+                },
+                "parent_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": true
                 },
                 "periodo_id": {
                   "codecId": "pg/int8@1",
@@ -3039,6 +3114,23 @@
                     "namespaceId": "public",
                     "tableName": "usuarios"
                   }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "parent_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "gestiones"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "gestiones"
+                  }
                 }
               ],
               "indexes": [
@@ -3056,6 +3148,14 @@
                   ],
                   "name": "gestiones_creado_por_idx_c3810b44",
                   "prefix": "gestiones_creado_por_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "parent_id"
+                  ],
+                  "name": "gestiones_parent_id_idx_ab33b399",
+                  "prefix": "gestiones_parent_id_idx",
                   "unique": false
                 },
                 {
@@ -4069,7 +4169,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "f1276e92860a884edb9b6fa4c7cda59bd673008087c8823800da08a4c567d111"
+    "storageHash": "4ba31f9318f70b4f508861502d42928c9dbcf0494a7cb1b1fd1466f59eb5c5eb"
   },
   "capabilities": {
     "postgres": {

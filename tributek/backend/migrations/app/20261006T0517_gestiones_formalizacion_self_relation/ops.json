@@ -1,0 +1,209 @@
+[
+  {
+    "id": "column.public.gestiones.fecha",
+    "label": "Add column \"fecha\" to \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "fecha",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"fecha\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "fecha"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"fecha\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\" ADD COLUMN \"fecha\" date"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"fecha\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "fecha"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.gestiones.orden",
+    "label": "Add column \"orden\" to \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "orden",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"orden\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "orden"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"orden\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\" ADD COLUMN \"orden\" int2"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"orden\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "orden"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.gestiones.parent_id",
+    "label": "Add column \"parent_id\" to \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "parent_id",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"parent_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "parent_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"parent_id\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\" ADD COLUMN \"parent_id\" int8"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"parent_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "gestiones",
+          "parent_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_parent_id_idx_ab33b399",
+    "label": "Create index \"gestiones_parent_id_idx_ab33b399\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_parent_id_idx_ab33b399",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_parent_id_idx_ab33b399\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_parent_id_idx_ab33b399\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_parent_id_idx_ab33b399\"",
+        "sql": "CREATE INDEX \"gestiones_parent_id_idx_ab33b399\" ON \"public\".\"gestiones\" (\"parent_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_parent_id_idx_ab33b399\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_parent_id_idx_ab33b399\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_parent_id_fkey",
+    "label": "Add foreign key \"gestiones_parent_id_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_parent_id_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_parent_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_parent_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_parent_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_parent_id_fkey\"\nFOREIGN KEY (\"parent_id\")\nREFERENCES \"public\".\"gestiones\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_parent_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_parent_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  }
+]

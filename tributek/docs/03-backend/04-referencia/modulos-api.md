@@ -60,6 +60,31 @@ listar o descargar documentos no está declarada en `DocumentosController`;
 defínela y verifícala antes de considerar estas rutas listas para el Portal
 Cliente.
 
+## Gestiones — `/gestiones`
+
+Módulo nuevo (Fase 2 · Formalizaciones). Todas las rutas declaran
+`JwtAuthGuard` + `RolesGuard` con rol `ADMIN` (o ID `1`).
+
+| Método y ruta | Función |
+| --- | --- |
+| `GET /gestiones/formalizacion/:clienteId` | Devuelve el checklist `{ steps: [{name, state, date}], note }`; `{ steps: [], note: "" }` si no existe proceso. |
+| `PUT /gestiones/formalizacion/:clienteId` | Reemplazo total del checklist en transacción (borra cabecera + hijos y crea 12 filas). Body: `{ steps[11], note }`. Devuelve el checklist guardado. |
+| `GET /gestiones?clienteId=&tipo=` | Listado genérico de filas con filtros opcionales; alimenta la tabla de progreso de todos los clientes. |
+
+Reglas de negocio (detalle en `vistas/formalizaciones.md`):
+
+- Modelo: **1 cabecera** (`parent_id IS NULL`, nota global en `descripcion`) +
+  **11 pasos hijos** (`parent_id` → cabecera, `orden` 1..11, FK `ON DELETE CASCADE`).
+- Validación del `PUT`: exactamente los 11 nombres del catálogo de Formalización,
+  sin repetir; estado ∈ {Pendiente, En proceso, Completado, No corresponde};
+  fecha `YYYY-MM-DD` o vacía; nota ≤ 1000 caracteres.
+- `visible_cliente = true` en cabecera y pasos.
+- Estado de la cabecera se deriva: `Completado` si todos los pasos están
+  `Completado`/`No corresponde`, si no `En proceso`.
+
+Verificado (2026-10-06): 401 sin token, 403 rol cliente, 200 admin, 400 en
+validaciones, reemplazo total sin duplicados (12 filas por cliente).
+
 ## Rutas aún no registradas
 
 `src/usuario/` contiene archivos vacíos para controller y module, y

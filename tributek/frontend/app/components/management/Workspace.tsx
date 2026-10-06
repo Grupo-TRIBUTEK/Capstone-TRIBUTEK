@@ -81,6 +81,17 @@ export default function Workspace({ view }: { view: View }) {
   const [editDeferred, setEditDeferred] = useState<Deferral | null>(null);
   const [invoice, setInvoice] = useState<Invoice | null>(null);
   const [processClient, setProcessClient] = useState<ClientView | null>(null);
+  // Filas de /gestiones (cabecera + pasos) para la tabla de Formalizaciones.
+  const [gestionesReload, setGestionesReload] = useState(0);
+  const [gestiones, setGestiones] = useState<
+    {
+      id: string;
+      clienteId: string;
+      parentId: string | null;
+      titulo: string;
+      estado: string;
+    }[]
+  >([]);
   const [paymentFilter, setPaymentFilter] = useState("");
   const [allPayments, setAllPayments] = useState(false);
   useEffect(() => {
@@ -129,35 +140,69 @@ export default function Workspace({ view }: { view: View }) {
     void getClients();
     return () => controller.abort();
   }, [store.ready, store.error, reload]);
+  // Tabla de Formalizaciones: filas (cabecera + pasos) desde el backend.
+  // En fallo/401 la tabla queda vacía ("Sin iniciar") sin romper el resto de la vista.
+  useEffect(() => {
+    const controller = new AbortController();
+    authenticatedFetch(
+      `/gestiones?tipo=${encodeURIComponent("Formalización")}`,
+      { signal: controller.signal },
+    )
+      .then(async (r) => {
+        if (!r.ok) return;
+        const rows = (await r.json()) as {
+          clienteId: unknown;
+          parentId: unknown;
+        }[];
+        if (controller.signal.aborted || !Array.isArray(rows)) return;
+        setGestiones(
+          rows.map((g) => ({
+            id: String((g as { id?: unknown }).id ?? ""),
+            clienteId: String(g.clienteId),
+            parentId:
+              g.parentId === null || g.parentId === undefined
+                ? null
+                : String(g.parentId),
+            titulo: String((g as { titulo?: unknown }).titulo ?? ""),
+            estado: String((g as { estado?: unknown }).estado ?? ""),
+          })),
+        );
+      })
+      .catch(() => {
+        /* sin conexión la tabla queda vacía; el modal muestra su propio error */
+      });
+    return () => controller.abort();
+  }, [gestionesReload]);
   // El directorio de clientes tiene como fuente de verdad el backend. Los
   // datos locales guardan pagos y períodos; nunca deben inventar filas aquí.
-  const clients: ClientView[] = view === "clientes"
-    ? remote.map((r) => {
-        const local = data.clients.find((c) => c.id === r.id);
-        const profile = meta.profiles[r.id];
-        return {
-          id: r.id,
-          name: r.nombreRazonSocial,
-          phone: r.telefono || "",
-          note: local?.note || "",
-          documentUrl: local?.documentUrl || "",
-          rut: r.rut,
-          machine: profile?.machine || "",
-          fee: profile?.fee || 0,
-          active: r.estado.toLowerCase() !== "inactivo",
-        };
-      })
-    : data.clients.map((c) => {
-        const r = remote.find((r) => r.id === c.id);
-        const profile = meta.profiles[c.id];
-        return {
-          ...c,
-          rut: r?.rut || profile?.rut || "",
-          machine: profile?.machine || "",
-          fee: profile?.fee || 0,
-          active: r ? r.estado.toLowerCase() !== "inactivo" : (profile?.active ?? true),
-        };
-      });
+  const clients: ClientView[] =
+    view === "clientes" || view === "formalizaciones"
+      ? remote.map((r) => {
+          const local = data.clients.find((c) => c.id === r.id);
+          const profile = meta.profiles[r.id];
+          return {
+            id: r.id,
+            name: r.nombreRazonSocial,
+            phone: r.telefono || "",
+            note: local?.note || "",
+            documentUrl: local?.documentUrl || "",
+            rut: r.rut,
+            machine: profile?.machine || "",
+            fee: profile?.fee || 0,
+            active: r.estado.toLowerCase() !== "inactivo",
+          };
+        })
+      : data.clients.map((c) => {
+          const r = remote.find((r) => r.id === c.id);
+          const profile = meta.profiles[c.id];
+          return {
+            ...c,
+            rut: r?.rut || profile?.rut || "",
+            machine: profile?.machine || "",
+            fee: profile?.fee || 0,
+            active: r ? r.estado.toLowerCase() !== "inactivo" : (profile?.active ?? true),
+          };
+        });
   const visible = clients.filter(
     (c) =>
       `${c.name} ${c.rut}`
@@ -1059,15 +1104,17 @@ export default function Workspace({ view }: { view: View }) {
               </thead>
               <tbody>
                 {visible.map((c) => {
-                  const process = meta.processes.find(
-                    (p) => p.clientId === c.id,
+                  // Fuente de verdad: cabecera (parentId null) + sus 11 pasos.
+                  const cabecera = gestiones.find(
+                    (g) => g.clienteId === c.id && !g.parentId,
                   );
-                  const all =
-                    process?.steps.filter(
-                      (s) => s.state !== "No corresponde",
-                    ) || [];
+                  const all = cabecera
+                    ? gestiones
+                        .filter((g) => g.parentId === cabecera.id)
+                        .filter((s) => s.estado !== "No corresponde")
+                    : [];
                   const done = all.filter(
-                    (s) => s.state === "Completado",
+                    (s) => s.estado === "Completado",
                   ).length;
                   return (
                     <tr key={c.id}>
@@ -1086,12 +1133,12 @@ export default function Workspace({ view }: { view: View }) {
                         </div>
                       </td>
                       <td>
-                        {all.find((s) => s.state !== "Completado")?.name ||
-                          (!process ? "Sin iniciar" : "Completado")}
+                        {all.find((s) => s.estado !== "Completado")?.titulo ||
+                          (!cabecera ? "Sin iniciar" : "Completado")}
                       </td>
                       <td>
                         <button onClick={() => setProcessClient(c)}>
-                          {process ? "Ver proceso" : "Iniciar proceso"}
+                          {cabecera ? "Ver proceso" : "Iniciar proceso"}
                         </button>
                       </td>
                     </tr>
@@ -1305,10 +1352,9 @@ export default function Workspace({ view }: { view: View }) {
       )}
       {processClient && (
         <Formalization
-          data={data}
           client={processClient}
           period={period}
-          save={save}
+          onSaved={() => setGestionesReload((r) => r + 1)}
           onClose={() => setProcessClient(null)}
         />
       )}

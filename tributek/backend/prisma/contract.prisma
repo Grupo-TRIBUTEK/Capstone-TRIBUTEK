@@ -257,12 +257,17 @@ model Gestion {
   creadoPor        BigInt?         @map("creado_por")
   creadoEn         Timestamptz?    @map("creado_en")
   actualizadoEn    Timestamptz?    @map("actualizado_en")
+  parentId         BigInt?         @map("parent_id")
+  orden            SmallInt?       @map("orden")
+  fecha            Date?           @map("fecha")
 
   cliente          Cliente         @relation(fields:[clienteId], references:[id])
   servicio         Servicio?       @relation(fields:[servicioId], references:[id])
   periodo          PeriodoCliente? @relation(fields:[periodoId], references:[id])
   responsable      Usuario?        @relation("GestionResponsable", fields:[responsableId], references:[id])
   creador          Usuario?        @relation("GestionCreadaPor", fields:[creadoPor], references:[id])
+  parent           Gestion?        @relation("GestionParent", fields:[parentId], references:[id], onDelete: Cascade)
+  hijos            Gestion[]       @relation("GestionParent")
 
   @@map("gestiones")
 }
