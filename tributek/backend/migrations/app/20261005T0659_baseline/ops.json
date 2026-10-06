@@ -1,0 +1,2845 @@
+[
+  {
+    "id": "schema.public",
+    "label": "Create schema \"public\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [],
+    "execute": [
+      {
+        "description": "Create schema \"public\"",
+        "sql": "CREATE SCHEMA IF NOT EXISTS \"public\"",
+        "params": []
+      }
+    ],
+    "postcheck": []
+  },
+  {
+    "id": "table.auditoria",
+    "label": "Create table \"auditoria\"",
+    "summary": "Creates table \"auditoria\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "auditoria"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"auditoria\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditoria\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"auditoria\"",
+        "sql": "CREATE TABLE \"public\".\"auditoria\" (\n  \"accion\" character varying(80) NOT NULL,\n  \"creado_en\" timestamptz,\n  \"detalle\" character varying(1000),\n  \"entidad\" character varying(80) NOT NULL,\n  \"entidad_id\" int8,\n  \"id\" BIGSERIAL NOT NULL,\n  \"usuario_id\" int8,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"auditoria\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditoria\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.cliente_servicio",
+    "label": "Create table \"cliente_servicio\"",
+    "summary": "Creates table \"cliente_servicio\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"cliente_servicio\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"cliente_servicio\"",
+        "sql": "CREATE TABLE \"public\".\"cliente_servicio\" (\n  \"cliente_id\" int8 NOT NULL,\n  \"estado\" character varying(30) NOT NULL,\n  \"fecha_inicio\" date,\n  \"fecha_termino\" date,\n  \"id\" BIGSERIAL NOT NULL,\n  \"servicio_id\" int8 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"cliente_servicio\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.clientes",
+    "label": "Create table \"clientes\"",
+    "summary": "Creates table \"clientes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "clientes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"clientes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"clientes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"clientes\"",
+        "sql": "CREATE TABLE \"public\".\"clientes\" (\n  \"actualizado_en\" timestamptz,\n  \"contacto_principal\" character varying(120),\n  \"creado_en\" timestamptz,\n  \"direccion\" character varying(250),\n  \"email_contacto\" character varying(150),\n  \"estado\" character varying(30) NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre_razon_social\" character varying(180) NOT NULL,\n  \"rut\" character varying(20) NOT NULL,\n  \"telefono\" character varying(30),\n  \"tipo_cliente\" character varying(20) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"clientes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"clientes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.documentos",
+    "label": "Create table \"documentos\"",
+    "summary": "Creates table \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"documentos\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"documentos\"",
+        "sql": "CREATE TABLE \"public\".\"documentos\" (\n  \"cargado_en\" timestamptz,\n  \"cargado_por\" int8 NOT NULL,\n  \"cliente_id\" int8 NOT NULL,\n  \"estado\" character varying(30) NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mime_type\" character varying(100) NOT NULL,\n  \"nombre_archivo\" character varying(255) NOT NULL,\n  \"observacion\" character varying(1000),\n  \"periodo_id\" int8 NOT NULL,\n  \"tamano_bytes\" int8 NOT NULL,\n  \"tipo_documento_id\" int8 NOT NULL,\n  \"url_archivo\" character varying(500) NOT NULL,\n  \"visible_cliente\" bool DEFAULT true NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"documentos\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.gestiones",
+    "label": "Create table \"gestiones\"",
+    "summary": "Creates table \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"gestiones\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"gestiones\"",
+        "sql": "CREATE TABLE \"public\".\"gestiones\" (\n  \"actualizado_en\" timestamptz,\n  \"cliente_id\" int8 NOT NULL,\n  \"creado_en\" timestamptz,\n  \"creado_por\" int8,\n  \"descripcion\" character varying(1000),\n  \"estado\" character varying(30) NOT NULL,\n  \"fecha_vencimiento\" date,\n  \"id\" BIGSERIAL NOT NULL,\n  \"periodo_id\" int8,\n  \"responsable_id\" int8,\n  \"servicio_id\" int8,\n  \"tipo\" character varying(80),\n  \"titulo\" character varying(180) NOT NULL,\n  \"visible_cliente\" bool DEFAULT true NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"gestiones\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.periodos_cliente",
+    "label": "Create table \"periodos_cliente\"",
+    "summary": "Creates table \"periodos_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "periodos_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"periodos_cliente\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"periodos_cliente\"",
+        "sql": "CREATE TABLE \"public\".\"periodos_cliente\" (\n  \"anio\" int2 NOT NULL,\n  \"cerrado\" bool DEFAULT false NOT NULL,\n  \"cliente_id\" int8 NOT NULL,\n  \"creado_en\" timestamptz,\n  \"estado_contable\" character varying(30) NOT NULL,\n  \"fecha_vencimiento\" date,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes\" int2 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"periodos_cliente\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.proyecciones_f29",
+    "label": "Create table \"proyecciones_f29\"",
+    "summary": "Creates table \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"proyecciones_f29\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"proyecciones_f29\"",
+        "sql": "CREATE TABLE \"public\".\"proyecciones_f29\" (\n  \"documento_generado\" int8,\n  \"estado\" character varying(30) NOT NULL,\n  \"generado_en\" timestamptz,\n  \"generado_por\" int8,\n  \"id\" BIGSERIAL NOT NULL,\n  \"impuesto_estimado\" numeric(14,2) NOT NULL,\n  \"iva_credito\" numeric(14,2) NOT NULL,\n  \"iva_debito\" numeric(14,2) NOT NULL,\n  \"periodo_id\" int8 NOT NULL,\n  \"ppm\" numeric(14,2) NOT NULL,\n  \"remanente_anterior\" numeric(14,2) NOT NULL,\n  \"retenciones\" numeric(14,2) NOT NULL,\n  \"revisado_por\" int8,\n  \"total_estimado\" numeric(14,2) NOT NULL,\n  \"version\" int4 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"proyecciones_f29\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.roles",
+    "label": "Create table \"roles\"",
+    "summary": "Creates table \"roles\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"roles\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"roles\"",
+        "sql": "CREATE TABLE \"public\".\"roles\" (\n  \"descripcion\" character varying(150),\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre\" character varying(30) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"roles\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.servicios",
+    "label": "Create table \"servicios\"",
+    "summary": "Creates table \"servicios\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "servicios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"servicios\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"servicios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"servicios\"",
+        "sql": "CREATE TABLE \"public\".\"servicios\" (\n  \"activo\" bool DEFAULT true NOT NULL,\n  \"descripcion\" character varying(250),\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre\" character varying(100) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"servicios\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"servicios\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.tipos_documento",
+    "label": "Create table \"tipos_documento\"",
+    "summary": "Creates table \"tipos_documento\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "tipos_documento"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"tipos_documento\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tipos_documento\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"tipos_documento\"",
+        "sql": "CREATE TABLE \"public\".\"tipos_documento\" (\n  \"activo\" bool DEFAULT true NOT NULL,\n  \"area\" character varying(30) NOT NULL,\n  \"descripcion\" character varying(250),\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre\" character varying(140) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"tipos_documento\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"tipos_documento\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.trabajadores",
+    "label": "Create table \"trabajadores\"",
+    "summary": "Creates table \"trabajadores\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "trabajadores"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"trabajadores\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"trabajadores\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"trabajadores\"",
+        "sql": "CREATE TABLE \"public\".\"trabajadores\" (\n  \"cargo\" character varying(120) NOT NULL,\n  \"cliente_id\" int8 NOT NULL,\n  \"creado_en\" timestamptz,\n  \"estado\" character varying(30) NOT NULL,\n  \"fecha_ingreso\" date NOT NULL,\n  \"fecha_termino\" date,\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre\" character varying(150) NOT NULL,\n  \"rut\" character varying(20) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"trabajadores\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"trabajadores\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.transacciones",
+    "label": "Create table \"transacciones\"",
+    "summary": "Creates table \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"transacciones\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"transacciones\"",
+        "sql": "CREATE TABLE \"public\".\"transacciones\" (\n  \"categoria\" character varying(100),\n  \"cliente_id\" int8 NOT NULL,\n  \"creado_en\" timestamptz,\n  \"creado_por\" int8,\n  \"descripcion\" character varying(300) NOT NULL,\n  \"direccion\" character varying(15) NOT NULL,\n  \"estado_revision\" character varying(30) NOT NULL,\n  \"fecha\" date NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"iva\" numeric(14,2) NOT NULL,\n  \"monto_exento\" numeric(14,2) NOT NULL,\n  \"monto_neto\" numeric(14,2) NOT NULL,\n  \"monto_total\" numeric(14,2) NOT NULL,\n  \"observacion\" character varying(1000),\n  \"periodo_id\" int8 NOT NULL,\n  \"revisado_en\" timestamptz,\n  \"revisado_por\" int8,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"transacciones\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.usuario_cliente",
+    "label": "Create table \"usuario_cliente\"",
+    "summary": "Creates table \"usuario_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "usuario_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"usuario_cliente\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"usuario_cliente\"",
+        "sql": "CREATE TABLE \"public\".\"usuario_cliente\" (\n  \"cliente_id\" int8 NOT NULL,\n  \"es_principal\" bool DEFAULT false NOT NULL,\n  \"usuario_id\" int8 NOT NULL,\n  PRIMARY KEY (\"usuario_id\", \"cliente_id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"usuario_cliente\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.usuarios",
+    "label": "Create table \"usuarios\"",
+    "summary": "Creates table \"usuarios\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "usuarios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"usuarios\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"usuarios\"",
+        "sql": "CREATE TABLE \"public\".\"usuarios\" (\n  \"activo\" bool DEFAULT true NOT NULL,\n  \"actualizado_en\" timestamptz,\n  \"creado_en\" timestamptz,\n  \"email\" character varying(150),\n  \"id\" BIGSERIAL NOT NULL,\n  \"nombre\" character varying(120) NOT NULL,\n  \"nombre_usuario\" character varying(80) NOT NULL,\n  \"password_hash\" character varying(255) NOT NULL,\n  \"rol_id\" int8 NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"usuarios\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.cliente_servicio.cliente_servicio_cliente_id_servicio_id_key",
+    "label": "Add unique constraint on \"cliente_servicio\" (cliente_id, servicio_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "cliente_servicio_cliente_id_servicio_id_key",
+        "table": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"cliente_servicio_cliente_id_servicio_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_cliente_id_servicio_id_key",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"cliente_servicio_cliente_id_servicio_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"cliente_servicio\" ADD CONSTRAINT \"cliente_servicio_cliente_id_servicio_id_key\" UNIQUE (\"cliente_id\", \"servicio_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"cliente_servicio_cliente_id_servicio_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_cliente_id_servicio_id_key",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.clientes.clientes_rut_key",
+    "label": "Add unique constraint on \"clientes\" (rut)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "clientes_rut_key",
+        "table": "clientes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"clientes_rut_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clientes_rut_key",
+          "public",
+          "\"public\".\"clientes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"clientes_rut_key\"",
+        "sql": "ALTER TABLE \"public\".\"clientes\" ADD CONSTRAINT \"clientes_rut_key\" UNIQUE (\"rut\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"clientes_rut_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "clientes_rut_key",
+          "public",
+          "\"public\".\"clientes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.periodos_cliente.periodos_cliente_cliente_id_anio_mes_key",
+    "label": "Add unique constraint on \"periodos_cliente\" (cliente_id, anio, mes)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "periodos_cliente_cliente_id_anio_mes_key",
+        "table": "periodos_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"periodos_cliente_cliente_id_anio_mes_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "periodos_cliente_cliente_id_anio_mes_key",
+          "public",
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"periodos_cliente_cliente_id_anio_mes_key\"",
+        "sql": "ALTER TABLE \"public\".\"periodos_cliente\" ADD CONSTRAINT \"periodos_cliente_cliente_id_anio_mes_key\" UNIQUE (\"cliente_id\", \"anio\", \"mes\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"periodos_cliente_cliente_id_anio_mes_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "periodos_cliente_cliente_id_anio_mes_key",
+          "public",
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.roles.roles_nombre_key",
+    "label": "Add unique constraint on \"roles\" (nombre)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "roles_nombre_key",
+        "table": "roles"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"roles_nombre_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_nombre_key",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"roles_nombre_key\"",
+        "sql": "ALTER TABLE \"public\".\"roles\" ADD CONSTRAINT \"roles_nombre_key\" UNIQUE (\"nombre\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"roles_nombre_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "roles_nombre_key",
+          "public",
+          "\"public\".\"roles\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.servicios.servicios_nombre_key",
+    "label": "Add unique constraint on \"servicios\" (nombre)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "servicios_nombre_key",
+        "table": "servicios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"servicios_nombre_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "servicios_nombre_key",
+          "public",
+          "\"public\".\"servicios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"servicios_nombre_key\"",
+        "sql": "ALTER TABLE \"public\".\"servicios\" ADD CONSTRAINT \"servicios_nombre_key\" UNIQUE (\"nombre\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"servicios_nombre_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "servicios_nombre_key",
+          "public",
+          "\"public\".\"servicios\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.tipos_documento.tipos_documento_nombre_key",
+    "label": "Add unique constraint on \"tipos_documento\" (nombre)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "tipos_documento_nombre_key",
+        "table": "tipos_documento"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"tipos_documento_nombre_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tipos_documento_nombre_key",
+          "public",
+          "\"public\".\"tipos_documento\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"tipos_documento_nombre_key\"",
+        "sql": "ALTER TABLE \"public\".\"tipos_documento\" ADD CONSTRAINT \"tipos_documento_nombre_key\" UNIQUE (\"nombre\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"tipos_documento_nombre_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "tipos_documento_nombre_key",
+          "public",
+          "\"public\".\"tipos_documento\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.usuarios.usuarios_email_key",
+    "label": "Add unique constraint on \"usuarios\" (email)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "usuarios_email_key",
+        "table": "usuarios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"usuarios_email_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_email_key",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"usuarios_email_key\"",
+        "sql": "ALTER TABLE \"public\".\"usuarios\" ADD CONSTRAINT \"usuarios_email_key\" UNIQUE (\"email\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"usuarios_email_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_email_key",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.usuarios.usuarios_nombre_usuario_key",
+    "label": "Add unique constraint on \"usuarios\" (nombre_usuario)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "usuarios_nombre_usuario_key",
+        "table": "usuarios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"usuarios_nombre_usuario_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_nombre_usuario_key",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"usuarios_nombre_usuario_key\"",
+        "sql": "ALTER TABLE \"public\".\"usuarios\" ADD CONSTRAINT \"usuarios_nombre_usuario_key\" UNIQUE (\"nombre_usuario\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"usuarios_nombre_usuario_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_nombre_usuario_key",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.auditoria.auditoria_usuario_id_idx_65b6616a",
+    "label": "Create index \"auditoria_usuario_id_idx_65b6616a\" on \"auditoria\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "auditoria_usuario_id_idx_65b6616a",
+        "table": "auditoria"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"auditoria_usuario_id_idx_65b6616a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditoria_usuario_id_idx_65b6616a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"auditoria_usuario_id_idx_65b6616a\"",
+        "sql": "CREATE INDEX \"auditoria_usuario_id_idx_65b6616a\" ON \"public\".\"auditoria\" (\"usuario_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"auditoria_usuario_id_idx_65b6616a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"auditoria_usuario_id_idx_65b6616a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.cliente_servicio.cliente_servicio_cliente_id_idx_9196b84e",
+    "label": "Create index \"cliente_servicio_cliente_id_idx_9196b84e\" on \"cliente_servicio\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "cliente_servicio_cliente_id_idx_9196b84e",
+        "table": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"cliente_servicio_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"cliente_servicio_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"cliente_servicio_cliente_id_idx_9196b84e\" ON \"public\".\"cliente_servicio\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"cliente_servicio_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.cliente_servicio.cliente_servicio_servicio_id_idx_857c9d89",
+    "label": "Create index \"cliente_servicio_servicio_id_idx_857c9d89\" on \"cliente_servicio\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "cliente_servicio_servicio_id_idx_857c9d89",
+        "table": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"cliente_servicio_servicio_id_idx_857c9d89\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio_servicio_id_idx_857c9d89\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"cliente_servicio_servicio_id_idx_857c9d89\"",
+        "sql": "CREATE INDEX \"cliente_servicio_servicio_id_idx_857c9d89\" ON \"public\".\"cliente_servicio\" (\"servicio_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"cliente_servicio_servicio_id_idx_857c9d89\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"cliente_servicio_servicio_id_idx_857c9d89\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentos.documentos_cargado_por_idx_895d3a3b",
+    "label": "Create index \"documentos_cargado_por_idx_895d3a3b\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentos_cargado_por_idx_895d3a3b",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentos_cargado_por_idx_895d3a3b\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_cargado_por_idx_895d3a3b\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentos_cargado_por_idx_895d3a3b\"",
+        "sql": "CREATE INDEX \"documentos_cargado_por_idx_895d3a3b\" ON \"public\".\"documentos\" (\"cargado_por\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentos_cargado_por_idx_895d3a3b\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_cargado_por_idx_895d3a3b\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentos.documentos_cliente_id_idx_9196b84e",
+    "label": "Create index \"documentos_cliente_id_idx_9196b84e\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentos_cliente_id_idx_9196b84e",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentos_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentos_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"documentos_cliente_id_idx_9196b84e\" ON \"public\".\"documentos\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentos_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentos.documentos_periodo_id_idx_0aa2ba5e",
+    "label": "Create index \"documentos_periodo_id_idx_0aa2ba5e\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentos_periodo_id_idx_0aa2ba5e",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentos_periodo_id_idx_0aa2ba5e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentos_periodo_id_idx_0aa2ba5e\"",
+        "sql": "CREATE INDEX \"documentos_periodo_id_idx_0aa2ba5e\" ON \"public\".\"documentos\" (\"periodo_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentos_periodo_id_idx_0aa2ba5e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.documentos.documentos_tipo_documento_id_idx_73afd756",
+    "label": "Create index \"documentos_tipo_documento_id_idx_73afd756\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "documentos_tipo_documento_id_idx_73afd756",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"documentos_tipo_documento_id_idx_73afd756\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_tipo_documento_id_idx_73afd756\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"documentos_tipo_documento_id_idx_73afd756\"",
+        "sql": "CREATE INDEX \"documentos_tipo_documento_id_idx_73afd756\" ON \"public\".\"documentos\" (\"tipo_documento_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"documentos_tipo_documento_id_idx_73afd756\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"documentos_tipo_documento_id_idx_73afd756\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_cliente_id_idx_9196b84e",
+    "label": "Create index \"gestiones_cliente_id_idx_9196b84e\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_cliente_id_idx_9196b84e",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"gestiones_cliente_id_idx_9196b84e\" ON \"public\".\"gestiones\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_creado_por_idx_c3810b44",
+    "label": "Create index \"gestiones_creado_por_idx_c3810b44\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_creado_por_idx_c3810b44",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_creado_por_idx_c3810b44\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_creado_por_idx_c3810b44\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_creado_por_idx_c3810b44\"",
+        "sql": "CREATE INDEX \"gestiones_creado_por_idx_c3810b44\" ON \"public\".\"gestiones\" (\"creado_por\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_creado_por_idx_c3810b44\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_creado_por_idx_c3810b44\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_periodo_id_idx_0aa2ba5e",
+    "label": "Create index \"gestiones_periodo_id_idx_0aa2ba5e\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_periodo_id_idx_0aa2ba5e",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_periodo_id_idx_0aa2ba5e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_periodo_id_idx_0aa2ba5e\"",
+        "sql": "CREATE INDEX \"gestiones_periodo_id_idx_0aa2ba5e\" ON \"public\".\"gestiones\" (\"periodo_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_periodo_id_idx_0aa2ba5e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_responsable_id_idx_24040e21",
+    "label": "Create index \"gestiones_responsable_id_idx_24040e21\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_responsable_id_idx_24040e21",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_responsable_id_idx_24040e21\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_responsable_id_idx_24040e21\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_responsable_id_idx_24040e21\"",
+        "sql": "CREATE INDEX \"gestiones_responsable_id_idx_24040e21\" ON \"public\".\"gestiones\" (\"responsable_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_responsable_id_idx_24040e21\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_responsable_id_idx_24040e21\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.gestiones.gestiones_servicio_id_idx_857c9d89",
+    "label": "Create index \"gestiones_servicio_id_idx_857c9d89\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "gestiones_servicio_id_idx_857c9d89",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"gestiones_servicio_id_idx_857c9d89\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_servicio_id_idx_857c9d89\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"gestiones_servicio_id_idx_857c9d89\"",
+        "sql": "CREATE INDEX \"gestiones_servicio_id_idx_857c9d89\" ON \"public\".\"gestiones\" (\"servicio_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"gestiones_servicio_id_idx_857c9d89\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"gestiones_servicio_id_idx_857c9d89\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.periodos_cliente.periodos_cliente_cliente_id_idx_9196b84e",
+    "label": "Create index \"periodos_cliente_cliente_id_idx_9196b84e\" on \"periodos_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "periodos_cliente_cliente_id_idx_9196b84e",
+        "table": "periodos_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"periodos_cliente_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"periodos_cliente_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"periodos_cliente_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"periodos_cliente_cliente_id_idx_9196b84e\" ON \"public\".\"periodos_cliente\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"periodos_cliente_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"periodos_cliente_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.proyecciones_f29.proyecciones_f29_documento_generado_idx_5af819a0",
+    "label": "Create index \"proyecciones_f29_documento_generado_idx_5af819a0\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "proyecciones_f29_documento_generado_idx_5af819a0",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"proyecciones_f29_documento_generado_idx_5af819a0\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_documento_generado_idx_5af819a0\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"proyecciones_f29_documento_generado_idx_5af819a0\"",
+        "sql": "CREATE INDEX \"proyecciones_f29_documento_generado_idx_5af819a0\" ON \"public\".\"proyecciones_f29\" (\"documento_generado\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"proyecciones_f29_documento_generado_idx_5af819a0\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_documento_generado_idx_5af819a0\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.proyecciones_f29.proyecciones_f29_generado_por_idx_abeb8a78",
+    "label": "Create index \"proyecciones_f29_generado_por_idx_abeb8a78\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "proyecciones_f29_generado_por_idx_abeb8a78",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"proyecciones_f29_generado_por_idx_abeb8a78\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_generado_por_idx_abeb8a78\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"proyecciones_f29_generado_por_idx_abeb8a78\"",
+        "sql": "CREATE INDEX \"proyecciones_f29_generado_por_idx_abeb8a78\" ON \"public\".\"proyecciones_f29\" (\"generado_por\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"proyecciones_f29_generado_por_idx_abeb8a78\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_generado_por_idx_abeb8a78\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.proyecciones_f29.proyecciones_f29_periodo_id_idx_0aa2ba5e",
+    "label": "Create index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "proyecciones_f29_periodo_id_idx_0aa2ba5e",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\"",
+        "sql": "CREATE INDEX \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" ON \"public\".\"proyecciones_f29\" (\"periodo_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.proyecciones_f29.proyecciones_f29_revisado_por_idx_d61c6583",
+    "label": "Create index \"proyecciones_f29_revisado_por_idx_d61c6583\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "proyecciones_f29_revisado_por_idx_d61c6583",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"proyecciones_f29_revisado_por_idx_d61c6583\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_revisado_por_idx_d61c6583\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"proyecciones_f29_revisado_por_idx_d61c6583\"",
+        "sql": "CREATE INDEX \"proyecciones_f29_revisado_por_idx_d61c6583\" ON \"public\".\"proyecciones_f29\" (\"revisado_por\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"proyecciones_f29_revisado_por_idx_d61c6583\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_revisado_por_idx_d61c6583\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.trabajadores.trabajadores_cliente_id_idx_9196b84e",
+    "label": "Create index \"trabajadores_cliente_id_idx_9196b84e\" on \"trabajadores\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "trabajadores_cliente_id_idx_9196b84e",
+        "table": "trabajadores"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"trabajadores_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"trabajadores_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"trabajadores_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"trabajadores_cliente_id_idx_9196b84e\" ON \"public\".\"trabajadores\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"trabajadores_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"trabajadores_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.transacciones.transacciones_cliente_id_idx_9196b84e",
+    "label": "Create index \"transacciones_cliente_id_idx_9196b84e\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "transacciones_cliente_id_idx_9196b84e",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"transacciones_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"transacciones_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"transacciones_cliente_id_idx_9196b84e\" ON \"public\".\"transacciones\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"transacciones_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.transacciones.transacciones_periodo_id_idx_0aa2ba5e",
+    "label": "Create index \"transacciones_periodo_id_idx_0aa2ba5e\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "transacciones_periodo_id_idx_0aa2ba5e",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"transacciones_periodo_id_idx_0aa2ba5e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"transacciones_periodo_id_idx_0aa2ba5e\"",
+        "sql": "CREATE INDEX \"transacciones_periodo_id_idx_0aa2ba5e\" ON \"public\".\"transacciones\" (\"periodo_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"transacciones_periodo_id_idx_0aa2ba5e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.transacciones.transacciones_revisado_por_idx_d61c6583",
+    "label": "Create index \"transacciones_revisado_por_idx_d61c6583\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "transacciones_revisado_por_idx_d61c6583",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"transacciones_revisado_por_idx_d61c6583\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_revisado_por_idx_d61c6583\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"transacciones_revisado_por_idx_d61c6583\"",
+        "sql": "CREATE INDEX \"transacciones_revisado_por_idx_d61c6583\" ON \"public\".\"transacciones\" (\"revisado_por\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"transacciones_revisado_por_idx_d61c6583\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"transacciones_revisado_por_idx_d61c6583\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.usuario_cliente.usuario_cliente_cliente_id_idx_9196b84e",
+    "label": "Create index \"usuario_cliente_cliente_id_idx_9196b84e\" on \"usuario_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "usuario_cliente_cliente_id_idx_9196b84e",
+        "table": "usuario_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"usuario_cliente_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"usuario_cliente_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"usuario_cliente_cliente_id_idx_9196b84e\" ON \"public\".\"usuario_cliente\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"usuario_cliente_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.usuario_cliente.usuario_cliente_usuario_id_idx_65b6616a",
+    "label": "Create index \"usuario_cliente_usuario_id_idx_65b6616a\" on \"usuario_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "usuario_cliente_usuario_id_idx_65b6616a",
+        "table": "usuario_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"usuario_cliente_usuario_id_idx_65b6616a\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente_usuario_id_idx_65b6616a\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"usuario_cliente_usuario_id_idx_65b6616a\"",
+        "sql": "CREATE INDEX \"usuario_cliente_usuario_id_idx_65b6616a\" ON \"public\".\"usuario_cliente\" (\"usuario_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"usuario_cliente_usuario_id_idx_65b6616a\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuario_cliente_usuario_id_idx_65b6616a\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.usuarios.usuarios_rol_id_idx_369fac19",
+    "label": "Create index \"usuarios_rol_id_idx_369fac19\" on \"usuarios\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "usuarios_rol_id_idx_369fac19",
+        "table": "usuarios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"usuarios_rol_id_idx_369fac19\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuarios_rol_id_idx_369fac19\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"usuarios_rol_id_idx_369fac19\"",
+        "sql": "CREATE INDEX \"usuarios_rol_id_idx_369fac19\" ON \"public\".\"usuarios\" (\"rol_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"usuarios_rol_id_idx_369fac19\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"usuarios_rol_id_idx_369fac19\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.auditoria.auditoria_usuario_id_fkey",
+    "label": "Add foreign key \"auditoria_usuario_id_fkey\" on \"auditoria\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "auditoria_usuario_id_fkey",
+        "table": "auditoria"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"auditoria_usuario_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditoria_usuario_id_fkey",
+          "public",
+          "\"public\".\"auditoria\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"auditoria_usuario_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"auditoria\"\nADD CONSTRAINT \"auditoria_usuario_id_fkey\"\nFOREIGN KEY (\"usuario_id\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"auditoria_usuario_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "auditoria_usuario_id_fkey",
+          "public",
+          "\"public\".\"auditoria\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.cliente_servicio.cliente_servicio_cliente_id_fkey",
+    "label": "Add foreign key \"cliente_servicio_cliente_id_fkey\" on \"cliente_servicio\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "cliente_servicio_cliente_id_fkey",
+        "table": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"cliente_servicio_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_cliente_id_fkey",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"cliente_servicio_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"cliente_servicio\"\nADD CONSTRAINT \"cliente_servicio_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"cliente_servicio_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_cliente_id_fkey",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.cliente_servicio.cliente_servicio_servicio_id_fkey",
+    "label": "Add foreign key \"cliente_servicio_servicio_id_fkey\" on \"cliente_servicio\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "cliente_servicio_servicio_id_fkey",
+        "table": "cliente_servicio"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"cliente_servicio_servicio_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_servicio_id_fkey",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"cliente_servicio_servicio_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"cliente_servicio\"\nADD CONSTRAINT \"cliente_servicio_servicio_id_fkey\"\nFOREIGN KEY (\"servicio_id\")\nREFERENCES \"public\".\"servicios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"cliente_servicio_servicio_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "cliente_servicio_servicio_id_fkey",
+          "public",
+          "\"public\".\"cliente_servicio\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentos.documentos_cliente_id_fkey",
+    "label": "Add foreign key \"documentos_cliente_id_fkey\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentos_cliente_id_fkey",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentos_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_cliente_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentos_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentos\"\nADD CONSTRAINT \"documentos_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentos_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_cliente_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentos.documentos_periodo_id_fkey",
+    "label": "Add foreign key \"documentos_periodo_id_fkey\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentos_periodo_id_fkey",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentos_periodo_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_periodo_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentos_periodo_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentos\"\nADD CONSTRAINT \"documentos_periodo_id_fkey\"\nFOREIGN KEY (\"periodo_id\")\nREFERENCES \"public\".\"periodos_cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentos_periodo_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_periodo_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentos.documentos_tipo_documento_id_fkey",
+    "label": "Add foreign key \"documentos_tipo_documento_id_fkey\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentos_tipo_documento_id_fkey",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentos_tipo_documento_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_tipo_documento_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentos_tipo_documento_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentos\"\nADD CONSTRAINT \"documentos_tipo_documento_id_fkey\"\nFOREIGN KEY (\"tipo_documento_id\")\nREFERENCES \"public\".\"tipos_documento\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentos_tipo_documento_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_tipo_documento_id_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.documentos.documentos_cargado_por_fkey",
+    "label": "Add foreign key \"documentos_cargado_por_fkey\" on \"documentos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "documentos_cargado_por_fkey",
+        "table": "documentos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"documentos_cargado_por_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_cargado_por_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"documentos_cargado_por_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"documentos\"\nADD CONSTRAINT \"documentos_cargado_por_fkey\"\nFOREIGN KEY (\"cargado_por\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"documentos_cargado_por_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "documentos_cargado_por_fkey",
+          "public",
+          "\"public\".\"documentos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_cliente_id_fkey",
+    "label": "Add foreign key \"gestiones_cliente_id_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_cliente_id_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_cliente_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_cliente_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_servicio_id_fkey",
+    "label": "Add foreign key \"gestiones_servicio_id_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_servicio_id_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_servicio_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_servicio_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_servicio_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_servicio_id_fkey\"\nFOREIGN KEY (\"servicio_id\")\nREFERENCES \"public\".\"servicios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_servicio_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_servicio_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_periodo_id_fkey",
+    "label": "Add foreign key \"gestiones_periodo_id_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_periodo_id_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_periodo_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_periodo_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_periodo_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_periodo_id_fkey\"\nFOREIGN KEY (\"periodo_id\")\nREFERENCES \"public\".\"periodos_cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_periodo_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_periodo_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_responsable_id_fkey",
+    "label": "Add foreign key \"gestiones_responsable_id_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_responsable_id_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_responsable_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_responsable_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_responsable_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_responsable_id_fkey\"\nFOREIGN KEY (\"responsable_id\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_responsable_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_responsable_id_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.gestiones.gestiones_creado_por_fkey",
+    "label": "Add foreign key \"gestiones_creado_por_fkey\" on \"gestiones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "gestiones_creado_por_fkey",
+        "table": "gestiones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"gestiones_creado_por_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_creado_por_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"gestiones_creado_por_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"gestiones\"\nADD CONSTRAINT \"gestiones_creado_por_fkey\"\nFOREIGN KEY (\"creado_por\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"gestiones_creado_por_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "gestiones_creado_por_fkey",
+          "public",
+          "\"public\".\"gestiones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.periodos_cliente.periodos_cliente_cliente_id_fkey",
+    "label": "Add foreign key \"periodos_cliente_cliente_id_fkey\" on \"periodos_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "periodos_cliente_cliente_id_fkey",
+        "table": "periodos_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"periodos_cliente_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "periodos_cliente_cliente_id_fkey",
+          "public",
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"periodos_cliente_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"periodos_cliente\"\nADD CONSTRAINT \"periodos_cliente_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"periodos_cliente_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "periodos_cliente_cliente_id_fkey",
+          "public",
+          "\"public\".\"periodos_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.proyecciones_f29.proyecciones_f29_periodo_id_fkey",
+    "label": "Add foreign key \"proyecciones_f29_periodo_id_fkey\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "proyecciones_f29_periodo_id_fkey",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"proyecciones_f29_periodo_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_periodo_id_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"proyecciones_f29_periodo_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\"\nADD CONSTRAINT \"proyecciones_f29_periodo_id_fkey\"\nFOREIGN KEY (\"periodo_id\")\nREFERENCES \"public\".\"periodos_cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"proyecciones_f29_periodo_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_periodo_id_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.proyecciones_f29.proyecciones_f29_generado_por_fkey",
+    "label": "Add foreign key \"proyecciones_f29_generado_por_fkey\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "proyecciones_f29_generado_por_fkey",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"proyecciones_f29_generado_por_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_generado_por_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"proyecciones_f29_generado_por_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\"\nADD CONSTRAINT \"proyecciones_f29_generado_por_fkey\"\nFOREIGN KEY (\"generado_por\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"proyecciones_f29_generado_por_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_generado_por_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.proyecciones_f29.proyecciones_f29_revisado_por_fkey",
+    "label": "Add foreign key \"proyecciones_f29_revisado_por_fkey\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "proyecciones_f29_revisado_por_fkey",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"proyecciones_f29_revisado_por_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_revisado_por_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"proyecciones_f29_revisado_por_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\"\nADD CONSTRAINT \"proyecciones_f29_revisado_por_fkey\"\nFOREIGN KEY (\"revisado_por\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"proyecciones_f29_revisado_por_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_revisado_por_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.proyecciones_f29.proyecciones_f29_documento_generado_fkey",
+    "label": "Add foreign key \"proyecciones_f29_documento_generado_fkey\" on \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "proyecciones_f29_documento_generado_fkey",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"proyecciones_f29_documento_generado_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_documento_generado_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"proyecciones_f29_documento_generado_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\"\nADD CONSTRAINT \"proyecciones_f29_documento_generado_fkey\"\nFOREIGN KEY (\"documento_generado\")\nREFERENCES \"public\".\"documentos\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"proyecciones_f29_documento_generado_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_documento_generado_fkey",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.trabajadores.trabajadores_cliente_id_fkey",
+    "label": "Add foreign key \"trabajadores_cliente_id_fkey\" on \"trabajadores\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "trabajadores_cliente_id_fkey",
+        "table": "trabajadores"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"trabajadores_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "trabajadores_cliente_id_fkey",
+          "public",
+          "\"public\".\"trabajadores\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"trabajadores_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"trabajadores\"\nADD CONSTRAINT \"trabajadores_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"trabajadores_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "trabajadores_cliente_id_fkey",
+          "public",
+          "\"public\".\"trabajadores\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.transacciones.transacciones_cliente_id_fkey",
+    "label": "Add foreign key \"transacciones_cliente_id_fkey\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "transacciones_cliente_id_fkey",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"transacciones_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_cliente_id_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"transacciones_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"transacciones\"\nADD CONSTRAINT \"transacciones_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"transacciones_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_cliente_id_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.transacciones.transacciones_periodo_id_fkey",
+    "label": "Add foreign key \"transacciones_periodo_id_fkey\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "transacciones_periodo_id_fkey",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"transacciones_periodo_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_periodo_id_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"transacciones_periodo_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"transacciones\"\nADD CONSTRAINT \"transacciones_periodo_id_fkey\"\nFOREIGN KEY (\"periodo_id\")\nREFERENCES \"public\".\"periodos_cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"transacciones_periodo_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_periodo_id_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.transacciones.transacciones_revisado_por_fkey",
+    "label": "Add foreign key \"transacciones_revisado_por_fkey\" on \"transacciones\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "transacciones_revisado_por_fkey",
+        "table": "transacciones"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"transacciones_revisado_por_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_revisado_por_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"transacciones_revisado_por_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"transacciones\"\nADD CONSTRAINT \"transacciones_revisado_por_fkey\"\nFOREIGN KEY (\"revisado_por\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"transacciones_revisado_por_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "transacciones_revisado_por_fkey",
+          "public",
+          "\"public\".\"transacciones\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.usuario_cliente.usuario_cliente_usuario_id_fkey",
+    "label": "Add foreign key \"usuario_cliente_usuario_id_fkey\" on \"usuario_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "usuario_cliente_usuario_id_fkey",
+        "table": "usuario_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"usuario_cliente_usuario_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuario_cliente_usuario_id_fkey",
+          "public",
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"usuario_cliente_usuario_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"usuario_cliente\"\nADD CONSTRAINT \"usuario_cliente_usuario_id_fkey\"\nFOREIGN KEY (\"usuario_id\")\nREFERENCES \"public\".\"usuarios\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"usuario_cliente_usuario_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuario_cliente_usuario_id_fkey",
+          "public",
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.usuario_cliente.usuario_cliente_cliente_id_fkey",
+    "label": "Add foreign key \"usuario_cliente_cliente_id_fkey\" on \"usuario_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "usuario_cliente_cliente_id_fkey",
+        "table": "usuario_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"usuario_cliente_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuario_cliente_cliente_id_fkey",
+          "public",
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"usuario_cliente_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"usuario_cliente\"\nADD CONSTRAINT \"usuario_cliente_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"usuario_cliente_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuario_cliente_cliente_id_fkey",
+          "public",
+          "\"public\".\"usuario_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.usuarios.usuarios_rol_id_fkey",
+    "label": "Add foreign key \"usuarios_rol_id_fkey\" on \"usuarios\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "usuarios_rol_id_fkey",
+        "table": "usuarios"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"usuarios_rol_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_rol_id_fkey",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"usuarios_rol_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"usuarios\"\nADD CONSTRAINT \"usuarios_rol_id_fkey\"\nFOREIGN KEY (\"rol_id\")\nREFERENCES \"public\".\"roles\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"usuarios_rol_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "usuarios_rol_id_fkey",
+          "public",
+          "\"public\".\"usuarios\""
+        ]
+      }
+    ]
+  }
+]
