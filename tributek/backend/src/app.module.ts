@@ -1,3 +1,4 @@
+import { PaymentEvidenceModule } from './payment-evidence/payment-evidence.module.js';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
@@ -15,6 +16,7 @@ import { GestionesModule } from './gestiones/gestiones.module.js';
     ClientesModule,
     ServiciosModule,
     DocumentosModule,
+    PaymentEvidenceModule,
     GestionesModule,
   ],
   controllers: [AppController],

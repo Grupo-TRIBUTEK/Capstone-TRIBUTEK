@@ -32,6 +32,7 @@ import {
   copyReportImage,
   downloadBlob,
 } from "./ui";
+import { PaymentFilesButton } from "./PaymentFiles";
 import Formalization from "./Formalization";
 
 export type View =
@@ -233,19 +234,20 @@ export default function Workspace({ view }: { view: View }) {
       setError(e instanceof Error ? e.message : "No se pudo guardar.");
     }
   }
-  function removePayments(key: string) {
+  async function removePayments(key: string) {
     if (
       !window.confirm(
         "¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?",
       )
     )
       return;
-    run(() =>
-      save({
-        ...data,
-        payments: data.payments.filter((p) => (p.transferId || p.id) !== key),
-      }),
-    );
+    try {
+      const payment = data.payments.find(p => (p.transferId || p.id) === key);
+      if (!payment) return;
+      const response = await authenticatedFetch(`/payment-evidence/${payment.clientId}/${key}`, {method:"DELETE"});
+      if (!response.ok) throw new Error("No se pudo archivar la carpeta de comprobantes. El pago no fue eliminado.");
+      save({...data, payments:data.payments.filter(p => (p.transferId || p.id) !== key)});
+    } catch(e) { setError((e as Error).message); }
   }
   const monthlyIncome = data.payments
     .filter(
@@ -953,9 +955,10 @@ export default function Workspace({ view }: { view: View }) {
                             : "Recibido por TRIBUTEK"}
                         </small>
                       </td>
-                      <td>{g.first.note}</td>
+                      <td>{g.first.note}<small>{g.first.method}</small>{g.first.originAccount && <small>Origen: {hidden ? "••••" : g.first.originAccount}</small>}{g.first.receivingAccount && <small>Receptora: {hidden ? "••••" : g.first.receivingAccount}</small>}</td>
                       <td>
                         <div className="tk-actions">
+                          <PaymentFilesButton clientId={g.first.clientId} id={g.key} date={g.first.date} amount={data.payments.filter(p => (p.transferId || p.id) === g.key).reduce((sum,p)=>sum+p.amount,0)} origin={g.first.originAccount} destination={g.first.receivingAccount} hidden={hidden} />
                           <button
                             disabled={hidden}
                             onClick={() => {

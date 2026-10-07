@@ -16,6 +16,7 @@ import {
   type Ledger,
   type PaymentInput,
 } from "./model";
+import { registerFolder } from "./PaymentFiles";
 import { Badge, Field, Modal, Money, copyReportImage, printReport } from "./ui";
 
 export type ClientView = Client & {
@@ -48,9 +49,12 @@ export function PaymentForm({
   const first = previous[0];
   const targetDeferred = deferredId || first?.deferredId;
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [method, setMethod] = useState(first?.method || "Transferencia");
-  function submit(e: FormEvent<HTMLFormElement>) {
+  async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (saving) return;
+    setSaving(true);
     const f = new FormData(e.currentTarget);
     try {
       const input: PaymentInput = {
@@ -61,6 +65,8 @@ export function PaymentForm({
         date: String(f.get("date")),
         note: String(f.get("note")),
         method,
+        originAccount: method === "Efectivo" ? "" : String(f.get("originAccount") || ""),
+        receivingAccount: method === "Efectivo" ? "" : String(f.get("receivingAccount") || ""),
         destination: f.get("destination") as PaymentInput["destination"],
         deferredId: targetDeferred,
       };
@@ -72,13 +78,19 @@ export function PaymentForm({
             ),
           }
         : data;
-      const next = allocatePayment(base, input);
+      const next = allocatePayment(base, input, editingKey);
       save(next, data.revision);
+      const added = next.payments.find(p => !base.payments.some(old => old.id === p.id));
+      if (added) {
+        try { await registerFolder(clientId, added.transferId || added.id, input.date, input.amount); }
+        catch { window.alert("El pago quedó guardado. No se pudo habilitar su carpeta en el servidor. Puedes reintentarlo con Comprobantes en el historial de pagos."); }
+      }
       onClose();
     } catch (e) {
       setError(
         e instanceof Error ? e.message : "No se pudo registrar el pago.",
       );
+      setSaving(false);
     }
   }
   return (
@@ -134,6 +146,8 @@ export function PaymentForm({
           <select value={method} onChange={(e) => setMethod(e.target.value)}>
             <option>Transferencia</option>
             <option>Efectivo</option>
+            <option>Tarjeta</option>
+            <option>Mixto</option>
             <option>Otro</option>
           </select>
         </Field>
@@ -149,6 +163,7 @@ export function PaymentForm({
           </select>
         </Field>
       </div>
+      {method !== "Efectivo" && <div className="tk-grid"><Field label="Cuenta de origen (opcional)"><input name="originAccount" defaultValue={first?.originAccount || ""} maxLength={200} placeholder="Banco, titular y cuenta" /></Field><Field label="Cuenta receptora (opcional)"><input name="receivingAccount" defaultValue={first?.receivingAccount || ""} maxLength={200} placeholder="Banco, titular y cuenta" /></Field></div>}
       <Field
         label={
           "Glosa / referencia (opcional)"
@@ -169,7 +184,7 @@ export function PaymentForm({
         <button type="button" onClick={onClose}>
           Cancelar
         </button>
-        <button className="primary">Guardar pago</button>
+        <button className="primary" disabled={saving}>{saving ? "Guardando…" : "Guardar pago"}</button>
       </footer>
     </form>
   );

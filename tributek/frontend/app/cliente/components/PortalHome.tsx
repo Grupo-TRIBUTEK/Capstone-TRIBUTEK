@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { authenticatedFetch, clearAuth, getAccessToken } from "@/app/features/auth/auth-client";
+import { ClientPaymentFiles } from "@/app/components/management/PaymentFiles";
+import "@/app/components/management/management.css";
 import Footer from "@/app/components/layout/Footer";
 
 type ClientSummary = {
@@ -87,6 +89,7 @@ export default function PortalHome() {
           </section>
         )}
 
+        {data && <ClientPaymentFiles clients={data.clientes} />}
         <section className="mt-12" aria-labelledby="tutoriales-title">
           <div className="max-w-2xl">
             <p className="text-label font-semibold uppercase tracking-[0.16em] text-secondary-strong">Centro de recursos</p>
