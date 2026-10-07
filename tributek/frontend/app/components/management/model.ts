@@ -5,6 +5,7 @@ import {
   paid,
   parseData,
   saveMonth,
+  receivables,
   services,
   today,
   validDate,
@@ -144,7 +145,7 @@ export function debt(
   data: Data,
   clientId: string,
   period: string,
-  selection: readonly Concept[] = services,
+  selection: readonly Concept[] = receivables,
 ) {
   return data.months
     .filter((m) => m.clientId === clientId && m.period <= period)
@@ -341,6 +342,13 @@ export function allocatePayment(data: Ledger, input: PaymentInput, transferId = 
   }
   return validateLedger(next);
 }
+export function receivedByCategory(data: Ledger, period: string) {
+  const received = data.payments.filter(p => p.date.slice(0, 7) === period && p.destination !== "institution");
+  return {
+    services: received.filter(p => services.includes(p.concept)).reduce((sum, p) => sum + p.amount, 0),
+    reimbursements: received.filter(p => p.concept === "Cobranza").reduce((sum, p) => sum + p.amount, 0),
+  };
+}
 export function periodLabel(period: string) {
   return new Intl.DateTimeFormat("es-CL", {
     month: "long",
@@ -366,7 +374,7 @@ export function reportRows(
     )
     .sort((a, b) => a.period.localeCompare(b.period))
     .flatMap((m) =>
-      (accumulated ? services : concepts)
+      (accumulated ? receivables : concepts)
         .map((c) => ({
           period: m.period,
           concept: c,

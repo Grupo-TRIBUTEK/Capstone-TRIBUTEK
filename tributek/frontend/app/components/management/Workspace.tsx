@@ -2,13 +2,14 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useData, persist, syncRemoteClients } from "../ficha/store";
-import { concepts, services, today, type Concept } from "../ficha/model";
+import { conceptLabel, concepts, receivables, services, today, type Concept } from "../ficha/model";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import ClientCreateModal, {
   type ClientRecord,
 } from "../features/clientes/ClientCreateModal";
 import ClientSheet, { PaymentForm, type ClientView } from "./ClientSheet";
 import {
+  receivedByCategory,
   balance,
   debt,
   extra,
@@ -50,7 +51,7 @@ const names: Record<View, string> = {
   facturacion: "Facturación",
   pagos: "Pagos",
   postergaciones: "Postergaciones",
-  formalizaciones: "Formalizaciones",
+  formalizaciones: "Constitución de empresas",
 };
 export default function Workspace({ view }: { view: View }) {
   const store = useData();
@@ -249,14 +250,7 @@ export default function Workspace({ view }: { view: View }) {
       save({...data, payments:data.payments.filter(p => (p.transferId || p.id) !== key)});
     } catch(e) { setError((e as Error).message); }
   }
-  const monthlyIncome = data.payments
-    .filter(
-      (p) =>
-        p.date.slice(0, 7) === period &&
-        services.includes(p.concept) &&
-        p.destination !== "institution",
-    )
-    .reduce((s, p) => s + p.amount, 0);
+  const received = receivedByCategory(data, period);
   const pendingMonths = clients.filter(
     (c) =>
       data.months.some((m) => m.clientId === c.id && m.period === period) &&
@@ -441,8 +435,8 @@ export default function Workspace({ view }: { view: View }) {
                 onChange={(e) => setConcept(e.target.value)}
               >
                 <option value="">Todos</option>
-                {(view === "clientes" ? services : concepts).map((c) => (
-                  <option key={c}>{c}</option>
+                {(view === "clientes" ? receivables : concepts).map((c) => (
+                  <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>
                 ))}
               </select>
             </Field>
@@ -486,10 +480,13 @@ export default function Workspace({ view }: { view: View }) {
         <>
           <div className="tk-metrics">
             <Metric label="Recibido por servicios">
-              <Money value={monthlyIncome} hidden={hidden} />
+              <Money value={received.services} hidden={hidden} />
+            </Metric>
+            <Metric label="Reembolsos recibidos">
+              <Money value={received.reimbursements} hidden={hidden} />
             </Metric>
             <Metric label="Clientes con deuda de servicios">
-              {clients.filter((c) => debt(data, c.id, period) > 0).length}
+              {clients.filter((c) => debt(data, c.id, period, services) > 0).length}
             </Metric>
             <Metric label="Postergaciones pendientes">
               <Money
@@ -517,9 +514,9 @@ export default function Workspace({ view }: { view: View }) {
                   { c: "Cotizaciones", day: 12 },
                   { c: "Impuestos", day: 20 },
                 ].map(({ c, day }) => (
-                  <div className="tk-due" key={c}>
+                  <div className="tk-due" key={conceptLabel(c)}>
                     <span>
-                      {c} · referencia interna día {day}
+                      {conceptLabel(c)} · referencia interna día {day}
                     </span>
                     <strong>
                       {dueRows.filter((r) => r.concept === c).length} clientes
@@ -552,7 +549,7 @@ export default function Workspace({ view }: { view: View }) {
                           <strong>{r.client.name}</strong>
                           <small>{r.client.rut}</small>
                         </td>
-                        <td>{r.concept}</td>
+                        <td>{conceptLabel(r.concept)}</td>
                         <td>
                           <Money value={r.amount} hidden={hidden} />
                         </td>
@@ -573,7 +570,7 @@ export default function Workspace({ view }: { view: View }) {
               </div>
             ) : (
               <Empty>
-                No hay impuestos ni cotizaciones pendientes en este período.
+                No hay impuestos ni cotizaciones previsionales pendientes en este período.
               </Empty>
             )}
           </section>
@@ -589,7 +586,7 @@ export default function Workspace({ view }: { view: View }) {
           <div className="tk-metrics">
             <Metric label="Clientes visibles">{visible.length}</Metric>
             <Metric label="Con deuda de servicios">
-              {visible.filter((c) => debt(data, c.id, period) > 0).length}
+              {visible.filter((c) => debt(data, c.id, period, services) > 0).length}
             </Metric>
             <Metric label="Deuda acumulada con TRIBUTEK">
               <Money
@@ -636,7 +633,7 @@ export default function Workspace({ view }: { view: View }) {
                       t = totals(data, m);
                     const creadoEn = remote.find((r) => r.id === c.id)?.creadoEn;
                     const cs = (
-                      view === "clientes" ? services : concepts
+                      view === "clientes" ? receivables : concepts
                     ).filter((k) => !concept || k === concept);
                     return (
                       <tr key={c.id}>
@@ -682,7 +679,7 @@ export default function Workspace({ view }: { view: View }) {
                             )
                             .map((k) => (
                               <div className="tk-detail" key={k}>
-                                {k}:{" "}
+                                {conceptLabel(k)}:{" "}
                                 <Money
                                   value={
                                     view === "clientes"
@@ -892,7 +889,7 @@ export default function Workspace({ view }: { view: View }) {
               >
                 <option value="">Todos</option>
                 {concepts.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>
                 ))}
               </select>
             </Field>
@@ -905,7 +902,7 @@ export default function Workspace({ view }: { view: View }) {
                       "Historial de pagos",
                       allPayments ? "Todos los meses" : periodLabel(period),
                       payments.map((p) => ({
-                        label: `${clients.find((c) => c.id === p.clientId)?.name || "Cliente"} · ${p.date} · ${p.concept}`,
+                        label: `${clients.find((c) => c.id === p.clientId)?.name || "Cliente"} · ${p.date} · ${conceptLabel(p.concept)}`,
                         amount: p.amount,
                       })),
                       payments.reduce((s, p) => s + p.amount, 0),
@@ -942,7 +939,7 @@ export default function Workspace({ view }: { view: View }) {
                       <td>
                         {g.rows.map((p) => (
                           <div key={p.id} className="tk-detail">
-                            {p.period} · {p.concept} ·{" "}
+                            {p.period} · {conceptLabel(p.concept)} ·{" "}
                             <Money value={p.amount} hidden={hidden} />
                           </div>
                         ))}
@@ -1036,7 +1033,7 @@ export default function Workspace({ view }: { view: View }) {
                             {clients.find((c) => c.id === d.clientId)?.name}
                           </td>
                           <td>
-                            {d.concept}
+                            {conceptLabel(d.concept)}
                             <small>{periodLabel(d.period)}</small>
                           </td>
                           <td>

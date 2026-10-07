@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { concepts, services, money, today, type Client } from "../ficha/model";
+import { conceptLabel, concepts, receivables, money, today, type Client } from "../ficha/model";
 import {
   allocatePayment,
   balance,
@@ -136,7 +136,7 @@ export function PaymentForm({
           >
             <option value="Todos">Pago todo · deuda más antigua primero</option>
             {concepts.filter((c) => c !== "Postergación" || data.months.some((m) => m.clientId === clientId && m.period <= period && m.amounts.Postergación > 0)).map((c) => (
-              <option key={c} value={c}>{c === "Postergación" ? "Postergación anterior" : c}</option>
+              <option key={conceptLabel(c)} value={c}>{c === "Postergación" ? "Postergación anterior" : conceptLabel(c)}</option>
             ))}
           </select>
         </Field>
@@ -246,12 +246,12 @@ export default function ClientSheet({
   const detail = rows.map((r) => {
     const label = r.concept === "Honorarios"
       ? "Honorarios mensuales"
-      : r.concept === "Impuestos" ? "Impuestos mensuales" : r.concept;
+      : r.concept === "Impuestos" ? "Impuestos mensuales" : conceptLabel(r.concept);
     const origin = accumulated ? ` (${periodLabel(r.period)})` : "";
     return `· *${label}${origin}:* ${money(r.amount)}`;
   }).join("\n") || "Sin saldos pendientes.";
   const postponedNote = includePostponed && deferrals.length
-    ? `\n\n⏳ *Postergaciones (informativo):*\n${deferrals.map((d) => `· ${d.concept} · ${d.period} · vence ${d.due}`).join("\n")}`
+    ? `\n\n⏳ *Postergaciones (informativo):*\n${deferrals.map((d) => `· ${conceptLabel(d.concept)} · ${d.period} · vence ${d.due}`).join("\n")}`
     : "";
   const text = accumulated
     ? `Buen día 😊\n\nLe escribimos para recordarle que, según nuestros registros, aún se encuentra pendiente el pago de los siguientes conceptos:\n\n📌 *COBROS PENDIENTES ACUMULADOS*\n${client.name}\n\n${detail}\n\n💰 *SALDO PENDIENTE: ${money(reportTotal)}*${postponedNote}\n\nAgradecemos mucho su gestión. Si el pago ya fue realizado, por favor envíenos el comprobante para actualizar nuestros registros.\n\n¡Muchas gracias! 🙌`
@@ -353,10 +353,10 @@ export default function ClientSheet({
             <div className="tk-grid">
               <div>
                 {concepts.filter((c) => c !== "Postergación").map((c) => (
-                  <label key={c} className="tk-line">
-                    <span>{c}</span>
+                  <label key={conceptLabel(c)} className="tk-line">
+                    <span>{conceptLabel(c)}</span>
                     <input
-                      aria-label={c}
+                      aria-label={conceptLabel(c)}
                       type="number"
                       min="0"
                       step="1"
@@ -548,7 +548,7 @@ export default function ClientSheet({
                         title,
                         `${client.name} · ${client.rut} · ${periodLabel(period)}`,
                         rows.map((r) => ({
-                          label: `${r.period} · ${r.concept}`,
+                          label: `${r.period} · ${conceptLabel(r.concept)}`,
                           amount: r.amount,
                         })),
                         reportTotal,
@@ -571,7 +571,7 @@ export default function ClientSheet({
                       title,
                       `${client.name} · ${client.rut} · ${periodLabel(period)}`,
                       rows.map((r) => ({
-                        label: `${r.period} · ${r.concept}`,
+                        label: `${r.period} · ${conceptLabel(r.concept)}`,
                         amount: r.amount,
                       })),
                       reportTotal,
@@ -612,9 +612,9 @@ export default function ClientSheet({
                 onChange={(e) => setPostponeConcept(e.target.value as Concept)}
               >
                 {concepts
-                  .filter((c) => !services.includes(c) && (c !== "Postergación" || balance(data, existing, c) > 0))
+                  .filter((c) => !receivables.includes(c) && (c !== "Postergación" || balance(data, existing, c) > 0))
                   .map((c) => (
-                    <option key={c} value={c}>{c === "Postergación" ? "Postergación anterior" : c}</option>
+                    <option key={conceptLabel(c)} value={c}>{c === "Postergación" ? "Postergación anterior" : conceptLabel(c)}</option>
                   ))}
               </select>
             </Field>

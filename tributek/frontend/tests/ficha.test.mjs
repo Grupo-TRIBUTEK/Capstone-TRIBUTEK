@@ -105,7 +105,8 @@ test("saldos de otros períodos no entran en obligación mensual", () => {
   next.amounts.Cobranza = 2000;
   const d = saveMonth(data, next);
   assert.equal(serviceDebt(d, client.id, "2026-08"), 10000);
-  assert.equal(serviceDebt(d, client.id, "2026-09"), 12000);
+  assert.equal(serviceDebt(d, client.id, "2026-09"), 10000);
+  assert.ok(message(d, client.id, "2026-09", true).includes("Reembolso de gastos por cuenta del cliente"));
   assert.ok(!message(d, client.id, "2026-09", false).includes("Honorarios"));
 });
 test("persistencia conserva checklist, fecha y notas", () => {

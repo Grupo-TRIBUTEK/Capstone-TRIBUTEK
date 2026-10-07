@@ -34,7 +34,7 @@ export const adminNavigation: {
   },
   {
     href: "/admin/formalizaciones",
-    label: "Formalizaciones",
+    label: "Constitución de empresas",
     icon: "briefcase",
     group: "Gestión",
   },

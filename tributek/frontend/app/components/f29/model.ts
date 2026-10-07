@@ -20,7 +20,7 @@ export type Source = {
 export const manualLabels = {
     voucherNet: 'Comprobante electrónico · neto', importation: 'IVA de importación', previousCredit: 'Remanente mes anterior',
     retained: 'IVA retenido por pagar', singleTax: 'Impuesto único', loanSalary: '3% préstamo solidario · remuneraciones',
-    loanFees: '3% préstamo solidario · honorarios', withholding: 'Retención de honorarios · monto', contributions: 'Cotizaciones', fees: 'Honorarios',
+    loanFees: '3% préstamo solidario · honorarios', withholding: 'Retención de honorarios · monto', contributions: 'Cotizaciones previsionales', fees: 'Honorarios',
 } as const;
 export type ManualKey = keyof typeof manualLabels;
 export type Projection = {
@@ -219,7 +219,7 @@ export function message(client: Client, p: Projection) {
         return `${opening}\n\n*Resultado: remanente de crédito fiscal a favor*\n${money(r.remainder)}\n\n*Información sobre el remanente*\nEl crédito fiscal de compras supera al débito fiscal de ventas, por lo que no se genera IVA a pagar por este concepto.\n\n*Monto estimado del remanente:*\n${money(r.remainder)}${r.other > 0 ? `\n\n*Otras obligaciones estimadas a pagar:*\n${money(r.other)}` : ''}\n\n${closing}`;
     return `${opening}\n\n*Valor aproximado a pagar el próximo mes:*\n${money(r.total)}${r.ivaPayable > 0 ? `\n\n*Recomendación para disminuir el impuesto a pagar*\nSi desean reducir el monto estimado del impuesto, pueden aumentar su crédito fiscal realizando compras con factura.\n\n*Monto aproximado de compras con factura recomendado:*\n${money(r.suggestedNet)}` : '\n\nNo se genera IVA a pagar por este concepto.'}\n\n${closing}`;
 }
-export function summary(client: Client, p: Projection) { const r = calculate(p); return `${client.name}\nRUT: ${client.rut}\nPeríodo: ${periodLabel(p.period)}\nVentas: ${money(r.sales.total + p.manual.voucherNet + r.voucherIva)}\nCompras: ${money(r.purchases.total)}\nIVA débito: ${money(r.debit)}\nIVA crédito: ${money(r.credit)}\nRemanente: ${money(r.remainder)}\nPPM: ${money(r.ppm)}\nCotizaciones: ${money(p.manual.contributions)}\nHonorarios: ${money(p.manual.fees)}\nTotal estimado a pagar: ${money(r.total)}`; }
+export function summary(client: Client, p: Projection) { const r = calculate(p); return `${client.name}\nRUT: ${client.rut}\nPeríodo: ${periodLabel(p.period)}\nVentas: ${money(r.sales.total + p.manual.voucherNet + r.voucherIva)}\nCompras: ${money(r.purchases.total)}\nIVA débito: ${money(r.debit)}\nIVA crédito: ${money(r.credit)}\nRemanente: ${money(r.remainder)}\nPPM: ${money(r.ppm)}\nCotizaciones previsionales: ${money(p.manual.contributions)}\nHonorarios: ${money(p.manual.fees)}\nTotal estimado a pagar: ${money(r.total)}`; }
 export function validateDatabase(value: unknown): Database {
     if (!value || typeof value !== 'object')
         throw new Error('Respaldo F29 inválido.');
