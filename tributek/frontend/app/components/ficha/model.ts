@@ -13,9 +13,9 @@ export type Concept = (typeof concepts)[number];
 export const services: readonly Concept[] = [
   "Honorarios",
   "Formalización",
-  "Cobranza",
   "Otro",
 ];
+export const receivables: readonly Concept[] = [...services, "Cobranza"];
 export type Client = {
   id: string;
   name: string;
@@ -241,15 +241,15 @@ export function message(
   const rows: string[] = [];
   let total = 0;
   for (const month of months) {
-    const detail = (accumulated ? services : concepts).flatMap((c) => {
+    const detail = (accumulated ? receivables : concepts).flatMap((c) => {
       const pending = month.amounts[c] - paid(data, clientId, month.period, c);
       if (!pending) return [];
       total += pending;
-      return [`• ${c}: ${money(pending)}`];
+      return [`• ${conceptLabel(c)}: ${money(pending)}`];
     });
     if (detail.length) rows.push(`${month.period}\n${detail.join("\n")}`);
   }
-  return `Hola, ${client?.name ?? "cliente"}.\n${accumulated ? "Cobros pendientes por servicios de TRIBUTEK hasta" : "Detalle pendiente del período"} ${period}.\n\n${rows.length ? rows.join("\n\n") : "Sin saldos pendientes registrados para esta selección."}\n\nTotal pendiente: ${money(total)}\nPor favor, envíanos el comprobante si ya realizaste el pago.`;
+  return `Hola, ${client?.name ?? "cliente"}.\n${accumulated ? "Cobros pendientes con TRIBUTEK hasta" : "Detalle pendiente del período"} ${period}.\n\n${rows.length ? rows.join("\n\n") : "Sin saldos pendientes registrados para esta selección."}\n\nTotal pendiente: ${money(total)}\nPor favor, envíanos el comprobante si ya realizaste el pago.`;
 }
 export function parseData(raw: string | null): Data {
   if (!raw) return emptyData;
@@ -319,3 +319,5 @@ export function parseData(raw: string | null): Data {
   }
   return data;
 }
+
+export const conceptLabel = (value: string): string => (({ "Cotizaciones": "Cotizaciones previsionales", "Formalización": "Constitución de empresa", "Retención boletas": "Retención de boletas de honorarios", "Convenio": "Cuotas de convenio de deuda con TGR", "Cobranza": "Reembolso de gastos por cuenta del cliente" } as Record<string, string>)[value] || value);

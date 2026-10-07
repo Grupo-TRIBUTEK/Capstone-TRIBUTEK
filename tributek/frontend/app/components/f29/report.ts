@@ -87,7 +87,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     const right = panel(716, y, 'OTRAS OBLIGACIONES', [
         ['IVA retenido por pagar', m.retained], ['Impuesto único', m.singleTax], ['3% préstamo solidario · remuneraciones', m.loanSalary],
         ['3% préstamo solidario · honorarios', m.loanFees], ['Retención de honorarios', m.withholding], ['P.P.M.', r.ppm],
-        ['Cotizaciones', m.contributions], ['Honorarios', m.fees], ['Total otras obligaciones', r.other],
+        ['Cotizaciones previsionales', m.contributions], ['Honorarios', m.fees], ['Total otras obligaciones', r.other],
     ]);
     y = Math.max(left, right) + 55;
     function table(number: string, title: string, firstColumn: string, list: typeof sales) {

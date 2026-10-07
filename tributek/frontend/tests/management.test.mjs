@@ -179,3 +179,49 @@ test("conserva postergación antigua y abonos al editar otros conceptos", () => 
   assert.equal(d.payments[0].amount, 1500);
   assert.equal(d.months[0].amounts.Postergación, 2000);
 });
+
+test("corregir conserva la referencia compartida y las cuentas tras restaurar", () => {
+  const original = m.allocatePayment(fixture(), {...payment, originAccount:"Banco A 123", receivingAccount:"Banco B 456"});
+  const key = original.payments[0].transferId;
+  const base = {...original,payments:[]};
+  const next = m.allocatePayment(base,{...payment,amount:140,originAccount:"Banco A 123",receivingAccount:"Banco B 456"},key);
+  const restored = m.validateLedger(JSON.parse(JSON.stringify(next)));
+  assert.ok(restored.payments.every(p=>p.transferId===key && p.originAccount==="Banco A 123" && p.receivingAccount==="Banco B 456"));
+  assert.equal(restored.payments.reduce((sum,p)=>sum+p.amount,0),140);
+  assert.throws(()=>m.allocatePayment(fixture(),{...payment,originAccount:"x".repeat(201)}));
+});
+test("nombres visibles más precisos conservan las claves históricas",async()=>{
+  const {conceptLabel,concepts}=await import(base);
+  assert.equal(conceptLabel("Cotizaciones"),"Cotizaciones previsionales");
+  assert.ok(concepts.includes("Cotizaciones"));
+});
+
+test("reembolsos pendientes se cobran sin incluirlos en ingresos de servicios", async () => {
+  const d = fixture();
+  d.months[0].amounts.Cobranza = 80;
+  d.months[0].amounts.Convenio = 60;
+  const {services, receivables, conceptLabel, serviceDebt} = await import(base);
+  assert.equal(services.includes("Cobranza"), false);
+  assert.equal(receivables.includes("Cobranza"), true);
+  assert.equal(m.debt(d,"a","2026-08"),280);
+  assert.equal(serviceDebt(d,"a","2026-08"),200);
+  assert.ok(m.reportRows(d,"a","2026-08",true).some(r=>r.concept==="Cobranza" && r.amount===80));
+  assert.ok(!m.reportRows(d,"a","2026-08",true).some(r=>r.concept==="Convenio"));
+  const next=m.allocatePayment(d,{...payment,concept:"Cobranza",amount:30});
+  assert.equal(m.debt(next,"a","2026-08"),250);
+  assert.deepEqual(m.receivedByCategory(next,"2026-08"),{services:0,reimbursements:30});
+  assert.equal(m.balance(next,next.months[0],"Impuestos"),200);
+  assert.equal(m.balance(next,next.months[0],"Convenio"),60);
+  const restored=m.validateLedger(JSON.parse(JSON.stringify(next)));
+  assert.equal(m.balance(restored,restored.months[0],"Cobranza"),50);
+  assert.equal(conceptLabel("Convenio"),"Cuotas de convenio de deuda con TGR");
+  assert.equal(conceptLabel("Cobranza"),"Reembolso de gastos por cuenta del cliente");
+});
+test("ingresos separa honorarios, reembolsos e importes pagados a instituciones",()=>{
+  const d=fixture();d.months[0].amounts.Cobranza=80;
+  let next=m.allocatePayment(d,{...payment,concept:"Honorarios",amount:50});
+  next=m.allocatePayment(next,{...payment,concept:"Cobranza",amount:20});
+  next=m.allocatePayment(next,{...payment,concept:"Impuestos",amount:40,destination:"institution"});
+  assert.deepEqual(m.receivedByCategory(next,"2026-08"),{services:50,reimbursements:20});
+  assert.deepEqual(m.receivedByCategory(next,"2026-07"),{services:0,reimbursements:0});
+});

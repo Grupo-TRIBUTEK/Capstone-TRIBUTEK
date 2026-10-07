@@ -5,6 +5,7 @@ import {
   paid,
   parseData,
   saveMonth,
+  receivables,
   services,
   today,
   validDate,
@@ -74,6 +75,8 @@ export type ProcessStep = {
 export type Process = { clientId: string; steps: ProcessStep[]; note: string };
 export type AppliedPayment = Payment & {
   transferId?: string;
+  originAccount?: string;
+  receivingAccount?: string;
   deferredId?: string;
   method?: string;
   destination?: "tributek" | "institution";
@@ -142,7 +145,7 @@ export function debt(
   data: Data,
   clientId: string,
   period: string,
-  selection: readonly Concept[] = services,
+  selection: readonly Concept[] = receivables,
 ) {
   return data.months
     .filter((m) => m.clientId === clientId && m.period <= period)
@@ -185,6 +188,7 @@ export function validateLedger(data: Ledger): Ledger {
       throw new Error("La postergación tiene abonos superiores a su monto.");
   }
   for (const p of data.payments) {
+    if ([p.originAccount, p.receivingAccount].some(v => v !== undefined && (typeof v !== "string" || v.length > 200))) throw new Error("Revisa las cuentas del pago.");
     if (p.destination && !["tributek", "institution"].includes(p.destination))
       throw new Error("Destino de pago inválido.");
     if (p.deferredId) {
@@ -268,6 +272,8 @@ export function removeDeferral(data: Ledger, id: string): Ledger {
   });
 }
 export type PaymentInput = {
+  originAccount?: string;
+  receivingAccount?: string;
   clientId: string;
   through: string;
   concept: Concept | "Todos";
@@ -278,7 +284,7 @@ export type PaymentInput = {
   destination: "tributek" | "institution";
   deferredId?: string;
 };
-export function allocatePayment(data: Ledger, input: PaymentInput): Ledger {
+export function allocatePayment(data: Ledger, input: PaymentInput, transferId = crypto.randomUUID()): Ledger {
   if (
     !Number.isSafeInteger(input.amount) ||
     input.amount <= 0 ||
@@ -288,7 +294,7 @@ export function allocatePayment(data: Ledger, input: PaymentInput): Ledger {
     throw new Error("Revisa el monto y la fecha del pago.");
   let remaining = input.amount;
   let next = data;
-  const transferId = crypto.randomUUID();
+
   const lines: { month: Month; concept: Concept; amount: number }[] = [];
   if (input.deferredId) {
     const d = extra(data).deferrals.find(
@@ -326,6 +332,8 @@ export function allocatePayment(data: Ledger, input: PaymentInput): Ledger {
       note: input.note,
       createdAt: new Date().toISOString(),
       method: input.method,
+      originAccount: input.originAccount?.trim() || "",
+      receivingAccount: input.receivingAccount?.trim() || "",
       destination: input.destination,
       ...(input.deferredId ? { deferredId: input.deferredId } : {}),
     };
@@ -333,6 +341,13 @@ export function allocatePayment(data: Ledger, input: PaymentInput): Ledger {
     remaining -= amount;
   }
   return validateLedger(next);
+}
+export function receivedByCategory(data: Ledger, period: string) {
+  const received = data.payments.filter(p => p.date.slice(0, 7) === period && p.destination !== "institution");
+  return {
+    services: received.filter(p => services.includes(p.concept)).reduce((sum, p) => sum + p.amount, 0),
+    reimbursements: received.filter(p => p.concept === "Cobranza").reduce((sum, p) => sum + p.amount, 0),
+  };
 }
 export function periodLabel(period: string) {
   return new Intl.DateTimeFormat("es-CL", {
@@ -359,7 +374,7 @@ export function reportRows(
     )
     .sort((a, b) => a.period.localeCompare(b.period))
     .flatMap((m) =>
-      (accumulated ? services : concepts)
+      (accumulated ? receivables : concepts)
         .map((c) => ({
           period: m.period,
           concept: c,

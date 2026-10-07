@@ -115,7 +115,7 @@ export default function Formalization({
     }
   }
   return (
-    <Modal title={`Formalización · ${client.name}`} onClose={close} wide>
+    <Modal title={`Constitución de empresa · ${client.name}`} onClose={close} wide>
       <div className="tk-dialog-body tk-stack">
         {error && (
           <p role="alert" className="tk-error">

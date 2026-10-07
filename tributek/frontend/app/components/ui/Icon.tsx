@@ -1,5 +1,5 @@
 export type IconName = "home" | "users" | "briefcase" | "calendar" |
-                        "calculator" | "file" | "wallet" | "team" |
+                        "calculator" | "folder" | "file" | "wallet" | "team" |
                         "message" | "shield" | "settings" | "search" |
                          "plus" | "download" | "sun" | "moon" | "monitor" | "menu" | "close" | "logout" | "login" | "arrowRight" | "arrowLeft" | "percent";
 
@@ -9,6 +9,7 @@ const paths: Record<IconName, string> = {
   briefcase: "M8 7V4h8v3M3 7h18v14H3ZM3 12c6 4 12 4 18 0M12 11v5",
   calendar: "M4 5h16v16H4ZM8 3v4M16 3v4M4 10h16M8 14h2M14 14h2M8 18h2",
   calculator: "M5 2h14v20H5ZM8 5h8v4H8ZM8 13h1M15 13h1M8 17h1M15 17h1",
+  folder: "M3 7V4h6l2 3h10v13H3ZM3 7h8",
   file: "M14 2H5v20h14V7ZM14 2v6h5M8 12h8M8 16h8",
   wallet: "M3 5h17v16H3ZM3 5V3h14M15 11h6v5h-6ZM17 13.5h1",
   team: "M2 21v-3a4 4 0 0 1 4-4h3M22 21v-3a4 4 0 0 0-4-4h-3M8 21v-3a4 4 0 0 1 8 0v3M9 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M21 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0M15 10a3 3 0 1 1-6 0 3 3 0 0 1 6 0",
