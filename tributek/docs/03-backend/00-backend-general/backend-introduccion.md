@@ -17,25 +17,36 @@ Cada carpeta es un **módulo**: una parte del sistema que se encarga de un tema.
 | `clientes/` | Los clientes y quién puede ver cada uno |
 | `servicios/` | Los servicios que se venden y a quién se asignan |
 | `documentos/` | Subir, listar y descargar archivos |
+| `gestiones/` | Pasos y progreso de formalización de cada cliente (agregado 2026-10) |
 | `prisma/` | La conexión con la base de datos |
 | `usuario/` | Vacía por ahora, reservada para más adelante |
 
 ## Cómo está armado un módulo (el patrón NestJS)
 
-Todos los módulos siguen la misma receta con tres piezas:
+Todos los módulos siguen la misma receta con **cuatro** piezas (ejemplo real:
+`gestiones/`, el más reciente):
 
-| Pieza | Qué es | Ejemplo |
+| Pieza | Archivo | Qué hace |
 |---|---|---|
-| **Controller** | Recibe la petición y dice qué ruta la atiende | `documentos.controller.ts` → `GET /documentos` |
-| **Service** | Hace el trabajo: valida, calcula y consulta la base | `documentos.service.ts` → busca y filtra |
-| **Module** | Declara qué piezas pertenecen juntas | `documentos.module.ts` → une controller + service |
+| **Controller** | `gestiones.controller.ts` | Recibe la petición HTTP y dice qué ruta la atiende. No toca la base: solo pasa la papelea al service. |
+| **DTO** | `dto/guardar-formalizacion.dto.ts` | El "formulario" tipado del body. Valida lo que llega antes de que nadie lo use (campos obligatorios, tamaños). Si llega algo raro, responde `400` sin llegar al service. |
+| **Service** | `gestiones.service.ts` | Hace el trabajo: aplica reglas de negocio y consulta la base con Prisma. |
+| **Module** | `gestiones.module.ts` | Declara qué piezas pertenecen juntas (controller + service). |
 
-El **controller** nunca toca la base de datos directo. Llama al **service**, y
-el service usa **Prisma** para hablar con PostgreSQL. Esa separación sirve para
-que cambiar una regla de negocio no obligue a tocar las rutas, y viceversa.
+El recorrido de un dato:
 
-El módulo raíz (`app.module.ts`) junta todo: Auth, Prisma, Clientes, Servicios
-y Documentos.
+```
+petición → controller (lee el DTO) → service → Prisma → PostgreSQL
+```
+
+Ejemplo concreto: `PUT /gestiones/formalizacion/19` → el controller valida el body
+con `GuardarFormalizacionDto` → el service reescribe cabecera + 11 pasos en una
+transacción → Prisma guarda en la tabla `gestiones`. El **controller** nunca toca
+la base directo: esa separación sirve para cambiar una regla de negocio sin tocar
+las rutas, y viceversa.
+
+El módulo raíz (`app.module.ts`) junta todo: Auth, Prisma, Clientes, Servicios,
+Documentos y Gestiones.
 
 ## Qué es JWT y por qué se usa
 
@@ -81,10 +92,15 @@ petición → JwtAuthGuard → RolesGuard → controller → service → base de
 **JwtAuthGuard** revisa el sello del pase y deja tus datos en la petición para
 que los use el resto. No sabe nada de roles.
 
-**RolesGuard** lee lo que la ruta exige. Cada ruta lo declara así:
+**RolesGuard** lee lo que la ruta exige. El patrón actual: `JwtAuthGuard` se pone
+**una sola vez a nivel de controller** y `RolesGuard` en cada ruta con roles:
 
 ```ts
-@UseGuards(JwtAuthGuard, RolesGuard)
+@Controller('gestiones')
+@UseGuards(JwtAuthGuard)      // todo el controller requiere pase válido
+...
+@Get()
+@UseGuards(RolesGuard)        // esta ruta además exige rol
 @Roles('ADMIN', 1)
 ```
 
@@ -99,6 +115,7 @@ tiene, compara tu rol: por número (`rolId`) o por nombre (`rolNombre`). El rol
 | `auth` | Entrar (`login`) es público; `perfil` pide pase; `admin` pide pase + rol |
 | `clientes` | Todo con pase + rol (`ADMIN` para gestionar, `CLIENTE` para lo suyo) |
 | `documentos` | Listar, subir y descargar con pase + rol `ADMIN` |
+| `gestiones` | Todo con pase + rol `ADMIN` (lectura y guardado de formalizaciones) |
 | `servicios` | Solo pide pase, falta control de roles |
 
 ## Los archivos de datos
@@ -107,9 +124,9 @@ La base se describe en un solo archivo editable:
 
 | Archivo | Qué es |
 |---|---|
-| `prisma/contract.prisma` | El modelo: las 14 tablas y sus relaciones |
+| `prisma/contract.prisma` | El modelo: las tablas y sus relaciones (se edita a mano) |
 | `contract.json`, `contract.d.ts` | Generados automáticamente. No se editan |
-| `migrations/app/.../` | El paquete que llevó el modelo a la base real |
+| `migrations/app/.../` | Los paquetes que llevaron el modelo a la base real (baseline + `20261006T0517` de gestiones) |
 
 ## Para seguir leyendo
 
@@ -117,3 +134,6 @@ La base se describe en un solo archivo editable:
 - [Autorización en documentos](../04-referencia/04-autorizacion-documentos.md) —
   cómo se cerraron los permisos, con pruebas
 - [Evaluación del backend](../README.md) — el diagnóstico completo del estado
+
+
+## proximame, integracion de doble autenticacion

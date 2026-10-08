@@ -178,28 +178,64 @@ model Documento {
 }
 
 model ProyeccionF29 {
-  id                BigInt         @id @default(autoincrement())
-  periodoId         BigInt         @map("periodo_id")
-  version           Int
-  ivaDebito         Numeric(14, 2) @map("iva_debito")
-  ivaCredito        Numeric(14, 2) @map("iva_credito")
-  remanenteAnterior Numeric(14, 2) @map("remanente_anterior")
-  retenciones       Numeric(14, 2)
-  ppm               Numeric(14, 2)
-  impuestoEstimado  Numeric(14, 2) @map("impuesto_estimado")
-  totalEstimado     Numeric(14, 2) @map("total_estimado")
-  estado            VarChar(30)
-  generadoPor       BigInt?        @map("generado_por")
-  revisadoPor       BigInt?        @map("revisado_por")
-  documentoGenerado BigInt?        @map("documento_generado")
-  generadoEn        Timestamptz?   @map("generado_en")
+  id                     BigInt          @id @default(autoincrement())
+  periodoId              BigInt          @map("periodo_id")
+  version                Int
+  ivaDebito              Numeric(14, 2)  @map("iva_debito")
+  ivaCredito             Numeric(14, 2)  @map("iva_credito")
+  remanenteAnterior      Numeric(14, 2)  @map("remanente_anterior")
+  retenciones            Numeric(14, 2)
+  ppm                    Numeric(14, 2)
+  impuestoEstimado       Numeric(14, 2)  @map("impuesto_estimado")
+  totalEstimado          Numeric(14, 2)  @map("total_estimado")
+  estado                 VarChar(30)
+  generadoPor            BigInt?         @map("generado_por")
+  revisadoPor            BigInt?         @map("revisado_por")
+  documentoGenerado      BigInt?         @map("documento_generado")
+  generadoEn             Timestamptz?    @map("generado_en")
+  ppmTasa                Numeric(6, 3)   @map("ppm_tasa")
+  ppmMontoManual         Numeric(14, 2)? @map("ppm_monto_manual")
+  netoVoucher            Numeric(14, 2)  @map("neto_voucher")
+  ivaImportacion         Numeric(14, 2)  @map("iva_importacion")
+  impuestoUnico          Numeric(14, 2)  @map("impuesto_unico")
+  prestamoRemuneraciones Numeric(14, 2)  @map("prestamo_remuneraciones")
+  prestamoHonorarios     Numeric(14, 2)  @map("prestamo_honorarios")
+  retencionHonorarios    Numeric(14, 2)  @map("retencion_honorarios")
+  cotizaciones           Numeric(14, 2)
+  honorarios             Numeric(14, 2)
+  ventasFuente           VarChar(255)?   @map("ventas_fuente")
+  comprasFuente          VarChar(255)?   @map("compras_fuente")
 
-  periodo           PeriodoCliente @relation(fields:[periodoId], references:[id])
-  generador         Usuario?       @relation("ProyeccionGeneradaPor", fields:[generadoPor], references:[id])
-  revisor           Usuario?       @relation("ProyeccionRevisadaPor", fields:[revisadoPor], references:[id])
-  documento         Documento?     @relation("DocumentoGenerado", fields:[documentoGenerado], references:[id])
+  periodo                PeriodoCliente  @relation(fields:[periodoId], references:[id])
+  generador              Usuario?        @relation("ProyeccionGeneradaPor", fields:[generadoPor], references:[id])
+  revisor                Usuario?        @relation("ProyeccionRevisadaPor", fields:[revisadoPor], references:[id])
+  documento              Documento?      @relation("DocumentoGenerado", fields:[documentoGenerado], references:[id])
+  movimientos            F29Movimiento[]
 
+  @@unique([periodoId])
   @@map("proyecciones_f29")
+}
+
+// Detalle RCV del F29: una fila por documento de ventas/compras (espejo del
+// tipo `Row` de `f29/model.ts`). El padre se reemplaza en cascada en cada PUT.
+model F29Movimiento {
+  id              BigInt         @id @default(autoincrement())
+  proyeccionId    BigInt         @map("proyeccion_id")
+  tipo            VarChar(10)
+  orden           SmallInt
+  codigoDocumento SmallInt       @map("codigo_documento")
+  rut             VarChar(20)
+  folio           VarChar(30)
+  nombre          VarChar(200)
+  fecha           VarChar(10)
+  exento          Numeric(14, 2)
+  neto            Numeric(14, 2)
+  iva             Numeric(14, 2)
+  total           Numeric(14, 2)
+
+  proyeccion      ProyeccionF29  @relation(fields:[proyeccionId], references:[id], onDelete: Cascade)
+
+  @@map("f29_movimientos")
 }
 
 model Auditoria {

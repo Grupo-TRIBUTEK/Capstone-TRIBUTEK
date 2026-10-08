@@ -20,6 +20,10 @@
       "model": "Documento",
       "namespace": "public"
     },
+    "f29_movimientos": {
+      "model": "F29Movimiento",
+      "namespace": "public"
+    },
     "gestiones": {
       "model": "Gestion",
       "namespace": "public"
@@ -759,6 +763,194 @@
               "table": "documentos"
             }
           },
+          "F29Movimiento": {
+            "fields": {
+              "codigoDocumento": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "exento": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "fecha": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 10
+                  }
+                }
+              },
+              "folio": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 30
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "iva": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "neto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "nombre": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 200
+                  }
+                }
+              },
+              "orden": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "proyeccionId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "rut": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 20
+                  }
+                }
+              },
+              "tipo": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 10
+                  }
+                }
+              },
+              "total": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              }
+            },
+            "relations": {
+              "proyeccion": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "proyeccionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "ProyeccionF29",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "codigoDocumento": {
+                  "column": "codigo_documento"
+                },
+                "exento": {
+                  "column": "exento"
+                },
+                "fecha": {
+                  "column": "fecha"
+                },
+                "folio": {
+                  "column": "folio"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "iva": {
+                  "column": "iva"
+                },
+                "neto": {
+                  "column": "neto"
+                },
+                "nombre": {
+                  "column": "nombre"
+                },
+                "orden": {
+                  "column": "orden"
+                },
+                "proyeccionId": {
+                  "column": "proyeccion_id"
+                },
+                "rut": {
+                  "column": "rut"
+                },
+                "tipo": {
+                  "column": "tipo"
+                },
+                "total": {
+                  "column": "total"
+                }
+              },
+              "namespaceId": "public",
+              "table": "f29_movimientos"
+            }
+          },
           "Gestion": {
             "fields": {
               "actualizadoEn": {
@@ -1230,6 +1422,27 @@
           },
           "ProyeccionF29": {
             "fields": {
+              "comprasFuente": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 255
+                  }
+                }
+              },
+              "cotizaciones": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
               "documentoGenerado": {
                 "nullable": true,
                 "type": {
@@ -1261,6 +1474,17 @@
                   "kind": "scalar"
                 }
               },
+              "honorarios": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -1269,6 +1493,17 @@
                 }
               },
               "impuestoEstimado": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "impuestoUnico": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
@@ -1301,6 +1536,28 @@
                   }
                 }
               },
+              "ivaImportacion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "netoVoucher": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
               "periodoId": {
                 "nullable": false,
                 "type": {
@@ -1319,7 +1576,62 @@
                   }
                 }
               },
+              "ppmMontoManual": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "ppmTasa": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 6,
+                    "scale": 3
+                  }
+                }
+              },
+              "prestamoHonorarios": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "prestamoRemuneraciones": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
               "remanenteAnterior": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "retencionHonorarios": {
                 "nullable": false,
                 "type": {
                   "codecId": "pg/numeric@1",
@@ -1356,6 +1668,16 @@
                   "typeParams": {
                     "precision": 14,
                     "scale": 2
+                  }
+                }
+              },
+              "ventasFuente": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 255
                   }
                 }
               },
@@ -1398,6 +1720,21 @@
                   "namespace": "public"
                 }
               },
+              "movimientos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "proyeccionId"
+                  ]
+                },
+                "to": {
+                  "model": "F29Movimiento",
+                  "namespace": "public"
+                }
+              },
               "periodo": {
                 "cardinality": "N:1",
                 "on": {
@@ -1431,6 +1768,12 @@
             },
             "storage": {
               "fields": {
+                "comprasFuente": {
+                  "column": "compras_fuente"
+                },
+                "cotizaciones": {
+                  "column": "cotizaciones"
+                },
                 "documentoGenerado": {
                   "column": "documento_generado"
                 },
@@ -1443,11 +1786,17 @@
                 "generadoPor": {
                   "column": "generado_por"
                 },
+                "honorarios": {
+                  "column": "honorarios"
+                },
                 "id": {
                   "column": "id"
                 },
                 "impuestoEstimado": {
                   "column": "impuesto_estimado"
+                },
+                "impuestoUnico": {
+                  "column": "impuesto_unico"
                 },
                 "ivaCredito": {
                   "column": "iva_credito"
@@ -1455,14 +1804,35 @@
                 "ivaDebito": {
                   "column": "iva_debito"
                 },
+                "ivaImportacion": {
+                  "column": "iva_importacion"
+                },
+                "netoVoucher": {
+                  "column": "neto_voucher"
+                },
                 "periodoId": {
                   "column": "periodo_id"
                 },
                 "ppm": {
                   "column": "ppm"
                 },
+                "ppmMontoManual": {
+                  "column": "ppm_monto_manual"
+                },
+                "ppmTasa": {
+                  "column": "ppm_tasa"
+                },
+                "prestamoHonorarios": {
+                  "column": "prestamo_honorarios"
+                },
+                "prestamoRemuneraciones": {
+                  "column": "prestamo_remuneraciones"
+                },
                 "remanenteAnterior": {
                   "column": "remanente_anterior"
+                },
+                "retencionHonorarios": {
+                  "column": "retencion_honorarios"
                 },
                 "retenciones": {
                   "column": "retenciones"
@@ -1472,6 +1842,9 @@
                 },
                 "totalEstimado": {
                   "column": "total_estimado"
+                },
+                "ventasFuente": {
+                  "column": "ventas_fuente"
                 },
                 "version": {
                   "column": "version"
@@ -2926,6 +3299,145 @@
               },
               "uniques": []
             },
+            "f29_movimientos": {
+              "columns": {
+                "codigo_documento": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "exento": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "fecha": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 10
+                  }
+                },
+                "folio": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 30
+                  }
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "iva": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "neto": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "nombre": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 200
+                  }
+                },
+                "orden": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "proyeccion_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "rut": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 20
+                  }
+                },
+                "tipo": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 10
+                  }
+                },
+                "total": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "proyeccion_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "f29_movimientos"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "proyecciones_f29"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "proyeccion_id"
+                  ],
+                  "name": "f29_movimientos_proyeccion_id_idx_c31ed0ff",
+                  "prefix": "f29_movimientos_proyeccion_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "gestiones": {
               "columns": {
                 "actualizado_en": {
@@ -3289,6 +3801,23 @@
             },
             "proyecciones_f29": {
               "columns": {
+                "compras_fuente": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 255
+                  }
+                },
+                "cotizaciones": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
                 "documento_generado": {
                   "codecId": "pg/int8@1",
                   "nativeType": "int8",
@@ -3312,6 +3841,15 @@
                   "nativeType": "int8",
                   "nullable": true
                 },
+                "honorarios": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
                 "id": {
                   "codecId": "pg/int8@1",
                   "default": {
@@ -3322,6 +3860,15 @@
                   "nullable": false
                 },
                 "impuesto_estimado": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "impuesto_unico": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
                   "nullable": false,
@@ -3348,6 +3895,24 @@
                     "scale": 2
                   }
                 },
+                "iva_importacion": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "neto_voucher": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
                 "periodo_id": {
                   "codecId": "pg/int8@1",
                   "nativeType": "int8",
@@ -3362,7 +3927,52 @@
                     "scale": 2
                   }
                 },
+                "ppm_monto_manual": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": true,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "ppm_tasa": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 6,
+                    "scale": 3
+                  }
+                },
+                "prestamo_honorarios": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "prestamo_remuneraciones": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
                 "remanente_anterior": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "retencion_honorarios": {
                   "codecId": "pg/numeric@1",
                   "nativeType": "numeric",
                   "nullable": false,
@@ -3392,6 +4002,14 @@
                   "typeParams": {
                     "precision": 14,
                     "scale": 2
+                  }
+                },
+                "ventas_fuente": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 255
                   }
                 },
                 "version": {
@@ -3485,14 +4103,6 @@
                 },
                 {
                   "columns": [
-                    "periodo_id"
-                  ],
-                  "name": "proyecciones_f29_periodo_id_idx_0aa2ba5e",
-                  "prefix": "proyecciones_f29_periodo_id_idx",
-                  "unique": false
-                },
-                {
-                  "columns": [
                     "revisado_por"
                   ],
                   "name": "proyecciones_f29_revisado_por_idx_d61c6583",
@@ -3505,7 +4115,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "periodo_id"
+                  ]
+                }
+              ]
             },
             "roles": {
               "columns": {
@@ -4169,7 +4785,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "4ba31f9318f70b4f508861502d42928c9dbcf0494a7cb1b1fd1466f59eb5c5eb"
+    "storageHash": "f45e32ff1341dba7ce3eaba21c82e5c7f32e5a5f22b716848015e6717b66f6e3"
   },
   "capabilities": {
     "postgres": {
