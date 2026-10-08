@@ -134,3 +134,6 @@ La base se describe en un solo archivo editable:
 - [Autorización en documentos](../04-referencia/04-autorizacion-documentos.md) —
   cómo se cerraron los permisos, con pruebas
 - [Evaluación del backend](../README.md) — el diagnóstico completo del estado
+
+
+## proximame, integracion de doble autenticacion

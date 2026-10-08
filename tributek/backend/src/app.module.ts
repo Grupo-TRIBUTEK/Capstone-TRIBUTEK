@@ -8,6 +8,8 @@ import { ClientesModule } from './clientes/clientes.module.js';
 import { ServiciosModule } from './servicios/servicios.module.js';
 import { DocumentosModule } from './documentos/documentos.module.js';
 import { GestionesModule } from './gestiones/gestiones.module.js';
+import { PeriodosModule } from './periodos/periodos.module.js';
+import { F29Module } from './f29/f29.module.js';
 
 @Module({
   imports: [
@@ -18,6 +20,8 @@ import { GestionesModule } from './gestiones/gestiones.module.js';
     DocumentosModule,
     PaymentEvidenceModule,
     GestionesModule,
+    PeriodosModule,
+    F29Module,
   ],
   controllers: [AppController],
   providers: [AppService],

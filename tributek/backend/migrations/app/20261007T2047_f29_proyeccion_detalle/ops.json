@@ -1,0 +1,1418 @@
+[
+  {
+    "id": "dropIndex.proyecciones_f29.proyecciones_f29_periodo_id_idx_0aa2ba5e",
+    "label": "Drop index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "proyecciones_f29_periodo_id_idx_0aa2ba5e",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "drop index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\"",
+        "sql": "DROP INDEX \"public\".\"proyecciones_f29_periodo_id_idx_0aa2ba5e\"",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"proyecciones_f29_periodo_id_idx_0aa2ba5e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"proyecciones_f29_periodo_id_idx_0aa2ba5e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.f29_movimientos",
+    "label": "Create table \"f29_movimientos\"",
+    "summary": "Creates table \"f29_movimientos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "f29_movimientos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"f29_movimientos\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"f29_movimientos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"f29_movimientos\"",
+        "sql": "CREATE TABLE \"public\".\"f29_movimientos\" (\n  \"codigo_documento\" int2 NOT NULL,\n  \"exento\" numeric(14,2) NOT NULL,\n  \"fecha\" character varying(10) NOT NULL,\n  \"folio\" character varying(30) NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"iva\" numeric(14,2) NOT NULL,\n  \"neto\" numeric(14,2) NOT NULL,\n  \"nombre\" character varying(200) NOT NULL,\n  \"orden\" int2 NOT NULL,\n  \"proyeccion_id\" int8 NOT NULL,\n  \"rut\" character varying(20) NOT NULL,\n  \"tipo\" character varying(10) NOT NULL,\n  \"total\" numeric(14,2) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"f29_movimientos\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"f29_movimientos\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.compras_fuente",
+    "label": "Add column \"compras_fuente\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "compras_fuente",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"compras_fuente\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "compras_fuente"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"compras_fuente\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"compras_fuente\" character varying(255)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"compras_fuente\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "compras_fuente"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.ppm_monto_manual",
+    "label": "Add column \"ppm_monto_manual\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "ppm_monto_manual",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"ppm_monto_manual\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_monto_manual"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"ppm_monto_manual\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"ppm_monto_manual\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"ppm_monto_manual\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_monto_manual"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.ventas_fuente",
+    "label": "Add column \"ventas_fuente\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "ventas_fuente",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"ventas_fuente\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ventas_fuente"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"ventas_fuente\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"ventas_fuente\" character varying(255)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"ventas_fuente\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ventas_fuente"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.cotizaciones",
+    "label": "Add column \"cotizaciones\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cotizaciones",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cotizaciones\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "cotizaciones"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cotizaciones\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"cotizaciones\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cotizaciones\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "cotizaciones"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-cotizaciones",
+    "label": "Data transform: backfill-proyecciones_f29-cotizaciones",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-cotizaciones has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"cotizaciones\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-cotizaciones",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"cotizaciones\" = $1 WHERE \"cotizaciones\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-cotizaciones resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"cotizaciones\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.cotizaciones",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"cotizaciones\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cotizaciones",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cotizaciones\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "cotizaciones"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"cotizaciones\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"cotizaciones\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"cotizaciones\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"cotizaciones\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cotizaciones\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "cotizaciones",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.honorarios",
+    "label": "Add column \"honorarios\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"honorarios\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "honorarios"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"honorarios\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "honorarios"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-honorarios",
+    "label": "Data transform: backfill-proyecciones_f29-honorarios",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-honorarios has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-honorarios",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"honorarios\" = $1 WHERE \"honorarios\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-honorarios resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.honorarios",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"honorarios\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "honorarios"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"honorarios\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"honorarios\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"honorarios\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"honorarios\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "honorarios",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.impuesto_unico",
+    "label": "Add column \"impuesto_unico\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "impuesto_unico",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"impuesto_unico\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "impuesto_unico"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"impuesto_unico\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"impuesto_unico\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"impuesto_unico\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "impuesto_unico"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-impuesto_unico",
+    "label": "Data transform: backfill-proyecciones_f29-impuesto_unico",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-impuesto_unico has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"impuesto_unico\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-impuesto_unico",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"impuesto_unico\" = $1 WHERE \"impuesto_unico\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-impuesto_unico resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"impuesto_unico\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.impuesto_unico",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"impuesto_unico\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "impuesto_unico",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"impuesto_unico\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "impuesto_unico"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"impuesto_unico\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"impuesto_unico\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"impuesto_unico\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"impuesto_unico\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"impuesto_unico\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "impuesto_unico",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.iva_importacion",
+    "label": "Add column \"iva_importacion\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "iva_importacion",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"iva_importacion\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "iva_importacion"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"iva_importacion\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"iva_importacion\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iva_importacion\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "iva_importacion"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-iva_importacion",
+    "label": "Data transform: backfill-proyecciones_f29-iva_importacion",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-iva_importacion has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"iva_importacion\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-iva_importacion",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"iva_importacion\" = $1 WHERE \"iva_importacion\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-iva_importacion resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"iva_importacion\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.iva_importacion",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"iva_importacion\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "iva_importacion",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"iva_importacion\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "iva_importacion"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"iva_importacion\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"iva_importacion\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"iva_importacion\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"iva_importacion\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"iva_importacion\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "iva_importacion",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.neto_voucher",
+    "label": "Add column \"neto_voucher\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "neto_voucher",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"neto_voucher\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "neto_voucher"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"neto_voucher\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"neto_voucher\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"neto_voucher\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "neto_voucher"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-neto_voucher",
+    "label": "Data transform: backfill-proyecciones_f29-neto_voucher",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-neto_voucher has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"neto_voucher\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-neto_voucher",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"neto_voucher\" = $1 WHERE \"neto_voucher\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-neto_voucher resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"neto_voucher\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.neto_voucher",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"neto_voucher\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "neto_voucher",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"neto_voucher\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "neto_voucher"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"neto_voucher\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"neto_voucher\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"neto_voucher\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"neto_voucher\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"neto_voucher\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "neto_voucher",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.ppm_tasa",
+    "label": "Add column \"ppm_tasa\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "ppm_tasa",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"ppm_tasa\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_tasa"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"ppm_tasa\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"ppm_tasa\" numeric(6,3)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"ppm_tasa\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_tasa"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-ppm_tasa",
+    "label": "Data transform: backfill-proyecciones_f29-ppm_tasa",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-ppm_tasa has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"ppm_tasa\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-ppm_tasa",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"ppm_tasa\" = $1 WHERE \"ppm_tasa\" IS NULL",
+        "params": [
+          "0.000"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-ppm_tasa resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"ppm_tasa\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.ppm_tasa",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"ppm_tasa\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "ppm_tasa",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"ppm_tasa\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_tasa"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"ppm_tasa\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"ppm_tasa\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"ppm_tasa\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"ppm_tasa\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"ppm_tasa\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "ppm_tasa",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.prestamo_honorarios",
+    "label": "Add column \"prestamo_honorarios\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "prestamo_honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"prestamo_honorarios\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_honorarios"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"prestamo_honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"prestamo_honorarios\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"prestamo_honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_honorarios"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-prestamo_honorarios",
+    "label": "Data transform: backfill-proyecciones_f29-prestamo_honorarios",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-prestamo_honorarios has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-prestamo_honorarios",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"prestamo_honorarios\" = $1 WHERE \"prestamo_honorarios\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-prestamo_honorarios resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.prestamo_honorarios",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"prestamo_honorarios\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "prestamo_honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"prestamo_honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_honorarios"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"prestamo_honorarios\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_honorarios\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"prestamo_honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"prestamo_honorarios\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"prestamo_honorarios\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_honorarios",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.prestamo_remuneraciones",
+    "label": "Add column \"prestamo_remuneraciones\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "prestamo_remuneraciones",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"prestamo_remuneraciones\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_remuneraciones"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"prestamo_remuneraciones\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"prestamo_remuneraciones\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"prestamo_remuneraciones\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_remuneraciones"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-prestamo_remuneraciones",
+    "label": "Data transform: backfill-proyecciones_f29-prestamo_remuneraciones",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-prestamo_remuneraciones has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_remuneraciones\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-prestamo_remuneraciones",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"prestamo_remuneraciones\" = $1 WHERE \"prestamo_remuneraciones\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-prestamo_remuneraciones resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_remuneraciones\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.prestamo_remuneraciones",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"prestamo_remuneraciones\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "prestamo_remuneraciones",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"prestamo_remuneraciones\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_remuneraciones"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"prestamo_remuneraciones\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"prestamo_remuneraciones\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"prestamo_remuneraciones\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"prestamo_remuneraciones\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"prestamo_remuneraciones\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "prestamo_remuneraciones",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.proyecciones_f29.retencion_honorarios",
+    "label": "Add column \"retencion_honorarios\" to \"proyecciones_f29\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "retencion_honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"retencion_honorarios\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "retencion_honorarios"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"retencion_honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD COLUMN \"retencion_honorarios\" numeric(14,2)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"retencion_honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "retencion_honorarios"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "data_migration.backfill-proyecciones_f29-retencion_honorarios",
+    "label": "Data transform: backfill-proyecciones_f29-retencion_honorarios",
+    "operationClass": "data",
+    "target": {
+      "id": "postgres"
+    },
+    "precheck": [
+      {
+        "description": "Check backfill-proyecciones_f29-retencion_honorarios has work to do",
+        "sql": "SELECT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"retencion_honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "Run backfill-proyecciones_f29-retencion_honorarios",
+        "sql": "UPDATE \"public\".\"proyecciones_f29\" SET \"retencion_honorarios\" = $1 WHERE \"retencion_honorarios\" IS NULL",
+        "params": [
+          "0.00"
+        ]
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "Verify backfill-proyecciones_f29-retencion_honorarios resolved all violations",
+        "sql": "SELECT NOT EXISTS (SELECT \"id\" AS \"id\" FROM \"public\".\"proyecciones_f29\" WHERE \"retencion_honorarios\" IS NULL LIMIT 1) AS ok",
+        "params": []
+      }
+    ]
+  },
+  {
+    "id": "alterNullability.setNotNull.proyecciones_f29.retencion_honorarios",
+    "label": "Set NOT NULL on \"proyecciones_f29\".\"retencion_honorarios\"",
+    "operationClass": "destructive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "retencion_honorarios",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"retencion_honorarios\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "retencion_honorarios"
+        ]
+      },
+      {
+        "description": "ensure no NULL values in \"retencion_honorarios\"",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"public\".\"proyecciones_f29\" WHERE \"retencion_honorarios\" IS NULL) AS \"result\"",
+        "params": []
+      }
+    ],
+    "execute": [
+      {
+        "description": "set NOT NULL on \"retencion_honorarios\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ALTER COLUMN \"retencion_honorarios\" SET NOT NULL"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"retencion_honorarios\" is NOT NULL",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3 AND \"is_nullable\" = $4)) AS \"result\"",
+        "params": [
+          "public",
+          "proyecciones_f29",
+          "retencion_honorarios",
+          "NO"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.proyecciones_f29.proyecciones_f29_periodo_id_key",
+    "label": "Add unique constraint on \"proyecciones_f29\" (periodo_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "proyecciones_f29_periodo_id_key",
+        "table": "proyecciones_f29"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"proyecciones_f29_periodo_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_periodo_id_key",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"proyecciones_f29_periodo_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"proyecciones_f29\" ADD CONSTRAINT \"proyecciones_f29_periodo_id_key\" UNIQUE (\"periodo_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"proyecciones_f29_periodo_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "proyecciones_f29_periodo_id_key",
+          "public",
+          "\"public\".\"proyecciones_f29\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.f29_movimientos.f29_movimientos_proyeccion_id_idx_c31ed0ff",
+    "label": "Create index \"f29_movimientos_proyeccion_id_idx_c31ed0ff\" on \"f29_movimientos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "f29_movimientos_proyeccion_id_idx_c31ed0ff",
+        "table": "f29_movimientos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"f29_movimientos_proyeccion_id_idx_c31ed0ff\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"f29_movimientos_proyeccion_id_idx_c31ed0ff\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"f29_movimientos_proyeccion_id_idx_c31ed0ff\"",
+        "sql": "CREATE INDEX \"f29_movimientos_proyeccion_id_idx_c31ed0ff\" ON \"public\".\"f29_movimientos\" (\"proyeccion_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"f29_movimientos_proyeccion_id_idx_c31ed0ff\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"f29_movimientos_proyeccion_id_idx_c31ed0ff\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.f29_movimientos.f29_movimientos_proyeccion_id_fkey",
+    "label": "Add foreign key \"f29_movimientos_proyeccion_id_fkey\" on \"f29_movimientos\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "f29_movimientos_proyeccion_id_fkey",
+        "table": "f29_movimientos"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"f29_movimientos_proyeccion_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "f29_movimientos_proyeccion_id_fkey",
+          "public",
+          "\"public\".\"f29_movimientos\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"f29_movimientos_proyeccion_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"f29_movimientos\"\nADD CONSTRAINT \"f29_movimientos_proyeccion_id_fkey\"\nFOREIGN KEY (\"proyeccion_id\")\nREFERENCES \"public\".\"proyecciones_f29\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"f29_movimientos_proyeccion_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "f29_movimientos_proyeccion_id_fkey",
+          "public",
+          "\"public\".\"f29_movimientos\""
+        ]
+      }
+    ]
+  }
+]

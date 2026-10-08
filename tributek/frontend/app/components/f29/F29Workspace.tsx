@@ -40,7 +40,46 @@ export default function F29Workspace() {
         return; setError(e instanceof Error ? e.message : String(e)); }); }
     function commit(next: Database) { const saved = writeDatabase(next, db.revision); setDb(saved); return saved; }
     function save(p = draft) { if (!p)
-        return; commit({ ...db, projections: [...db.projections.filter(x => x.clientId !== p.clientId || x.period !== p.period), p] }); setDraft(p); setDirty(false); setNotice('Proyección guardada.'); }
+        return; commit({ ...db, projections: [...db.projections.filter(x => x.clientId !== p.clientId || x.period !== p.period), p] }); setDraft(p); setDirty(false); setNotice('Proyección guardada localmente…'); syncProjection(p).then(msg => setNotice(msg ? `Guardada localmente. ${msg}` : 'Proyección guardada en TRIBUTEK.')).catch(e => setNotice(`Guardada localmente. No se pudo sincronizar con el servidor: ${e instanceof Error ? e.message : String(e)}`)); }
+    // QUÉ HACE: envía la proyección al backend (PUT /f29/proyeccion/:clienteId).
+    //   El frontend usa un id local (UUID), pero el backend necesita el id real
+    //   de la BD, así que se resuelve por RUT. Antes se asegura de que exista el
+    //   periodo (PUT /periodos, upsert), porque guardar la proyección exige que
+    //   el periodo exista.
+    // DEVUELVE: un mensaje de aviso (cliente inexistente) o null si todo fue bien.
+    async function syncProjection(p: Projection): Promise<string | null> {
+        const client = db.clients.find(c => c.id === p.clientId);
+        if (!client) return 'Cliente no encontrado en la lista local.';
+        const dirRes = await authenticatedFetch('/clientes');
+        if (!dirRes.ok) throw new Error('no se pudo consultar el directorio de clientes.');
+        const remote = await dirRes.json();
+        const norm = normalizeRut(client.rut);
+        const match = Array.isArray(remote) ? remote.find((c: { id?: unknown; rut?: unknown }) => typeof c.rut === 'string' && normalizeRut(c.rut) === norm) : null;
+        if (!match || typeof match.id !== 'string' && typeof match.id !== 'number') return `El cliente ${client.name} no existe en TRIBUTEK (RUT ${client.rut}).`;
+        const clienteId = String(match.id);
+        const anio = Number(p.period.slice(0, 4)), mes = Number(p.period.slice(5, 7));
+        const perRes = await authenticatedFetch('/periodos', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ clienteId, anio, mes }),
+        });
+        if (!perRes.ok) throw new Error('no se pudo crear el periodo en el servidor.');
+        const fRes = await authenticatedFetch(`/f29/proyeccion/${clienteId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                anio, mes, manual: p.manual, ppmRate: p.ppmRate, ppmOverride: p.ppmOverride, reviewed: p.reviewed,
+                ventas: p.sales ? { name: p.sales.name, rows: p.sales.rows } : null,
+                compras: p.purchases ? { name: p.purchases.name, rows: p.purchases.rows } : null,
+            }),
+        });
+        if (!fRes.ok) {
+            let msg = `error ${fRes.status}`;
+            try { const data = await fRes.json(); if (data?.message) msg = typeof data.message === 'string' ? data.message : data.message.join(', '); } catch { }
+            throw new Error(msg);
+        }
+        return null;
+    }
     function leave() { return !dirty || confirm('Hay cambios sin guardar. ¿Quieres descartarlos?'); }
     function open(c: Client) { if (!leave())
         return; setActive(c); setDraft(db.projections.find(p => p.clientId === c.id && p.period === period) ?? newProjection(c.id, period)); setDirty(false); setError(''); setNotice(''); }
