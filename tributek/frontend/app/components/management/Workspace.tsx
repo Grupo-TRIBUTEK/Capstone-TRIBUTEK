@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useData, persist, syncRemoteClients } from "../ficha/store";
+import { borrarAbonos, hidratarObligaciones, sincronizarMes } from "./syncObligaciones";
+import { mesIgual } from "./syncHelpers";
 import { conceptLabel, concepts, receivables, services, today, type Concept } from "../ficha/model";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import ClientCreateModal, {
@@ -128,6 +130,18 @@ export default function Workspace({ view }: { view: View }) {
             ? `Directorio cargado; no se pudieron sincronizar los datos locales: ${syncError.message}`
             : "Directorio cargado; no se pudieron sincronizar los datos locales.");
         }
+        // Pull de Obligaciones: descarga meses y abonos del backend y
+        //   REEMPLAZA la parte local de cada cliente hidratado bien (el
+        //   servidor es la fuente de verdad). Best-effort: si falla, la vista
+        //   sigue con los datos locales. Si alguien guardó durante la
+        //   descarga, persist lanza por revisión y se descarta.
+        try {
+          const hidratado = await hidratarObligaciones(store.data);
+          if (hidratado && !controller.signal.aborted) {
+            persist(hidratado, store.data.revision);
+            setNotice("Datos de Obligaciones descargados del servidor.");
+          }
+        } catch { /* sin conexión, el ledger local sigue siendo válido */ }
       } catch (e) {
         if (!controller.signal.aborted) {
           setLoad("error");
@@ -175,6 +189,28 @@ export default function Workspace({ view }: { view: View }) {
       });
     return () => controller.abort();
   }, [gestionesReload]);
+  // En Obligaciones el backend es la fuente de verdad: solo se listan los
+  //   clientes que el servidor devolvió (ids de `remote`). El resto de las
+  //   vistas mantiene el directorio local.
+  const soloBackend = view === "obligaciones";
+  const clientesVisibles =
+    soloBackend && load === "ready"
+      ? data.clients.filter((c) => remote.some((r) => r.id === c.id))
+      : data.clients;
+  // La ficha de un cliente (meses/abonos) solo se considera "del backend"
+  // cuando el pull la hidrató bien; antes de eso la vista no la muestra.
+  const [hidratados, setHidratados] = useState<string[]>([]);
+  // Meses y abonos visibles en Obligaciones: solo lo hidratado del servidor.
+  // El resto de las vistas usa el ledger completo.
+  const mesesVisibles = soloBackend
+    ? data.months.filter((m) => hidratados.includes(m.clientId))
+    : data.months;
+  const abonosVisibles = soloBackend
+    ? data.payments.filter((p) => hidratados.includes(p.clientId))
+    : data.payments;
+  const vista: Ledger = soloBackend
+    ? { ...data, clients: clientesVisibles, months: mesesVisibles, payments: abonosVisibles }
+    : data;
   // El directorio de clientes tiene como fuente de verdad el backend. Los
   // datos locales guardan pagos y períodos; nunca deben inventar filas aquí.
   const clients: ClientView[] =
@@ -213,20 +249,64 @@ export default function Workspace({ view }: { view: View }) {
       (!machine || c.machine === machine) &&
       (!active || (active === "active") === c.active) &&
       (!status ||
-        totals(data, getMonth(data, c.id, period)).status === status) &&
+        totals(vista, getMonth(vista, c.id, period)).status === status) &&
       (!concept ||
         (view === "clientes"
-          ? debt(data, c.id, period, [concept as Concept])
-          : balance(data, getMonth(data, c.id, period), concept as Concept)) >
+          ? debt(vista, c.id, period, [concept as Concept])
+          : balance(vista, getMonth(vista, c.id, period), concept as Concept)) >
           0),
   );
   const openDeferrals = meta.deferrals.filter(
     (d) => deferralBalance(data, d) > 0,
   );
   function save(next: Ledger, revision = data.revision) {
+    const previo = data;
     persist(validateLedger(next), revision);
     setNotice("Cambios guardados.");
     setError("");
+    sincronizarObligaciones(previo, next);
+  }
+  // QUÉ HACE: después de persistir local, empuja a /obligaciones los cambios
+  //   de este guardado (opción B, igual que F29): meses modificados → PUT;
+  //   abonos quitados → DELETE. Los abonos NUEVOS no pasan por aquí:
+  //   PaymentForm les asigna el id del servidor antes de llamar a save.
+  //   Fire-and-forget: el guardado local ya ocurrió, un fallo solo cambia el
+  //   aviso de la banda superior.
+  function sincronizarObligaciones(previo: Ledger, next: Ledger) {
+    const meses = next.months.filter((m) => {
+      const antes = previo.months.find(
+        (x) => x.clientId === m.clientId && x.period === m.period,
+      );
+      return !antes || !mesIgual(antes, m);
+    });
+    const quitados = previo.payments.filter(
+      (p) => !next.payments.some((n) => n.id === p.id),
+    );
+    if (!meses.length && !quitados.length) return;
+    void (async () => {
+      try {
+        const avisos: string[] = [];
+        for (const month of meses) {
+          const cliente =
+            clients.find((c) => c.id === month.clientId) ??
+            next.clients.find((c) => c.id === month.clientId);
+          if (!cliente) {
+            avisos.push(`No se encontró el cliente del período ${month.period}.`);
+            continue;
+          }
+          const aviso = await sincronizarMes(month, cliente);
+          if (aviso) avisos.push(aviso);
+        }
+        await borrarAbonos(quitados);
+        if (avisos.length) setNotice(`Guardado localmente. ${avisos.join(" ")}`);
+        else setNotice("Cambios guardados y sincronizados con TRIBUTEK.");
+      } catch (e) {
+        setNotice(
+          "Guardado localmente. No se pudo sincronizar con el servidor: "
+          + (e instanceof Error ? e.message : String(e)),
+        );
+      }
+    })();
   }
   function run(action: () => void) {
     try {
@@ -250,13 +330,13 @@ export default function Workspace({ view }: { view: View }) {
       save({...data, payments:data.payments.filter(p => (p.transferId || p.id) !== key)});
     } catch(e) { setError((e as Error).message); }
   }
-  const received = receivedByCategory(data, period);
+  const received = receivedByCategory(vista, period);
   const pendingMonths = clients.filter(
     (c) =>
-      data.months.some((m) => m.clientId === c.id && m.period === period) &&
-      totals(data, getMonth(data, c.id, period)).status === "NO ENVIADO",
+      vista.months.some((m) => m.clientId === c.id && m.period === period) &&
+      totals(vista, getMonth(vista, c.id, period)).status === "NO ENVIADO",
   );
-  const payments = data.payments.filter(
+  const payments = vista.payments.filter(
     (p) =>
       (allPayments || p.date.slice(0, 7) === period) &&
       (!paymentFilter || p.clientId === paymentFilter) &&
@@ -278,7 +358,7 @@ export default function Workspace({ view }: { view: View }) {
   });
   const dueRows = clients.flatMap((c) =>
     ["Cotizaciones", "Impuestos"].flatMap((co) => {
-      const value = balance(data, getMonth(data, c.id, period), co as Concept);
+      const value = balance(vista, getMonth(vista, c.id, period), co as Concept);
       return value > 0
         ? [
             {
@@ -312,10 +392,10 @@ export default function Workspace({ view }: { view: View }) {
           kind: "monthly" as const,
           name: c.name,
           rut: c.rut,
-          amount: data.months.some(
+          amount: vista.months.some(
             (m) => m.clientId === c.id && m.period === period,
           )
-            ? getMonth(data, c.id, period).amounts.Honorarios
+            ? getMonth(vista, c.id, period).amounts.Honorarios
             : c.fee,
           description: `Servicios mensuales ${periodLabel(period)}`,
           number: "",
@@ -586,12 +666,12 @@ export default function Workspace({ view }: { view: View }) {
           <div className="tk-metrics">
             <Metric label="Clientes visibles">{visible.length}</Metric>
             <Metric label="Con deuda de servicios">
-              {visible.filter((c) => debt(data, c.id, period, services) > 0).length}
+              {visible.filter((c) => debt(vista, c.id, period, services) > 0).length}
             </Metric>
             <Metric label="Deuda acumulada con TRIBUTEK">
               <Money
                 value={visible.reduce(
-                  (s, c) => s + debt(data, c.id, period),
+                  (s, c) => s + debt(vista, c.id, period),
                   0,
                 )}
                 hidden={hidden}
@@ -629,8 +709,8 @@ export default function Workspace({ view }: { view: View }) {
                 </thead>
                 <tbody>
                   {visible.map((c) => {
-                    const m = getMonth(data, c.id, period),
-                      t = totals(data, m);
+                    const m = getMonth(vista, c.id, period),
+                      t = totals(vista, m);
                     const creadoEn = remote.find((r) => r.id === c.id)?.creadoEn;
                     const cs = (
                       view === "clientes" ? receivables : concepts
@@ -664,7 +744,7 @@ export default function Workspace({ view }: { view: View }) {
                         <td>{c.machine || "—"}</td>
                         <td>
                           <Badge>
-                            {data.months.includes(m)
+                            {vista.months.includes(m)
                               ? t.status
                               : "SIN REGISTRO"}
                           </Badge>
@@ -674,8 +754,8 @@ export default function Workspace({ view }: { view: View }) {
                             .filter(
                               (k) =>
                                 (view === "clientes"
-                                  ? debt(data, c.id, period, [k])
-                                  : balance(data, m, k)) > 0,
+                                  ? debt(vista, c.id, period, [k])
+                                  : balance(vista, m, k)) > 0,
                             )
                             .map((k) => (
                               <div className="tk-detail" key={k}>
@@ -683,8 +763,8 @@ export default function Workspace({ view }: { view: View }) {
                                 <Money
                                   value={
                                     view === "clientes"
-                                      ? debt(data, c.id, period, [k])
-                                      : balance(data, m, k)
+                                      ? debt(vista, c.id, period, [k])
+                                      : balance(vista, m, k)
                                   }
                                   hidden={hidden}
                                 />
@@ -695,7 +775,7 @@ export default function Workspace({ view }: { view: View }) {
                           {view === "clientes" ? (
                             <strong>
                               <Money
-                                value={debt(data, c.id, period, cs)}
+                                value={debt(vista, c.id, period, cs)}
                                 hidden={hidden}
                               />
                             </strong>
