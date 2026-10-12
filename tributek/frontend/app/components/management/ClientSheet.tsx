@@ -17,6 +17,7 @@ import {
   type PaymentInput,
 } from "./model";
 import { registerFolder } from "./PaymentFiles";
+import { asignarIdsAbonos } from "./syncObligaciones";
 import { Badge, Field, Modal, Money, copyReportImage, printReport } from "./ui";
 
 export type ClientView = Client & {
@@ -24,6 +25,13 @@ export type ClientView = Client & {
   machine: string;
   fee: number;
   active: boolean;
+  // Datos reales de la tabla `clientes` (PostgreSQL) que muestra la ficha.
+  //   Van vacíos en las vistas que todavía leen del ledger local.
+  tipoCliente: string;
+  contactoPrincipal: string;
+  emailContacto: string;
+  direccion: string;
+  estadoCliente: string;
 };
 export type Save = (next: Ledger, revision: string) => void;
 export function PaymentForm({
@@ -79,6 +87,33 @@ export function PaymentForm({
           }
         : data;
       const next = allocatePayment(base, input, editingKey);
+      // Registro los pagos nuevos en el backend ANTES de persistir para
+      //   quedarme con sus ids de la BD (mismo orden que registerFolder más abajo).
+      //   En una corrección también borro allá los reemplazados (primero borra,
+      //   después registra: el backend valida saldo por concepto). Si el servidor
+      //   falla, el pago se guarda igual con su id local y el aviso no bloquea
+      //   el guardado (opción B). Si el DELETE de los reemplazados falló pero
+      //   el POST sí pasó, quedan filas huérfanas en la BD que el próximo pull
+      //   re-agrega por clave natural: se corrigen borrando el pago de nuevo.
+      const nuevos = next.payments.filter(
+        (p) => !base.payments.some((old) => old.id === p.id),
+      );
+      const reemplazados = editingKey
+        ? data.payments.filter((p) => (p.transferId || p.id) === editingKey)
+        : [];
+      try {
+        const aviso = await asignarIdsAbonos(
+          nuevos,
+          data.clients.find((c) => c.id === clientId),
+          reemplazados,
+        );
+        if (aviso) window.alert(aviso);
+      } catch (e) {
+        window.alert(
+          "El pago quedó guardado localmente. No se pudo registrar en el servidor: "
+          + (e instanceof Error ? e.message : String(e)),
+        );
+      }
       save(next, data.revision);
       const added = next.payments.find(p => !base.payments.some(old => old.id === p.id));
       if (added) {
@@ -651,33 +686,76 @@ export default function ClientSheet({
         )}
         {tab === "Datos" && (
           <>
-          <form
-            className="tk-stack"
-            onSubmit={(e) => {
-              e.preventDefault();
-              try {
-                save(
-                  {
-                    ...data,
-                    clients: data.clients.map((c) =>
-                      c.id === client.id ? { ...c, note } : c,
-                    ),
-                    management: {
-                      ...extra(data),
-                      profiles: {
-                        ...extra(data).profiles,
-                        [client.id]: profile,
+            <section className="tk-panel">
+              <h3>Datos del cliente · PostgreSQL</h3>
+              <div className="tk-grid">
+                <div className="tk-line">
+                  <span>RUT</span>
+                  <strong>{client.rut || "Sin registrar"}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Nombre o razón social</span>
+                  <strong>{client.name || "Sin registrar"}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Tipo de cliente</span>
+                  <strong>{client.tipoCliente || "Sin registrar"}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Estado</span>
+                  <strong>{client.estadoCliente || (client.active ? "Activo" : "Inactivo")}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Contacto principal</span>
+                  <strong>{client.contactoPrincipal || "—"}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Correo de contacto</span>
+                  <strong>{client.emailContacto || "—"}</strong>
+                </div>
+                <div className="tk-line">
+                  <span>Teléfono</span>
+                  <strong>{client.phone || "—"}</strong>
+                </div>
+              </div>
+              <div className="tk-line">
+                <span>Dirección</span>
+                <strong>{client.direccion || "—"}</strong>
+              </div>
+              <p className="tk-subtle">
+                Estos campos provienen de la tabla <code>clientes</code> en
+                PostgreSQL. Para modificarlos usa «Editar» en la vista Clientes.
+              </p>
+            </section>
+            <form
+              className="tk-stack"
+              onSubmit={(e) => {
+                e.preventDefault();
+                try {
+                  save(
+                    {
+                      ...data,
+                      clients: data.clients.map((c) =>
+                        c.id === client.id ? { ...c, note } : c,
+                      ),
+                      management: {
+                        // `extra(data)` garantiza un Management completo: el
+                        //   campo `management` del ledger es opcional.
+                        ...extra(data),
+                        profiles: {
+                          ...extra(data).profiles,
+                          [client.id]: profile,
+                        },
                       },
                     },
-                  },
-                  data.revision,
-                );
-                onClose();
-              } catch (e) {
-                setError((e as Error).message);
-              }
-            }}
-          >
+                    data.revision,
+                  );
+                  onClose();
+                } catch (e) {
+                  setError((e as Error).message);
+                }
+              }}
+            >
             <Field label="Máquina de pago">
               <input
                 value={profile.machine}
@@ -744,6 +822,11 @@ export default function ClientSheet({
             </Field>
             <p className="tk-subtle">
               La nota privada no se incluye en mensajes ni imágenes.
+            </p>
+            <p role="note" className="tk-subtle">
+              Máquina de pago, honorario acordado, comuna, régimen tributario,
+              fecha de inicio y nota privada aún no tienen columna en
+              PostgreSQL: se guardan en el almacenamiento local del navegador.
             </p>
             <footer>
               <button className="primary">Guardar datos de gestión</button>

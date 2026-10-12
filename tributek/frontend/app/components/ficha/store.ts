@@ -41,7 +41,7 @@ function subscribe(fn: () => void) {
     if (!listeners.size) window.removeEventListener("storage", storage);
   };
 }
-export function persist(data: Data, revision: string) {
+export function persist(data: Data, revision: string): Data {
   if (!snapshot.ready || snapshot.error)
     throw new Error("El almacenamiento no está disponible.");
   const current = parseData(localStorage.getItem(KEY));
@@ -56,6 +56,7 @@ export function persist(data: Data, revision: string) {
   localStorage.setItem(KEY, JSON.stringify(saved));
   snapshot = { data: saved, ready: true, error: "" };
   emit();
+  return saved;
 }
 const getSnapshot = () => snapshot;
 const getServerSnapshot = () => initial;
@@ -63,7 +64,7 @@ export function useData() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-export function syncRemoteClients(records: import('./mergeClients').RemoteClient[]) {
+export function syncRemoteClients(records: import('./mergeClients').RemoteClient[]): Data {
   if (!snapshot.ready || snapshot.error) throw new Error('La ficha local no está disponible.');
   const remoteIds = new Set(records.map((record) => record.id));
   const clients = snapshot.data.clients.filter((client) => remoteIds.has(client.id));
@@ -75,5 +76,9 @@ export function syncRemoteClients(records: import('./mergeClients').RemoteClient
   const source = pruned ? { ...snapshot.data, clients, months, payments } : snapshot.data;
   const next = mergeClients(source, records);
   if (next !== snapshot.data) persist(next, snapshot.data.revision);
+  // Devuelve el ledger vigente: quien llama debe usarlo (y su
+  //   revisión) para cualquier escritura posterior, porque la
+  //   fusión puede haber persistido y cambiado la revisión.
+  return snapshot.data;
 }
 

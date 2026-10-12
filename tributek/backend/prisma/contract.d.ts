@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'f45e32ff1341dba7ce3eaba21c82e5c7f32e5a5f22b716848015e6717b66f6e3'>;
+  StorageHashBase<'d8445047d45ca198adf184c27a3a780c021cf626a55e17470ef1f7372a447582'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -240,6 +240,21 @@ type DefaultLiteralValue<CodecId extends string, Encoded> = CodecId extends keyo
 
 export type FieldOutputTypes = {
   readonly public: {
+    readonly AbonoMes: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mesId: CodecTypes['pg/int8@1']['output'];
+      readonly concepto: Varchar<60>;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['output'];
+      readonly monto: Numeric<14, 2>;
+      readonly nota: Varchar<300> | null;
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly metodo: Varchar<30> | null;
+      readonly cuentaOrigen: Varchar<200> | null;
+      readonly cuentaDestino: Varchar<200> | null;
+      readonly destino: Varchar<20> | null;
+      readonly transferId: Varchar<255> | null;
+      readonly postergacionId: CodecTypes['pg/int8@1']['output'] | null;
+    };
     readonly Auditoria: {
       readonly id: CodecTypes['pg/int8@1']['output'];
       readonly usuarioId: CodecTypes['pg/int8@1']['output'] | null;
@@ -300,6 +315,21 @@ export type FieldOutputTypes = {
       readonly iva: Numeric<14, 2>;
       readonly total: Numeric<14, 2>;
     };
+    readonly Factura: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly clienteId: CodecTypes['pg/int8@1']['output'];
+      readonly anio: CodecTypes['pg/int2@1']['output'];
+      readonly mes: CodecTypes['pg/int2@1']['output'];
+      readonly tipo: Varchar<10>;
+      readonly nombre: Varchar<180>;
+      readonly rut: Varchar<20>;
+      readonly descripcion: Varchar<300>;
+      readonly monto: Numeric<14, 2>;
+      readonly numero: Varchar<30> | null;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly nota: Varchar<1000> | null;
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    };
     readonly Gestion: {
       readonly id: CodecTypes['pg/int8@1']['output'];
       readonly clienteId: CodecTypes['pg/int8@1']['output'];
@@ -319,6 +349,29 @@ export type FieldOutputTypes = {
       readonly orden: CodecTypes['pg/int2@1']['output'] | null;
       readonly fecha: CodecTypes['pg/date-temporal@1']['output'] | null;
     };
+    readonly MesCliente: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly periodoId: CodecTypes['pg/int8@1']['output'];
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly actualizadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly enviado: CodecTypes['pg/bool@1']['output'];
+      readonly seguimientoFecha: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly seguimientoHecho: CodecTypes['pg/bool@1']['output'];
+      readonly seguimientoNota: Varchar<500> | null;
+    };
+    readonly MontoConcepto: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mesId: CodecTypes['pg/int8@1']['output'];
+      readonly concepto: Varchar<60>;
+      readonly monto: Numeric<14, 2>;
+    };
+    readonly PasoMes: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mesId: CodecTypes['pg/int8@1']['output'];
+      readonly orden: CodecTypes['pg/int2@1']['output'];
+      readonly texto: Varchar<180>;
+      readonly hecho: CodecTypes['pg/bool@1']['output'];
+    };
     readonly PeriodoCliente: {
       readonly id: CodecTypes['pg/int8@1']['output'];
       readonly clienteId: CodecTypes['pg/int8@1']['output'];
@@ -327,6 +380,17 @@ export type FieldOutputTypes = {
       readonly estadoContable: Varchar<30>;
       readonly fechaVencimiento: CodecTypes['pg/date-temporal@1']['output'] | null;
       readonly cerrado: CodecTypes['pg/bool@1']['output'];
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+    };
+    readonly PostergacionMes: {
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly clienteId: CodecTypes['pg/int8@1']['output'];
+      readonly anio: CodecTypes['pg/int2@1']['output'];
+      readonly mes: CodecTypes['pg/int2@1']['output'];
+      readonly concepto: Varchar<60>;
+      readonly monto: Numeric<14, 2>;
+      readonly vencimiento: CodecTypes['pg/date-temporal@1']['output'];
+      readonly nota: Varchar<500> | null;
       readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     };
     readonly ProyeccionF29: {
@@ -426,6 +490,21 @@ export type FieldOutputTypes = {
 };
 export type FieldInputTypes = {
   readonly public: {
+    readonly AbonoMes: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mesId: CodecTypes['pg/int8@1']['input'];
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly fecha: CodecTypes['pg/date-temporal@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly metodo: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly cuentaOrigen: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly cuentaDestino: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly destino: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly transferId: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly postergacionId: CodecTypes['pg/int8@1']['input'] | null;
+    };
     readonly Auditoria: {
       readonly id: CodecTypes['pg/int8@1']['input'];
       readonly usuarioId: CodecTypes['pg/int8@1']['input'] | null;
@@ -486,6 +565,21 @@ export type FieldInputTypes = {
       readonly iva: CodecTypes['pg/numeric@1']['input'];
       readonly total: CodecTypes['pg/numeric@1']['input'];
     };
+    readonly Factura: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly clienteId: CodecTypes['pg/int8@1']['input'];
+      readonly anio: CodecTypes['pg/int2@1']['input'];
+      readonly mes: CodecTypes['pg/int2@1']['input'];
+      readonly tipo: CodecTypes['sql/varchar@1']['input'];
+      readonly nombre: CodecTypes['sql/varchar@1']['input'];
+      readonly rut: CodecTypes['sql/varchar@1']['input'];
+      readonly descripcion: CodecTypes['sql/varchar@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly numero: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+    };
     readonly Gestion: {
       readonly id: CodecTypes['pg/int8@1']['input'];
       readonly clienteId: CodecTypes['pg/int8@1']['input'];
@@ -505,6 +599,29 @@ export type FieldInputTypes = {
       readonly orden: CodecTypes['pg/int2@1']['input'] | null;
       readonly fecha: CodecTypes['pg/date-temporal@1']['input'] | null;
     };
+    readonly MesCliente: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly periodoId: CodecTypes['pg/int8@1']['input'];
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly actualizadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly enviado: CodecTypes['pg/bool@1']['input'];
+      readonly seguimientoFecha: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly seguimientoHecho: CodecTypes['pg/bool@1']['input'];
+      readonly seguimientoNota: CodecTypes['sql/varchar@1']['input'] | null;
+    };
+    readonly MontoConcepto: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mesId: CodecTypes['pg/int8@1']['input'];
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+    };
+    readonly PasoMes: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mesId: CodecTypes['pg/int8@1']['input'];
+      readonly orden: CodecTypes['pg/int2@1']['input'];
+      readonly texto: CodecTypes['sql/varchar@1']['input'];
+      readonly hecho: CodecTypes['pg/bool@1']['input'];
+    };
     readonly PeriodoCliente: {
       readonly id: CodecTypes['pg/int8@1']['input'];
       readonly clienteId: CodecTypes['pg/int8@1']['input'];
@@ -513,6 +630,17 @@ export type FieldInputTypes = {
       readonly estadoContable: CodecTypes['sql/varchar@1']['input'];
       readonly fechaVencimiento: CodecTypes['pg/date-temporal@1']['input'] | null;
       readonly cerrado: CodecTypes['pg/bool@1']['input'];
+      readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+    };
+    readonly PostergacionMes: {
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly clienteId: CodecTypes['pg/int8@1']['input'];
+      readonly anio: CodecTypes['pg/int2@1']['input'];
+      readonly mes: CodecTypes['pg/int2@1']['input'];
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly vencimiento: CodecTypes['pg/date-temporal@1']['input'];
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
       readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
     };
     readonly ProyeccionF29: {
@@ -612,6 +740,21 @@ export type FieldInputTypes = {
 };
 export type StorageColumnTypes = {
   readonly public: {
+    readonly abonos_mes: {
+      readonly concepto: Varchar<60>;
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly cuenta_destino: Varchar<200> | null;
+      readonly cuenta_origen: Varchar<200> | null;
+      readonly destino: Varchar<20> | null;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['output'];
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mes_id: CodecTypes['pg/int8@1']['output'];
+      readonly metodo: Varchar<30> | null;
+      readonly monto: Numeric<14, 2>;
+      readonly nota: Varchar<300> | null;
+      readonly postergacion_id: CodecTypes['pg/int8@1']['output'] | null;
+      readonly transfer_id: Varchar<255> | null;
+    };
     readonly auditoria: {
       readonly accion: Varchar<80>;
       readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
@@ -672,6 +815,21 @@ export type StorageColumnTypes = {
       readonly tipo: Varchar<10>;
       readonly total: Numeric<14, 2>;
     };
+    readonly facturas: {
+      readonly anio: CodecTypes['pg/int2@1']['output'];
+      readonly cliente_id: CodecTypes['pg/int8@1']['output'];
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly descripcion: Varchar<300>;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mes: CodecTypes['pg/int2@1']['output'];
+      readonly monto: Numeric<14, 2>;
+      readonly nombre: Varchar<180>;
+      readonly nota: Varchar<1000> | null;
+      readonly numero: Varchar<30> | null;
+      readonly rut: Varchar<20>;
+      readonly tipo: Varchar<10>;
+    };
     readonly gestiones: {
       readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly cliente_id: CodecTypes['pg/int8@1']['output'];
@@ -691,6 +849,29 @@ export type StorageColumnTypes = {
       readonly titulo: Varchar<180>;
       readonly visible_cliente: CodecTypes['pg/bool@1']['output'];
     };
+    readonly meses_cliente: {
+      readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly enviado: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly periodo_id: CodecTypes['pg/int8@1']['output'];
+      readonly seguimiento_fecha: CodecTypes['pg/date-temporal@1']['output'] | null;
+      readonly seguimiento_hecho: CodecTypes['pg/bool@1']['output'];
+      readonly seguimiento_nota: Varchar<500> | null;
+    };
+    readonly montos_concepto: {
+      readonly concepto: Varchar<60>;
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mes_id: CodecTypes['pg/int8@1']['output'];
+      readonly monto: Numeric<14, 2>;
+    };
+    readonly pasos_mes: {
+      readonly hecho: CodecTypes['pg/bool@1']['output'];
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mes_id: CodecTypes['pg/int8@1']['output'];
+      readonly orden: CodecTypes['pg/int2@1']['output'];
+      readonly texto: Varchar<180>;
+    };
     readonly periodos_cliente: {
       readonly anio: CodecTypes['pg/int2@1']['output'];
       readonly cerrado: CodecTypes['pg/bool@1']['output'];
@@ -700,6 +881,17 @@ export type StorageColumnTypes = {
       readonly fecha_vencimiento: CodecTypes['pg/date-temporal@1']['output'] | null;
       readonly id: CodecTypes['pg/int8@1']['output'];
       readonly mes: CodecTypes['pg/int2@1']['output'];
+    };
+    readonly postergaciones_mes: {
+      readonly anio: CodecTypes['pg/int2@1']['output'];
+      readonly cliente_id: CodecTypes['pg/int8@1']['output'];
+      readonly concepto: Varchar<60>;
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly id: CodecTypes['pg/int8@1']['output'];
+      readonly mes: CodecTypes['pg/int2@1']['output'];
+      readonly monto: Numeric<14, 2>;
+      readonly nota: Varchar<500> | null;
+      readonly vencimiento: CodecTypes['pg/date-temporal@1']['output'];
     };
     readonly proyecciones_f29: {
       readonly compras_fuente: Varchar<255> | null;
@@ -798,6 +990,21 @@ export type StorageColumnTypes = {
 };
 export type StorageColumnInputTypes = {
   readonly public: {
+    readonly abonos_mes: {
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly cuenta_destino: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly cuenta_origen: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly destino: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly fecha: CodecTypes['pg/date-temporal@1']['input'];
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mes_id: CodecTypes['pg/int8@1']['input'];
+      readonly metodo: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly postergacion_id: CodecTypes['pg/int8@1']['input'] | null;
+      readonly transfer_id: CodecTypes['sql/varchar@1']['input'] | null;
+    };
     readonly auditoria: {
       readonly accion: CodecTypes['sql/varchar@1']['input'];
       readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
@@ -858,6 +1065,21 @@ export type StorageColumnInputTypes = {
       readonly tipo: CodecTypes['sql/varchar@1']['input'];
       readonly total: CodecTypes['pg/numeric@1']['input'];
     };
+    readonly facturas: {
+      readonly anio: CodecTypes['pg/int2@1']['input'];
+      readonly cliente_id: CodecTypes['pg/int8@1']['input'];
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly descripcion: CodecTypes['sql/varchar@1']['input'];
+      readonly fecha: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mes: CodecTypes['pg/int2@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly nombre: CodecTypes['sql/varchar@1']['input'];
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly numero: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly rut: CodecTypes['sql/varchar@1']['input'];
+      readonly tipo: CodecTypes['sql/varchar@1']['input'];
+    };
     readonly gestiones: {
       readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly cliente_id: CodecTypes['pg/int8@1']['input'];
@@ -877,6 +1099,29 @@ export type StorageColumnInputTypes = {
       readonly titulo: CodecTypes['sql/varchar@1']['input'];
       readonly visible_cliente: CodecTypes['pg/bool@1']['input'];
     };
+    readonly meses_cliente: {
+      readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly enviado: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly periodo_id: CodecTypes['pg/int8@1']['input'];
+      readonly seguimiento_fecha: CodecTypes['pg/date-temporal@1']['input'] | null;
+      readonly seguimiento_hecho: CodecTypes['pg/bool@1']['input'];
+      readonly seguimiento_nota: CodecTypes['sql/varchar@1']['input'] | null;
+    };
+    readonly montos_concepto: {
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mes_id: CodecTypes['pg/int8@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+    };
+    readonly pasos_mes: {
+      readonly hecho: CodecTypes['pg/bool@1']['input'];
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mes_id: CodecTypes['pg/int8@1']['input'];
+      readonly orden: CodecTypes['pg/int2@1']['input'];
+      readonly texto: CodecTypes['sql/varchar@1']['input'];
+    };
     readonly periodos_cliente: {
       readonly anio: CodecTypes['pg/int2@1']['input'];
       readonly cerrado: CodecTypes['pg/bool@1']['input'];
@@ -886,6 +1131,17 @@ export type StorageColumnInputTypes = {
       readonly fecha_vencimiento: CodecTypes['pg/date-temporal@1']['input'] | null;
       readonly id: CodecTypes['pg/int8@1']['input'];
       readonly mes: CodecTypes['pg/int2@1']['input'];
+    };
+    readonly postergaciones_mes: {
+      readonly anio: CodecTypes['pg/int2@1']['input'];
+      readonly cliente_id: CodecTypes['pg/int8@1']['input'];
+      readonly concepto: CodecTypes['sql/varchar@1']['input'];
+      readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly id: CodecTypes['pg/int8@1']['input'];
+      readonly mes: CodecTypes['pg/int2@1']['input'];
+      readonly monto: CodecTypes['pg/numeric@1']['input'];
+      readonly nota: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly vencimiento: CodecTypes['pg/date-temporal@1']['input'];
     };
     readonly proyecciones_f29: {
       readonly compras_fuente: CodecTypes['sql/varchar@1']['input'] | null;
@@ -1000,6 +1256,129 @@ type ContractBase = Omit<
         readonly kind: 'postgres-schema';
         readonly entries: {
           readonly table: {
+            readonly abonos_mes: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly mes_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly concepto: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 60 };
+                };
+                readonly fecha: {
+                  readonly nativeType: 'date';
+                  readonly codecId: 'pg/date-temporal@1';
+                  readonly nullable: false;
+                };
+                readonly monto: {
+                  readonly nativeType: 'numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+                readonly nota: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 300 };
+                };
+                readonly creado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly metodo: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 30 };
+                };
+                readonly cuenta_origen: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 200 };
+                };
+                readonly cuenta_destino: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 200 };
+                };
+                readonly destino: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 20 };
+                };
+                readonly transfer_id: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 255 };
+                };
+                readonly postergacion_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'abonos_mes_mes_id_idx_321dd52e';
+                  readonly prefix: 'abonos_mes_mes_id_idx';
+                  readonly columns: readonly ['mes_id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'abonos_mes_postergacion_id_idx_b60c6cc9';
+                  readonly prefix: 'abonos_mes_postergacion_id_idx';
+                  readonly columns: readonly ['postergacion_id'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'abonos_mes';
+                    readonly columns: readonly ['mes_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'meses_cliente';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'abonos_mes';
+                    readonly columns: readonly ['postergacion_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'postergaciones_mes';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly auditoria: {
               columns: {
                 readonly id: {
@@ -1492,6 +1871,110 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly facturas: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly cliente_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly anio: {
+                  readonly nativeType: 'int2';
+                  readonly codecId: 'pg/int2@1';
+                  readonly nullable: false;
+                };
+                readonly mes: {
+                  readonly nativeType: 'int2';
+                  readonly codecId: 'pg/int2@1';
+                  readonly nullable: false;
+                };
+                readonly tipo: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 10 };
+                };
+                readonly nombre: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 180 };
+                };
+                readonly rut: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 20 };
+                };
+                readonly descripcion: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 300 };
+                };
+                readonly monto: {
+                  readonly nativeType: 'numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+                readonly numero: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 30 };
+                };
+                readonly fecha: {
+                  readonly nativeType: 'date';
+                  readonly codecId: 'pg/date-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly nota: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 1000 };
+                };
+                readonly creado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'facturas_cliente_id_idx_9196b84e';
+                  readonly prefix: 'facturas_cliente_id_idx';
+                  readonly columns: readonly ['cliente_id'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'facturas';
+                    readonly columns: readonly ['cliente_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'clientes';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly gestiones: {
               columns: {
                 readonly id: {
@@ -1707,6 +2190,196 @@ type ContractBase = Omit<
                 },
               ];
             };
+            readonly meses_cliente: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly periodo_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly creado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly actualizado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly enviado: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly seguimiento_fecha: {
+                  readonly nativeType: 'date';
+                  readonly codecId: 'pg/date-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly seguimiento_hecho: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly seguimiento_nota: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 500 };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['periodo_id'] }];
+              indexes: readonly [];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'meses_cliente';
+                    readonly columns: readonly ['periodo_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'periodos_cliente';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly montos_concepto: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly mes_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly concepto: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 60 };
+                };
+                readonly monto: {
+                  readonly nativeType: 'numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['mes_id', 'concepto'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'montos_concepto_mes_id_idx_321dd52e';
+                  readonly prefix: 'montos_concepto_mes_id_idx';
+                  readonly columns: readonly ['mes_id'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'montos_concepto';
+                    readonly columns: readonly ['mes_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'meses_cliente';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly pasos_mes: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly mes_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly orden: {
+                  readonly nativeType: 'int2';
+                  readonly codecId: 'pg/int2@1';
+                  readonly nullable: false;
+                };
+                readonly texto: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 180 };
+                };
+                readonly hecho: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'pasos_mes_mes_id_idx_321dd52e';
+                  readonly prefix: 'pasos_mes_mes_id_idx';
+                  readonly columns: readonly ['mes_id'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'pasos_mes';
+                    readonly columns: readonly ['mes_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'meses_cliente';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
             readonly periodos_cliente: {
               columns: {
                 readonly id: {
@@ -1774,6 +2447,86 @@ type ContractBase = Omit<
                   readonly source: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'periodos_cliente';
+                    readonly columns: readonly ['cliente_id'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'clientes';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly postergaciones_mes: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'function';
+                    readonly expression: 'autoincrement()';
+                  };
+                };
+                readonly cliente_id: {
+                  readonly nativeType: 'int8';
+                  readonly codecId: 'pg/int8@1';
+                  readonly nullable: false;
+                };
+                readonly anio: {
+                  readonly nativeType: 'int2';
+                  readonly codecId: 'pg/int2@1';
+                  readonly nullable: false;
+                };
+                readonly mes: {
+                  readonly nativeType: 'int2';
+                  readonly codecId: 'pg/int2@1';
+                  readonly nullable: false;
+                };
+                readonly concepto: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 60 };
+                };
+                readonly monto: {
+                  readonly nativeType: 'numeric';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+                readonly vencimiento: {
+                  readonly nativeType: 'date';
+                  readonly codecId: 'pg/date-temporal@1';
+                  readonly nullable: false;
+                };
+                readonly nota: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 500 };
+                };
+                readonly creado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [
+                {
+                  readonly name: 'postergaciones_mes_cliente_id_idx_9196b84e';
+                  readonly prefix: 'postergaciones_mes_cliente_id_idx';
+                  readonly columns: readonly ['cliente_id'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'postergaciones_mes';
                     readonly columns: readonly ['cliente_id'];
                   };
                   readonly target: {
@@ -2553,6 +3306,21 @@ type ContractBase = Omit<
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'PeriodoCliente';
     };
+    readonly meses_cliente: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'MesCliente';
+    };
+    readonly montos_concepto: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'MontoConcepto';
+    };
+    readonly pasos_mes: { readonly namespace: 'public' & NamespaceId; readonly model: 'PasoMes' };
+    readonly abonos_mes: { readonly namespace: 'public' & NamespaceId; readonly model: 'AbonoMes' };
+    readonly postergaciones_mes: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'PostergacionMes';
+    };
+    readonly facturas: { readonly namespace: 'public' & NamespaceId; readonly model: 'Factura' };
     readonly trabajadores: {
       readonly namespace: 'public' & NamespaceId;
       readonly model: 'Trabajador';
@@ -2584,6 +3352,140 @@ type ContractBase = Omit<
     readonly namespaces: {
       readonly public: {
         readonly models: {
+          readonly AbonoMes: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly mesId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly concepto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 60 };
+                };
+              };
+              readonly fecha: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-temporal@1' };
+              };
+              readonly monto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+              };
+              readonly nota: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 300 };
+                };
+              };
+              readonly creadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly metodo: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 30 };
+                };
+              };
+              readonly cuentaOrigen: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 200 };
+                };
+              };
+              readonly cuentaDestino: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 200 };
+                };
+              };
+              readonly destino: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 20 };
+                };
+              };
+              readonly transferId: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 255 };
+                };
+              };
+              readonly postergacionId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+            };
+            readonly relations: {
+              readonly mes: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MesCliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['mesId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly postergacion: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PostergacionMes';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['postergacionId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'abonos_mes';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly mesId: { readonly column: 'mes_id' };
+                readonly concepto: { readonly column: 'concepto' };
+                readonly fecha: { readonly column: 'fecha' };
+                readonly monto: { readonly column: 'monto' };
+                readonly nota: { readonly column: 'nota' };
+                readonly creadoEn: { readonly column: 'creado_en' };
+                readonly metodo: { readonly column: 'metodo' };
+                readonly cuentaOrigen: { readonly column: 'cuenta_origen' };
+                readonly cuentaDestino: { readonly column: 'cuenta_destino' };
+                readonly destino: { readonly column: 'destino' };
+                readonly transferId: { readonly column: 'transfer_id' };
+                readonly postergacionId: { readonly column: 'postergacion_id' };
+              };
+            };
+          };
           readonly Auditoria: {
             readonly fields: {
               readonly id: {
@@ -2754,6 +3656,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['clienteId'];
                 };
               };
+              readonly facturas: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Factura';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['clienteId'];
+                };
+              };
               readonly gestiones: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -2769,6 +3682,17 @@ type ContractBase = Omit<
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
                   readonly model: 'PeriodoCliente';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['clienteId'];
+                };
+              };
+              readonly postergaciones: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PostergacionMes';
                 };
                 readonly cardinality: '1:N';
                 readonly on: {
@@ -3186,6 +4110,125 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly Factura: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly clienteId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly anio: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int2@1' };
+              };
+              readonly mes: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int2@1' };
+              };
+              readonly tipo: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 10 };
+                };
+              };
+              readonly nombre: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 180 };
+                };
+              };
+              readonly rut: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 20 };
+                };
+              };
+              readonly descripcion: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 300 };
+                };
+              };
+              readonly monto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+              };
+              readonly numero: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 30 };
+                };
+              };
+              readonly fecha: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-temporal@1' };
+              };
+              readonly nota: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 1000 };
+                };
+              };
+              readonly creadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly cliente: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Cliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['clienteId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'facturas';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly clienteId: { readonly column: 'cliente_id' };
+                readonly anio: { readonly column: 'anio' };
+                readonly mes: { readonly column: 'mes' };
+                readonly tipo: { readonly column: 'tipo' };
+                readonly nombre: { readonly column: 'nombre' };
+                readonly rut: { readonly column: 'rut' };
+                readonly descripcion: { readonly column: 'descripcion' };
+                readonly monto: { readonly column: 'monto' };
+                readonly numero: { readonly column: 'numero' };
+                readonly fecha: { readonly column: 'fecha' };
+                readonly nota: { readonly column: 'nota' };
+                readonly creadoEn: { readonly column: 'creado_en' };
+              };
+            };
+          };
           readonly Gestion: {
             readonly fields: {
               readonly id: {
@@ -3382,6 +4425,215 @@ type ContractBase = Omit<
               };
             };
           };
+          readonly MesCliente: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly periodoId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly creadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly actualizadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+              readonly enviado: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly seguimientoFecha: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-temporal@1' };
+              };
+              readonly seguimientoHecho: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly seguimientoNota: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 500 };
+                };
+              };
+            };
+            readonly relations: {
+              readonly abonos: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AbonoMes';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['mesId'];
+                };
+              };
+              readonly montos: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MontoConcepto';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['mesId'];
+                };
+              };
+              readonly pasos: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PasoMes';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['mesId'];
+                };
+              };
+              readonly periodo: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'PeriodoCliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['periodoId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'meses_cliente';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly periodoId: { readonly column: 'periodo_id' };
+                readonly creadoEn: { readonly column: 'creado_en' };
+                readonly actualizadoEn: { readonly column: 'actualizado_en' };
+                readonly enviado: { readonly column: 'enviado' };
+                readonly seguimientoFecha: { readonly column: 'seguimiento_fecha' };
+                readonly seguimientoHecho: { readonly column: 'seguimiento_hecho' };
+                readonly seguimientoNota: { readonly column: 'seguimiento_nota' };
+              };
+            };
+          };
+          readonly MontoConcepto: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly mesId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly concepto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 60 };
+                };
+              };
+              readonly monto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+              };
+            };
+            readonly relations: {
+              readonly mes: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MesCliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['mesId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'montos_concepto';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly mesId: { readonly column: 'mes_id' };
+                readonly concepto: { readonly column: 'concepto' };
+                readonly monto: { readonly column: 'monto' };
+              };
+            };
+          };
+          readonly PasoMes: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly mesId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly orden: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int2@1' };
+              };
+              readonly texto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 180 };
+                };
+              };
+              readonly hecho: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+            };
+            readonly relations: {
+              readonly mes: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MesCliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['mesId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'pasos_mes';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly mesId: { readonly column: 'mes_id' };
+                readonly orden: { readonly column: 'orden' };
+                readonly texto: { readonly column: 'texto' };
+                readonly hecho: { readonly column: 'hecho' };
+              };
+            };
+          };
           readonly PeriodoCliente: {
             readonly fields: {
               readonly id: {
@@ -3458,6 +4710,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['periodoId'];
                 };
               };
+              readonly meses: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MesCliente';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['periodoId'];
+                };
+              };
               readonly proyeccionesF29: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -3492,6 +4755,100 @@ type ContractBase = Omit<
                 readonly estadoContable: { readonly column: 'estado_contable' };
                 readonly fechaVencimiento: { readonly column: 'fecha_vencimiento' };
                 readonly cerrado: { readonly column: 'cerrado' };
+                readonly creadoEn: { readonly column: 'creado_en' };
+              };
+            };
+          };
+          readonly PostergacionMes: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly clienteId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int8@1' };
+              };
+              readonly anio: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int2@1' };
+              };
+              readonly mes: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/int2@1' };
+              };
+              readonly concepto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 60 };
+                };
+              };
+              readonly monto: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/numeric@1';
+                  readonly typeParams: { readonly precision: 14; readonly scale: 2 };
+                };
+              };
+              readonly vencimiento: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/date-temporal@1' };
+              };
+              readonly nota: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 500 };
+                };
+              };
+              readonly creadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
+            };
+            readonly relations: {
+              readonly abonos: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'AbonoMes';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['postergacionId'];
+                };
+              };
+              readonly cliente: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Cliente';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['clienteId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'postergaciones_mes';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly clienteId: { readonly column: 'cliente_id' };
+                readonly anio: { readonly column: 'anio' };
+                readonly mes: { readonly column: 'mes' };
+                readonly concepto: { readonly column: 'concepto' };
+                readonly monto: { readonly column: 'monto' };
+                readonly vencimiento: { readonly column: 'vencimiento' };
+                readonly nota: { readonly column: 'nota' };
                 readonly creadoEn: { readonly column: 'creado_en' };
               };
             };

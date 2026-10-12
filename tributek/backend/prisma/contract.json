@@ -4,6 +4,10 @@
   "target": "postgres",
   "profileHash": "3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2",
   "roots": {
+    "abonos_mes": {
+      "model": "AbonoMes",
+      "namespace": "public"
+    },
     "auditoria": {
       "model": "Auditoria",
       "namespace": "public"
@@ -24,12 +28,32 @@
       "model": "F29Movimiento",
       "namespace": "public"
     },
+    "facturas": {
+      "model": "Factura",
+      "namespace": "public"
+    },
     "gestiones": {
       "model": "Gestion",
       "namespace": "public"
     },
+    "meses_cliente": {
+      "model": "MesCliente",
+      "namespace": "public"
+    },
+    "montos_concepto": {
+      "model": "MontoConcepto",
+      "namespace": "public"
+    },
+    "pasos_mes": {
+      "model": "PasoMes",
+      "namespace": "public"
+    },
     "periodos_cliente": {
       "model": "PeriodoCliente",
+      "namespace": "public"
+    },
+    "postergaciones_mes": {
+      "model": "PostergacionMes",
       "namespace": "public"
     },
     "proyecciones_f29": {
@@ -69,6 +93,203 @@
     "namespaces": {
       "public": {
         "models": {
+          "AbonoMes": {
+            "fields": {
+              "concepto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 60
+                  }
+                }
+              },
+              "creadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "cuentaDestino": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 200
+                  }
+                }
+              },
+              "cuentaOrigen": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 200
+                  }
+                }
+              },
+              "destino": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 20
+                  }
+                }
+              },
+              "fecha": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/date-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "mesId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "metodo": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 30
+                  }
+                }
+              },
+              "monto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "nota": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 300
+                  }
+                }
+              },
+              "postergacionId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "transferId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 255
+                  }
+                }
+              }
+            },
+            "relations": {
+              "mes": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "mesId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MesCliente",
+                  "namespace": "public"
+                }
+              },
+              "postergacion": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "postergacionId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PostergacionMes",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "concepto": {
+                  "column": "concepto"
+                },
+                "creadoEn": {
+                  "column": "creado_en"
+                },
+                "cuentaDestino": {
+                  "column": "cuenta_destino"
+                },
+                "cuentaOrigen": {
+                  "column": "cuenta_origen"
+                },
+                "destino": {
+                  "column": "destino"
+                },
+                "fecha": {
+                  "column": "fecha"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mesId": {
+                  "column": "mes_id"
+                },
+                "metodo": {
+                  "column": "metodo"
+                },
+                "monto": {
+                  "column": "monto"
+                },
+                "nota": {
+                  "column": "nota"
+                },
+                "postergacionId": {
+                  "column": "postergacion_id"
+                },
+                "transferId": {
+                  "column": "transfer_id"
+                }
+              },
+              "namespaceId": "public",
+              "table": "abonos_mes"
+            }
+          },
           "Auditoria": {
             "fields": {
               "accion": {
@@ -295,6 +516,21 @@
                   "namespace": "public"
                 }
               },
+              "facturas": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "clienteId"
+                  ]
+                },
+                "to": {
+                  "model": "Factura",
+                  "namespace": "public"
+                }
+              },
               "gestiones": {
                 "cardinality": "1:N",
                 "on": {
@@ -322,6 +558,21 @@
                 },
                 "to": {
                   "model": "PeriodoCliente",
+                  "namespace": "public"
+                }
+              },
+              "postergaciones": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "clienteId"
+                  ]
+                },
+                "to": {
+                  "model": "PostergacionMes",
                   "namespace": "public"
                 }
               },
@@ -951,6 +1202,185 @@
               "table": "f29_movimientos"
             }
           },
+          "Factura": {
+            "fields": {
+              "anio": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "clienteId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "creadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "descripcion": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 300
+                  }
+                }
+              },
+              "fecha": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/date-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "mes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "monto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "nombre": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 180
+                  }
+                }
+              },
+              "nota": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 1000
+                  }
+                }
+              },
+              "numero": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 30
+                  }
+                }
+              },
+              "rut": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 20
+                  }
+                }
+              },
+              "tipo": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 10
+                  }
+                }
+              }
+            },
+            "relations": {
+              "cliente": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "clienteId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Cliente",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "anio": {
+                  "column": "anio"
+                },
+                "clienteId": {
+                  "column": "cliente_id"
+                },
+                "creadoEn": {
+                  "column": "creado_en"
+                },
+                "descripcion": {
+                  "column": "descripcion"
+                },
+                "fecha": {
+                  "column": "fecha"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mes": {
+                  "column": "mes"
+                },
+                "monto": {
+                  "column": "monto"
+                },
+                "nombre": {
+                  "column": "nombre"
+                },
+                "nota": {
+                  "column": "nota"
+                },
+                "numero": {
+                  "column": "numero"
+                },
+                "rut": {
+                  "column": "rut"
+                },
+                "tipo": {
+                  "column": "tipo"
+                }
+              },
+              "namespaceId": "public",
+              "table": "facturas"
+            }
+          },
           "Gestion": {
             "fields": {
               "actualizadoEn": {
@@ -1250,6 +1680,315 @@
               "table": "gestiones"
             }
           },
+          "MesCliente": {
+            "fields": {
+              "actualizadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "creadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "enviado": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "periodoId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "seguimientoFecha": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/date-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "seguimientoHecho": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "seguimientoNota": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 500
+                  }
+                }
+              }
+            },
+            "relations": {
+              "abonos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "mesId"
+                  ]
+                },
+                "to": {
+                  "model": "AbonoMes",
+                  "namespace": "public"
+                }
+              },
+              "montos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "mesId"
+                  ]
+                },
+                "to": {
+                  "model": "MontoConcepto",
+                  "namespace": "public"
+                }
+              },
+              "pasos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "mesId"
+                  ]
+                },
+                "to": {
+                  "model": "PasoMes",
+                  "namespace": "public"
+                }
+              },
+              "periodo": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "periodoId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "PeriodoCliente",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "actualizadoEn": {
+                  "column": "actualizado_en"
+                },
+                "creadoEn": {
+                  "column": "creado_en"
+                },
+                "enviado": {
+                  "column": "enviado"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "periodoId": {
+                  "column": "periodo_id"
+                },
+                "seguimientoFecha": {
+                  "column": "seguimiento_fecha"
+                },
+                "seguimientoHecho": {
+                  "column": "seguimiento_hecho"
+                },
+                "seguimientoNota": {
+                  "column": "seguimiento_nota"
+                }
+              },
+              "namespaceId": "public",
+              "table": "meses_cliente"
+            }
+          },
+          "MontoConcepto": {
+            "fields": {
+              "concepto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 60
+                  }
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "mesId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "monto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              }
+            },
+            "relations": {
+              "mes": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "mesId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MesCliente",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "concepto": {
+                  "column": "concepto"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mesId": {
+                  "column": "mes_id"
+                },
+                "monto": {
+                  "column": "monto"
+                }
+              },
+              "namespaceId": "public",
+              "table": "montos_concepto"
+            }
+          },
+          "PasoMes": {
+            "fields": {
+              "hecho": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "mesId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "orden": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "texto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 180
+                  }
+                }
+              }
+            },
+            "relations": {
+              "mes": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "mesId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "MesCliente",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "hecho": {
+                  "column": "hecho"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mesId": {
+                  "column": "mes_id"
+                },
+                "orden": {
+                  "column": "orden"
+                },
+                "texto": {
+                  "column": "texto"
+                }
+              },
+              "namespaceId": "public",
+              "table": "pasos_mes"
+            }
+          },
           "PeriodoCliente": {
             "fields": {
               "anio": {
@@ -1358,6 +2097,21 @@
                   "namespace": "public"
                 }
               },
+              "meses": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "periodoId"
+                  ]
+                },
+                "to": {
+                  "model": "MesCliente",
+                  "namespace": "public"
+                }
+              },
               "proyeccionesF29": {
                 "cardinality": "1:N",
                 "on": {
@@ -1418,6 +2172,148 @@
               },
               "namespaceId": "public",
               "table": "periodos_cliente"
+            }
+          },
+          "PostergacionMes": {
+            "fields": {
+              "anio": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "clienteId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "concepto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 60
+                  }
+                }
+              },
+              "creadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int8@1",
+                  "kind": "scalar"
+                }
+              },
+              "mes": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/int2@1",
+                  "kind": "scalar"
+                }
+              },
+              "monto": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/numeric@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "nota": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 500
+                  }
+                }
+              },
+              "vencimiento": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/date-temporal@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "abonos": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "postergacionId"
+                  ]
+                },
+                "to": {
+                  "model": "AbonoMes",
+                  "namespace": "public"
+                }
+              },
+              "cliente": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "clienteId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Cliente",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "anio": {
+                  "column": "anio"
+                },
+                "clienteId": {
+                  "column": "cliente_id"
+                },
+                "concepto": {
+                  "column": "concepto"
+                },
+                "creadoEn": {
+                  "column": "creado_en"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "mes": {
+                  "column": "mes"
+                },
+                "monto": {
+                  "column": "monto"
+                },
+                "nota": {
+                  "column": "nota"
+                },
+                "vencimiento": {
+                  "column": "vencimiento"
+                }
+              },
+              "namespaceId": "public",
+              "table": "postergaciones_mes"
             }
           },
           "ProyeccionF29": {
@@ -2808,6 +3704,163 @@
       "public": {
         "entries": {
           "table": {
+            "abonos_mes": {
+              "columns": {
+                "concepto": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 60
+                  }
+                },
+                "creado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "cuenta_destino": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 200
+                  }
+                },
+                "cuenta_origen": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 200
+                  }
+                },
+                "destino": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 20
+                  }
+                },
+                "fecha": {
+                  "codecId": "pg/date-temporal@1",
+                  "nativeType": "date",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "mes_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "metodo": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 30
+                  }
+                },
+                "monto": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "nota": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 300
+                  }
+                },
+                "postergacion_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": true
+                },
+                "transfer_id": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 255
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "mes_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "abonos_mes"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "meses_cliente"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "postergacion_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "abonos_mes"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "postergaciones_mes"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "mes_id"
+                  ],
+                  "name": "abonos_mes_mes_id_idx_321dd52e",
+                  "prefix": "abonos_mes_mes_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "postergacion_id"
+                  ],
+                  "name": "abonos_mes_postergacion_id_idx_b60c6cc9",
+                  "prefix": "abonos_mes_postergacion_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "auditoria": {
               "columns": {
                 "accion": {
@@ -3438,6 +4491,135 @@
               },
               "uniques": []
             },
+            "facturas": {
+              "columns": {
+                "anio": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "cliente_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "creado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "descripcion": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 300
+                  }
+                },
+                "fecha": {
+                  "codecId": "pg/date-temporal@1",
+                  "nativeType": "date",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "mes": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "monto": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "nombre": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 180
+                  }
+                },
+                "nota": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 1000
+                  }
+                },
+                "numero": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 30
+                  }
+                },
+                "rut": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 20
+                  }
+                },
+                "tipo": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 10
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "cliente_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "facturas"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "clientes"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "cliente_id"
+                  ],
+                  "name": "facturas_cliente_id_idx_9196b84e",
+                  "prefix": "facturas_cliente_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "gestiones": {
               "columns": {
                 "actualizado_en": {
@@ -3702,6 +4884,248 @@
               },
               "uniques": []
             },
+            "meses_cliente": {
+              "columns": {
+                "actualizado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "creado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "enviado": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "periodo_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "seguimiento_fecha": {
+                  "codecId": "pg/date-temporal@1",
+                  "nativeType": "date",
+                  "nullable": true
+                },
+                "seguimiento_hecho": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "seguimiento_nota": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 500
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "periodo_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "meses_cliente"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "periodos_cliente"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "periodo_id"
+                  ]
+                }
+              ]
+            },
+            "montos_concepto": {
+              "columns": {
+                "concepto": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 60
+                  }
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "mes_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "monto": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "mes_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "montos_concepto"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "meses_cliente"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "mes_id"
+                  ],
+                  "name": "montos_concepto_mes_id_idx_321dd52e",
+                  "prefix": "montos_concepto_mes_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "mes_id",
+                    "concepto"
+                  ]
+                }
+              ]
+            },
+            "pasos_mes": {
+              "columns": {
+                "hecho": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "mes_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "orden": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "texto": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 180
+                  }
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "mes_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "pasos_mes"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "meses_cliente"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "mes_id"
+                  ],
+                  "name": "pasos_mes_mes_id_idx_321dd52e",
+                  "prefix": "pasos_mes_mes_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "periodos_cliente": {
               "columns": {
                 "anio": {
@@ -3798,6 +5222,103 @@
                   ]
                 }
               ]
+            },
+            "postergaciones_mes": {
+              "columns": {
+                "anio": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "cliente_id": {
+                  "codecId": "pg/int8@1",
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "concepto": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 60
+                  }
+                },
+                "creado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/int8@1",
+                  "default": {
+                    "expression": "autoincrement()",
+                    "kind": "function"
+                  },
+                  "nativeType": "int8",
+                  "nullable": false
+                },
+                "mes": {
+                  "codecId": "pg/int2@1",
+                  "nativeType": "int2",
+                  "nullable": false
+                },
+                "monto": {
+                  "codecId": "pg/numeric@1",
+                  "nativeType": "numeric",
+                  "nullable": false,
+                  "typeParams": {
+                    "precision": 14,
+                    "scale": 2
+                  }
+                },
+                "nota": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 500
+                  }
+                },
+                "vencimiento": {
+                  "codecId": "pg/date-temporal@1",
+                  "nativeType": "date",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "source": {
+                    "columns": [
+                      "cliente_id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "postergaciones_mes"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "clientes"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "cliente_id"
+                  ],
+                  "name": "postergaciones_mes_cliente_id_idx_9196b84e",
+                  "prefix": "postergaciones_mes_cliente_id_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "proyecciones_f29": {
               "columns": {
@@ -4785,7 +6306,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "f45e32ff1341dba7ce3eaba21c82e5c7f32e5a5f22b716848015e6717b66f6e3"
+    "storageHash": "d8445047d45ca198adf184c27a3a780c021cf626a55e17470ef1f7372a447582"
   },
   "capabilities": {
     "postgres": {

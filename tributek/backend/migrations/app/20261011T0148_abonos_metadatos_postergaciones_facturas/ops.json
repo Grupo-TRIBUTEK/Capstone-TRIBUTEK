@@ -1,0 +1,575 @@
+[
+  {
+    "id": "table.facturas",
+    "label": "Create table \"facturas\"",
+    "summary": "Creates table \"facturas\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "facturas"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"facturas\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"facturas\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"facturas\"",
+        "sql": "CREATE TABLE \"public\".\"facturas\" (\n  \"anio\" int2 NOT NULL,\n  \"cliente_id\" int8 NOT NULL,\n  \"creado_en\" timestamptz,\n  \"descripcion\" character varying(300) NOT NULL,\n  \"fecha\" date,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes\" int2 NOT NULL,\n  \"monto\" numeric(14,2) NOT NULL,\n  \"nombre\" character varying(180) NOT NULL,\n  \"nota\" character varying(1000),\n  \"numero\" character varying(30),\n  \"rut\" character varying(20) NOT NULL,\n  \"tipo\" character varying(10) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"facturas\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"facturas\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.postergaciones_mes",
+    "label": "Create table \"postergaciones_mes\"",
+    "summary": "Creates table \"postergaciones_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "postergaciones_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"postergaciones_mes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"postergaciones_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"postergaciones_mes\"",
+        "sql": "CREATE TABLE \"public\".\"postergaciones_mes\" (\n  \"anio\" int2 NOT NULL,\n  \"cliente_id\" int8 NOT NULL,\n  \"concepto\" character varying(60) NOT NULL,\n  \"creado_en\" timestamptz,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes\" int2 NOT NULL,\n  \"monto\" numeric(14,2) NOT NULL,\n  \"nota\" character varying(500),\n  \"vencimiento\" date NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"postergaciones_mes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"postergaciones_mes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.cuenta_destino",
+    "label": "Add column \"cuenta_destino\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cuenta_destino",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cuenta_destino\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "cuenta_destino"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cuenta_destino\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"cuenta_destino\" character varying(200)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cuenta_destino\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "cuenta_destino"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.cuenta_origen",
+    "label": "Add column \"cuenta_origen\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "cuenta_origen",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"cuenta_origen\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "cuenta_origen"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"cuenta_origen\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"cuenta_origen\" character varying(200)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"cuenta_origen\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "cuenta_origen"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.destino",
+    "label": "Add column \"destino\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "destino",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"destino\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "destino"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"destino\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"destino\" character varying(20)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"destino\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "destino"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.metodo",
+    "label": "Add column \"metodo\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "metodo",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"metodo\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "metodo"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"metodo\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"metodo\" character varying(30)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"metodo\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "metodo"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.postergacion_id",
+    "label": "Add column \"postergacion_id\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "postergacion_id",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"postergacion_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "postergacion_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"postergacion_id\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"postergacion_id\" int8"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"postergacion_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "postergacion_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "column.public.abonos_mes.transfer_id",
+    "label": "Add column \"transfer_id\" to \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "column",
+        "name": "transfer_id",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure column \"transfer_id\" is missing",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "transfer_id"
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add column \"transfer_id\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\" ADD COLUMN \"transfer_id\" character varying(255)"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify column \"transfer_id\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"information_schema\".\"columns\" WHERE (\"table_schema\" = $1 AND \"table_name\" = $2 AND \"column_name\" = $3)) AS \"result\"",
+        "params": [
+          "public",
+          "abonos_mes",
+          "transfer_id"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.abonos_mes.abonos_mes_postergacion_id_idx_b60c6cc9",
+    "label": "Create index \"abonos_mes_postergacion_id_idx_b60c6cc9\" on \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "abonos_mes_postergacion_id_idx_b60c6cc9",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"abonos_mes_postergacion_id_idx_b60c6cc9\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes_postergacion_id_idx_b60c6cc9\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"abonos_mes_postergacion_id_idx_b60c6cc9\"",
+        "sql": "CREATE INDEX \"abonos_mes_postergacion_id_idx_b60c6cc9\" ON \"public\".\"abonos_mes\" (\"postergacion_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"abonos_mes_postergacion_id_idx_b60c6cc9\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes_postergacion_id_idx_b60c6cc9\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.facturas.facturas_cliente_id_idx_9196b84e",
+    "label": "Create index \"facturas_cliente_id_idx_9196b84e\" on \"facturas\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "facturas_cliente_id_idx_9196b84e",
+        "table": "facturas"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"facturas_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"facturas_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"facturas_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"facturas_cliente_id_idx_9196b84e\" ON \"public\".\"facturas\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"facturas_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"facturas_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.postergaciones_mes.postergaciones_mes_cliente_id_idx_9196b84e",
+    "label": "Create index \"postergaciones_mes_cliente_id_idx_9196b84e\" on \"postergaciones_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "postergaciones_mes_cliente_id_idx_9196b84e",
+        "table": "postergaciones_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"postergaciones_mes_cliente_id_idx_9196b84e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"postergaciones_mes_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"postergaciones_mes_cliente_id_idx_9196b84e\"",
+        "sql": "CREATE INDEX \"postergaciones_mes_cliente_id_idx_9196b84e\" ON \"public\".\"postergaciones_mes\" (\"cliente_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"postergaciones_mes_cliente_id_idx_9196b84e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"postergaciones_mes_cliente_id_idx_9196b84e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.facturas.facturas_cliente_id_fkey",
+    "label": "Add foreign key \"facturas_cliente_id_fkey\" on \"facturas\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "facturas_cliente_id_fkey",
+        "table": "facturas"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"facturas_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "facturas_cliente_id_fkey",
+          "public",
+          "\"public\".\"facturas\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"facturas_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"facturas\"\nADD CONSTRAINT \"facturas_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"facturas_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "facturas_cliente_id_fkey",
+          "public",
+          "\"public\".\"facturas\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.postergaciones_mes.postergaciones_mes_cliente_id_fkey",
+    "label": "Add foreign key \"postergaciones_mes_cliente_id_fkey\" on \"postergaciones_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "postergaciones_mes_cliente_id_fkey",
+        "table": "postergaciones_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"postergaciones_mes_cliente_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "postergaciones_mes_cliente_id_fkey",
+          "public",
+          "\"public\".\"postergaciones_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"postergaciones_mes_cliente_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"postergaciones_mes\"\nADD CONSTRAINT \"postergaciones_mes_cliente_id_fkey\"\nFOREIGN KEY (\"cliente_id\")\nREFERENCES \"public\".\"clientes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"postergaciones_mes_cliente_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "postergaciones_mes_cliente_id_fkey",
+          "public",
+          "\"public\".\"postergaciones_mes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.abonos_mes.abonos_mes_postergacion_id_fkey",
+    "label": "Add foreign key \"abonos_mes_postergacion_id_fkey\" on \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "abonos_mes_postergacion_id_fkey",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"abonos_mes_postergacion_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "abonos_mes_postergacion_id_fkey",
+          "public",
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"abonos_mes_postergacion_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\"\nADD CONSTRAINT \"abonos_mes_postergacion_id_fkey\"\nFOREIGN KEY (\"postergacion_id\")\nREFERENCES \"public\".\"postergaciones_mes\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"abonos_mes_postergacion_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "abonos_mes_postergacion_id_fkey",
+          "public",
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ]
+  }
+]

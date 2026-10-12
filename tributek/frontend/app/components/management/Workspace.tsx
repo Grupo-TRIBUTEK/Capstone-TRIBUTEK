@@ -1,7 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useData, persist, syncRemoteClients } from "../ficha/store";
+import { useData, persist } from "../ficha/store";
+import { sincronizarMes } from "./syncObligaciones";
+import { mesIgual } from "./syncHelpers";
 import { conceptLabel, concepts, receivables, services, today, type Concept } from "../ficha/model";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import ClientCreateModal, {
@@ -30,10 +32,8 @@ import {
   Metric,
   Modal,
   Money,
-  copyReportImage,
   downloadBlob,
 } from "./ui";
-import { PaymentFilesButton } from "./PaymentFiles";
 import Formalization from "./Formalization";
 
 export type View =
@@ -53,1425 +53,8 @@ const names: Record<View, string> = {
   postergaciones: "Postergaciones",
   formalizaciones: "Constitución de empresas",
 };
-export default function Workspace({ view }: { view: View }) {
-  const store = useData();
-  const data = store.data as Ledger;
-  const meta = extra(data);
-  const [remote, setRemote] = useState<ClientRecord[]>([]);
-  const [load, setLoad] = useState("loading");
-  const [reload, setReload] = useState(0);
-  const [periodValue, setPeriod] = useState("");
-  const period = periodValue || (store.ready ? today().slice(0, 7) : "2026-09");
-  const [search, setSearch] = useState("");
-  const [concept, setConcept] = useState("");
-  const [status, setStatus] = useState("");
-  const [machine, setMachine] = useState("");
-  const [active, setActive] = useState("");
-  const [hidden, setHidden] = useState(false);
-  const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [selected, setSelected] = useState<{
-    client: ClientView;
-    data: Ledger;
-  } | null>(null);
-  const [clientModal, setClientModal] = useState<ClientRecord | "new" | null>(
-    null,
-  );
-  const [paymentClient, setPaymentClient] = useState("");
-  const [editingPayment, setEditingPayment] = useState<string | undefined>();
-  const [deferred, setDeferred] = useState<Deferral | null>(null);
-  const [editDeferred, setEditDeferred] = useState<Deferral | null>(null);
-  const [invoice, setInvoice] = useState<Invoice | null>(null);
-  const [processClient, setProcessClient] = useState<ClientView | null>(null);
-  // Filas de /gestiones (cabecera + pasos) para la tabla de Formalizaciones.
-  const [gestionesReload, setGestionesReload] = useState(0);
-  const [gestiones, setGestiones] = useState<
-    {
-      id: string;
-      clienteId: string;
-      parentId: string | null;
-      titulo: string;
-      estado: string;
-    }[]
-  >([]);
-  const [paymentFilter, setPaymentFilter] = useState("");
-  const [allPayments, setAllPayments] = useState(false);
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    const id = q.get("cliente");
-    if (id) queueMicrotask(() => setPaymentFilter(id));
-  }, []);
-  useEffect(() => {
-    if (!store.ready || store.error) return;
-    const controller = new AbortController();
-    async function getClients() {
-      try {
-        const r = await authenticatedFetch("/clientes", {
-          signal: controller.signal,
-        });
-        if (!r.ok) {
-          const body = await r.json().catch(() => null) as { message?: string | string[] } | null;
-          const message = Array.isArray(body?.message) ? body.message.join(" ") : body?.message;
-          throw new Error(message || `No se pudo cargar el directorio (HTTP ${r.status}).`);
-        }
-        const rows: ClientRecord[] = await r.json();
-        if (controller.signal.aborted) return;
-        if (!Array.isArray(rows)) throw new Error("Directorio inválido.");
-        const normalized = rows.map((c) => ({ ...c, id: String(c.id) }));
-        setRemote(normalized);
-        setLoad("ready");
-        setError("");
-        try {
-          syncRemoteClients(normalized);
-        } catch (syncError) {
-          setError(syncError instanceof Error
-            ? `Directorio cargado; no se pudieron sincronizar los datos locales: ${syncError.message}`
-            : "Directorio cargado; no se pudieron sincronizar los datos locales.");
-        }
-      } catch (e) {
-        if (!controller.signal.aborted) {
-          setLoad("error");
-          setError(
-            e instanceof Error
-              ? e.message
-              : "No se pudo conectar con el servidor.",
-          );
-        }
-      }
-    }
-    void getClients();
-    return () => controller.abort();
-  }, [store.ready, store.error, reload]);
-  // Tabla de Formalizaciones: filas (cabecera + pasos) desde el backend.
-  // En fallo/401 la tabla queda vacía ("Sin iniciar") sin romper el resto de la vista.
-  useEffect(() => {
-    const controller = new AbortController();
-    authenticatedFetch(
-      `/gestiones?tipo=${encodeURIComponent("Formalización")}`,
-      { signal: controller.signal },
-    )
-      .then(async (r) => {
-        if (!r.ok) return;
-        const rows = (await r.json()) as {
-          clienteId: unknown;
-          parentId: unknown;
-        }[];
-        if (controller.signal.aborted || !Array.isArray(rows)) return;
-        setGestiones(
-          rows.map((g) => ({
-            id: String((g as { id?: unknown }).id ?? ""),
-            clienteId: String(g.clienteId),
-            parentId:
-              g.parentId === null || g.parentId === undefined
-                ? null
-                : String(g.parentId),
-            titulo: String((g as { titulo?: unknown }).titulo ?? ""),
-            estado: String((g as { estado?: unknown }).estado ?? ""),
-          })),
-        );
-      })
-      .catch(() => {
-        /* sin conexión la tabla queda vacía; el modal muestra su propio error */
-      });
-    return () => controller.abort();
-  }, [gestionesReload]);
-  // El directorio de clientes tiene como fuente de verdad el backend. Los
-  // datos locales guardan pagos y períodos; nunca deben inventar filas aquí.
-  const clients: ClientView[] =
-    view === "clientes" || view === "formalizaciones"
-      ? remote.map((r) => {
-          const local = data.clients.find((c) => c.id === r.id);
-          const profile = meta.profiles[r.id];
-          return {
-            id: r.id,
-            name: r.nombreRazonSocial,
-            phone: r.telefono || "",
-            note: local?.note || "",
-            documentUrl: local?.documentUrl || "",
-            rut: r.rut,
-            machine: profile?.machine || "",
-            fee: profile?.fee || 0,
-            active: r.estado.toLowerCase() !== "inactivo",
-          };
-        })
-      : data.clients.map((c) => {
-          const r = remote.find((r) => r.id === c.id);
-          const profile = meta.profiles[c.id];
-          return {
-            ...c,
-            rut: r?.rut || profile?.rut || "",
-            machine: profile?.machine || "",
-            fee: profile?.fee || 0,
-            active: r ? r.estado.toLowerCase() !== "inactivo" : (profile?.active ?? true),
-          };
-        });
-  const visible = clients.filter(
-    (c) =>
-      `${c.name} ${c.rut}`
-        .toLocaleLowerCase("es")
-        .includes(search.toLocaleLowerCase("es")) &&
-      (!machine || c.machine === machine) &&
-      (!active || (active === "active") === c.active) &&
-      (!status ||
-        totals(data, getMonth(data, c.id, period)).status === status) &&
-      (!concept ||
-        (view === "clientes"
-          ? debt(data, c.id, period, [concept as Concept])
-          : balance(data, getMonth(data, c.id, period), concept as Concept)) >
-          0),
-  );
-  const openDeferrals = meta.deferrals.filter(
-    (d) => deferralBalance(data, d) > 0,
-  );
-  function save(next: Ledger, revision = data.revision) {
-    persist(validateLedger(next), revision);
-    setNotice("Cambios guardados.");
-    setError("");
-  }
-  function run(action: () => void) {
-    try {
-      action();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "No se pudo guardar.");
-    }
-  }
-  async function removePayments(key: string) {
-    if (
-      !window.confirm(
-        "¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?",
-      )
-    )
-      return;
-    try {
-      const payment = data.payments.find(p => (p.transferId || p.id) === key);
-      if (!payment) return;
-      const response = await authenticatedFetch(`/payment-evidence/${payment.clientId}/${key}`, {method:"DELETE"});
-      if (!response.ok) throw new Error("No se pudo archivar la carpeta de comprobantes. El pago no fue eliminado.");
-      save({...data, payments:data.payments.filter(p => (p.transferId || p.id) !== key)});
-    } catch(e) { setError((e as Error).message); }
-  }
-  const received = receivedByCategory(data, period);
-  const pendingMonths = clients.filter(
-    (c) =>
-      data.months.some((m) => m.clientId === c.id && m.period === period) &&
-      totals(data, getMonth(data, c.id, period)).status === "NO ENVIADO",
-  );
-  const payments = data.payments.filter(
-    (p) =>
-      (allPayments || p.date.slice(0, 7) === period) &&
-      (!paymentFilter || p.clientId === paymentFilter) &&
-      (!concept || p.concept === concept) &&
-      `${clients.find((c) => c.id === p.clientId)?.name} ${clients.find((c) => c.id === p.clientId)?.rut} ${p.note}`
-        .toLowerCase()
-        .includes(search.toLowerCase()),
-  );
-  const groups = Array.from(
-    new Set(payments.map((p) => p.transferId || p.id)),
-  ).map((key) => {
-    const rows = payments.filter((p) => (p.transferId || p.id) === key);
-    return {
-      key,
-      rows,
-      first: rows[0],
-      amount: rows.reduce((s, p) => s + p.amount, 0),
-    };
-  });
-  const dueRows = clients.flatMap((c) =>
-    ["Cotizaciones", "Impuestos"].flatMap((co) => {
-      const value = balance(data, getMonth(data, c.id, period), co as Concept);
-      return value > 0
-        ? [
-            {
-              client: c,
-              concept: co,
-              amount: value,
-              day: co === "Cotizaciones" ? 12 : 20,
-            },
-          ]
-        : [];
-    }),
-  );
-  function prepareInvoices() {
-    run(() => {
-      const existing = meta.invoices;
-      const add = visible
-        .filter(
-          (c) =>
-            c.active &&
-            !existing.some(
-              (i) =>
-                i.clientId === c.id &&
-                i.period === period &&
-                i.kind === "monthly",
-            ),
-        )
-        .map((c) => ({
-          id: crypto.randomUUID(),
-          clientId: c.id,
-          period,
-          kind: "monthly" as const,
-          name: c.name,
-          rut: c.rut,
-          amount: data.months.some(
-            (m) => m.clientId === c.id && m.period === period,
-          )
-            ? getMonth(data, c.id, period).amounts.Honorarios
-            : c.fee,
-          description: `Servicios mensuales ${periodLabel(period)}`,
-          number: "",
-          date: "",
-          note: "",
-        }));
-      save({
-        ...data,
-        management: { ...meta, invoices: [...existing, ...add] },
-      });
-    });
-  }
-  if (!store.ready)
-    return (
-      <div className="tk">
-        <Empty>Cargando gestión…</Empty>
-      </div>
-    );
-  return (
-    <div className="tk">
-      <header className="tk-header">
-        <div>
-          <p className="tk-eyebrow">TRIBUTEK / Gestión</p>
-          <h1>{names[view]}</h1>
-        </div>
-        <div className="tk-actions">
-          <button onClick={() => setHidden(!hidden)}>
-            {hidden ? "Mostrar montos" : "Ocultar montos"}
-          </button>
-          {view === "clientes" && (
-            <button className="primary" onClick={() => setClientModal("new")}>
-              Nuevo cliente
-            </button>
-          )}
-          {view === "pagos" && (
-            <button
-              className="primary"
-              disabled={!clients.length}
-              onClick={() => {
-                setEditingPayment(undefined);
-                setPaymentClient(clients[0]?.id || "");
-              }}
-            >
-              Registrar pago
-            </button>
-          )}
-        </div>
-      </header>
-      {store.error && (
-        <p role="alert" className="tk-error">
-          {store.error}
-        </p>
-      )}
-      {error && (
-        <div role="alert" className="tk-error">
-          {error}{" "}
-          <button
-            onClick={() => {
-              setLoad("loading");
-              setReload((n) => n + 1);
-              setError("");
-            }}
-          >
-            Reintentar
-          </button>
-        </div>
-      )}
-      {notice && (
-        <p role="status" className="tk-success">
-          {notice} <button onClick={() => setNotice("")}>Cerrar</button>
-        </p>
-      )}
-      <div className="tk-toolbar">
-        <Field
-          label={view === "pagos" ? "Mes de recepción" : "Período de trabajo"}
-        >
-          <input
-            type="month"
-            min="2000-01"
-            max="2100-12"
-            value={period}
-            onChange={(e) => {
-              if (e.target.value) {
-                setPeriod(e.target.value);
-                setSelected(null);
-              }
-            }}
-          />
-        </Field>
-        {view !== "inicio" && (
-          <label className="tk-field search">
-            <span>Buscar cliente o RUT</span>
-            <input
-              type="search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Razón social o RUT"
-            />
-          </label>
-        )}
-        {(view === "clientes" || view === "obligaciones") && (
-          <>
-            <Field label="Estado del mes">
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Concepto pendiente">
-              <select
-                value={concept}
-                onChange={(e) => setConcept(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {(view === "clientes" ? receivables : concepts).map((c) => (
-                  <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>
-                ))}
-              </select>
-            </Field>
-            <details className="tk-details">
-              <summary>Más filtros</summary>
-              <div className="tk-actions">
-                <Field label="Máquina">
-                  <select
-                    value={machine}
-                    onChange={(e) => setMachine(e.target.value)}
-                  >
-                    <option value="">Todas</option>
-                    {Array.from(
-                      new Set(clients.map((c) => c.machine).filter(Boolean)),
-                    ).map((m) => (
-                      <option key={m}>{m}</option>
-                    ))}
-                  </select>
-                </Field>
-                <Field label="Clientes">
-                  <select
-                    value={active}
-                    onChange={(e) => setActive(e.target.value)}
-                  >
-                    <option value="">Activos e inactivos</option>
-                    <option value="active">Activos</option>
-                    <option value="inactive">Inactivos</option>
-                  </select>
-                </Field>
-              </div>
-            </details>
-          </>
-        )}
-      </div>
-      {load === "loading" && (
-        <p role="status" className="tk-subtle">
-          Actualizando clientes…
-        </p>
-      )}
-      {view === "inicio" && (
-        <>
-          <div className="tk-metrics">
-            <Metric label="Recibido por servicios">
-              <Money value={received.services} hidden={hidden} />
-            </Metric>
-            <Metric label="Reembolsos recibidos">
-              <Money value={received.reimbursements} hidden={hidden} />
-            </Metric>
-            <Metric label="Clientes con deuda de servicios">
-              {clients.filter((c) => debt(data, c.id, period, services) > 0).length}
-            </Metric>
-            <Metric label="Postergaciones pendientes">
-              <Money
-                value={openDeferrals.reduce(
-                  (s, d) => s + deferralBalance(data, d),
-                  0,
-                )}
-                hidden={hidden}
-              />
-            </Metric>
-            <Metric label="Obligaciones no enviadas">
-              {pendingMonths.length}
-            </Metric>
-          </div>
-          <section className="tk-card">
-            <div className="tk-card-head">
-              <h2>Control de vencimientos</h2>
-              <Link className="tk-button" href="/admin/obligaciones">
-                Ver obligaciones
-              </Link>
-            </div>
-            <div className="tk-panel">
-              <div className="tk-grid">
-                {[
-                  { c: "Cotizaciones", day: 12 },
-                  { c: "Impuestos", day: 20 },
-                ].map(({ c, day }) => (
-                  <div className="tk-due" key={conceptLabel(c)}>
-                    <span>
-                      {conceptLabel(c)} · referencia interna día {day}
-                    </span>
-                    <strong>
-                      {dueRows.filter((r) => r.concept === c).length} clientes
-                    </strong>
-                    <Money
-                      value={dueRows
-                        .filter((r) => r.concept === c)
-                        .reduce((s, r) => s + r.amount, 0)}
-                      hidden={hidden}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-            {dueRows.length ? (
-              <div className="tk-table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>Cliente</th>
-                      <th>Concepto</th>
-                      <th>Saldo</th>
-                      <th></th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {dueRows.map((r) => (
-                      <tr key={r.client.id + r.concept}>
-                        <td>
-                          <strong>{r.client.name}</strong>
-                          <small>{r.client.rut}</small>
-                        </td>
-                        <td>{conceptLabel(r.concept)}</td>
-                        <td>
-                          <Money value={r.amount} hidden={hidden} />
-                        </td>
-                        <td>
-                          <button
-                            disabled={hidden}
-                            onClick={() =>
-                              setSelected({ client: r.client, data })
-                            }
-                          >
-                            Ver ficha
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <Empty>
-                No hay impuestos ni cotizaciones previsionales pendientes en este período.
-              </Empty>
-            )}
-          </section>
-          <p className="tk-subtle">
-            Ingresos: abonos de honorarios, formalización, cobranza y otro
-            recibidos en {periodLabel(period)}. Las fechas de referencia no
-            sustituyen el vencimiento confirmado del trámite.
-          </p>
-        </>
-      )}
-      {(view === "clientes" || view === "obligaciones") && (
-        <>
-          <div className="tk-metrics">
-            <Metric label="Clientes visibles">{visible.length}</Metric>
-            <Metric label="Con deuda de servicios">
-              {visible.filter((c) => debt(data, c.id, period, services) > 0).length}
-            </Metric>
-            <Metric label="Deuda acumulada con TRIBUTEK">
-              <Money
-                value={visible.reduce(
-                  (s, c) => s + debt(data, c.id, period),
-                  0,
-                )}
-                hidden={hidden}
-              />
-            </Metric>
-            <Metric label="Postergaciones pendientes">
-              {
-                openDeferrals.filter((d) =>
-                  visible.some((c) => c.id === d.clientId),
-                ).length
-              }
-            </Metric>
-          </div>
-          <section className="tk-card">
-            <div className="tk-table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    {view === "clientes" && <th>Creado en</th>}
-                    <th>Máquina de pago</th>
-                    <th>Estado del mes</th>
-                    <th>
-                      {view === "clientes"
-                        ? "Deuda por concepto"
-                        : "Obligación mensual"}
-                    </th>
-                    <th>
-                      {view === "clientes"
-                        ? "Suma filtrada"
-                        : "Resumen del período"}
-                    </th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {visible.map((c) => {
-                    const m = getMonth(data, c.id, period),
-                      t = totals(data, m);
-                    const creadoEn = remote.find((r) => r.id === c.id)?.creadoEn;
-                    const cs = (
-                      view === "clientes" ? receivables : concepts
-                    ).filter((k) => !concept || k === concept);
-                    return (
-                      <tr key={c.id}>
-                        <td>
-                          <strong>{c.name}</strong>
-                          <small>
-                            {c.rut} {!c.active && "· Inactivo"}
-                          </small>
-                          <a
-                            href="https://www.sii.cl/"
-                            target="_blank"
-                            rel="noreferrer"
-                            className="tk-subtle"
-                          >
-                            Ir al SII
-                          </a>
-                        </td>
-                        {view === "clientes" && (
-                          <td>
-                            {creadoEn
-                              ? new Intl.DateTimeFormat("es-CL", {
-                                  dateStyle: "short",
-                                  timeStyle: "short",
-                                }).format(new Date(creadoEn))
-                              : "-"}
-                          </td>
-                        )}
-                        <td>{c.machine || "—"}</td>
-                        <td>
-                          <Badge>
-                            {data.months.includes(m)
-                              ? t.status
-                              : "SIN REGISTRO"}
-                          </Badge>
-                        </td>
-                        <td>
-                          {cs
-                            .filter(
-                              (k) =>
-                                (view === "clientes"
-                                  ? debt(data, c.id, period, [k])
-                                  : balance(data, m, k)) > 0,
-                            )
-                            .map((k) => (
-                              <div className="tk-detail" key={k}>
-                                {conceptLabel(k)}:{" "}
-                                <Money
-                                  value={
-                                    view === "clientes"
-                                      ? debt(data, c.id, period, [k])
-                                      : balance(data, m, k)
-                                  }
-                                  hidden={hidden}
-                                />
-                              </div>
-                            ))}
-                        </td>
-                        <td>
-                          {view === "clientes" ? (
-                            <strong>
-                              <Money
-                                value={debt(data, c.id, period, cs)}
-                                hidden={hidden}
-                              />
-                            </strong>
-                          ) : (
-                            <div>
-                              <div className="tk-detail">
-                                Total <Money value={t.total} hidden={hidden} />
-                              </div>
-                              <div className="tk-detail">
-                                Cancelado{" "}
-                                <Money value={t.received} hidden={hidden} />
-                              </div>
-                              <strong>
-                                Pendiente{" "}
-                                <Money value={t.pending} hidden={hidden} />
-                              </strong>
-                            </div>
-                          )}
-                        </td>
-                        <td>
-                          <div className="tk-actions">
-                            <button
-                              disabled={hidden}
-                              onClick={() => setSelected({ client: c, data })}
-                            >
-                              Ver ficha
-                            </button>
-                            {view === "clientes" &&
-                              remote.some((r) => r.id === c.id) && (
-                                <button
-                                  onClick={() =>
-                                    setClientModal(
-                                      remote.find((r) => r.id === c.id)!,
-                                    )
-                                  }
-                                >
-                                  Editar
-                                </button>
-                              )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {!visible.length && load === "ready" && (
-              <Empty>
-                {search || status || concept
-                  ? "No hay clientes para estos filtros."
-                  : "No hay clientes registrados."}
-              </Empty>
-            )}
-          </section>
-        </>
-      )}
-      {view === "facturacion" && (
-        <>
-          <div className="tk-actions" style={{ marginBottom: 20 }}>
-            <button className="primary" onClick={prepareInvoices}>
-              Preparar servicios mensuales
-            </button>
-            <button
-              disabled={!visible.length}
-              onClick={() => {
-                const c = visible[0];
-                setInvoice({
-                  id: crypto.randomUUID(),
-                  clientId: c.id,
-                  name: c.name,
-                  rut: c.rut,
-                  period,
-                  kind: "extra",
-                  amount: 0,
-                  description: "",
-                  number: "",
-                  date: "",
-                  note: "",
-                });
-              }}
-            >
-              Agregar otro servicio
-            </button>
-          </div>
-          {["monthly", "extra"].map((kind) => (
-            <section className="tk-card" key={kind}>
-              <div className="tk-card-head">
-                <h2>
-                  {kind === "monthly"
-                    ? "Servicios mensuales"
-                    : "Otros servicios"}
-                </h2>
-              </div>
-              <div className="tk-table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      {[
-                        "Nombre / RUT",
-                        "Honorarios",
-                        "Glosa",
-                        "N° factura",
-                        "Fecha",
-                        "Observación",
-                        "",
-                      ].map((h, i) => (
-                        <th key={i}>{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {meta.invoices
-                      .filter(
-                        (i) =>
-                          i.period === period &&
-                          i.kind === kind &&
-                          visible.some((c) => c.id === i.clientId),
-                      )
-                      .map((i) => (
-                        <tr key={i.id}>
-                          <td>
-                            <strong>{i.name}</strong>
-                            <small>{i.rut}</small>
-                          </td>
-                          <td>
-                            <Money value={i.amount} hidden={hidden} />
-                          </td>
-                          <td>{i.description}</td>
-                          <td>{i.number || "Sin facturar"}</td>
-                          <td>{i.date || "—"}</td>
-                          <td>{i.note || "—"}</td>
-                          <td>
-                            <button
-                              disabled={hidden}
-                              onClick={() => setInvoice(i)}
-                            >
-                              Editar
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                  </tbody>
-                </table>
-              </div>
-              {!meta.invoices.some(
-                (i) => i.period === period && i.kind === kind,
-              ) && (
-                <Empty>
-                  {kind === "monthly"
-                    ? "Prepara el período para conservar los datos de los servicios mensuales."
-                    : "Sin otros servicios en este período."}
-                </Empty>
-              )}
-            </section>
-          ))}
-          <InvoiceComparison
-            invoices={meta.invoices.filter((i) => i.period === period)}
-            hidden={hidden}
-          />
-        </>
-      )}
-      {view === "pagos" && (
-        <>
-          <div className="tk-toolbar">
-            <label className="tk-actions">
-              <input
-                type="checkbox"
-                checked={allPayments}
-                onChange={(e) => setAllPayments(e.target.checked)}
-              />
-              Todos los meses
-            </label>
-            <Field label="Cliente">
-              <select
-                value={paymentFilter}
-                onChange={(e) => setPaymentFilter(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {clients.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Concepto">
-              <select
-                value={concept}
-                onChange={(e) => setConcept(e.target.value)}
-              >
-                <option value="">Todos</option>
-                {concepts.map((c) => (
-                  <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>
-                ))}
-              </select>
-            </Field>
-            <button
-              disabled={!payments.length || hidden}
-              onClick={async () => {
-                try {
-                  setNotice(
-                    await copyReportImage(
-                      "Historial de pagos",
-                      allPayments ? "Todos los meses" : periodLabel(period),
-                      payments.map((p) => ({
-                        label: `${clients.find((c) => c.id === p.clientId)?.name || "Cliente"} · ${p.date} · ${conceptLabel(p.concept)}`,
-                        amount: p.amount,
-                      })),
-                      payments.reduce((s, p) => s + p.amount, 0),
-                    ),
-                  );
-                } catch {
-                  setError("No se pudo copiar la imagen.");
-                }
-              }}
-            >
-              Copiar imagen
-            </button>
-          </div>
-          <section className="tk-card">
-            <div className="tk-table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Fecha</th>
-                    <th>Cliente</th>
-                    <th>Aplicación</th>
-                    <th>Monto</th>
-                    <th>Glosa</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {groups.map((g) => (
-                    <tr key={g.key}>
-                      <td>{g.first.date}</td>
-                      <td>
-                        {clients.find((c) => c.id === g.first.clientId)?.name}
-                      </td>
-                      <td>
-                        {g.rows.map((p) => (
-                          <div key={p.id} className="tk-detail">
-                            {p.period} · {conceptLabel(p.concept)} ·{" "}
-                            <Money value={p.amount} hidden={hidden} />
-                          </div>
-                        ))}
-                      </td>
-                      <td>
-                        <Money value={g.amount} hidden={hidden} />
-                        <small>
-                          {g.first.destination === "institution"
-                            ? "Pago a institución"
-                            : "Recibido por TRIBUTEK"}
-                        </small>
-                      </td>
-                      <td>{g.first.note}<small>{g.first.method}</small>{g.first.originAccount && <small>Origen: {hidden ? "••••" : g.first.originAccount}</small>}{g.first.receivingAccount && <small>Receptora: {hidden ? "••••" : g.first.receivingAccount}</small>}</td>
-                      <td>
-                        <div className="tk-actions">
-                          <PaymentFilesButton clientId={g.first.clientId} id={g.key} date={g.first.date} amount={data.payments.filter(p => (p.transferId || p.id) === g.key).reduce((sum,p)=>sum+p.amount,0)} origin={g.first.originAccount} destination={g.first.receivingAccount} hidden={hidden} />
-                          <button
-                            disabled={hidden}
-                            onClick={() => {
-                              setEditingPayment(g.key);
-                              setPaymentClient(g.first.clientId);
-                            }}
-                          >
-                            Corregir
-                          </button>
-                          <button
-                            className="danger"
-                            onClick={() => removePayments(g.key)}
-                          >
-                            Eliminar
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            {!groups.length && (
-              <Empty>
-                No hay pagos para el mes y los filtros seleccionados.
-              </Empty>
-            )}
-          </section>
-        </>
-      )}
-      {view === "postergaciones" && (
-        <>
-          <div className="tk-actions" style={{ marginBottom: 20 }}>
-            <Link className="tk-button primary" href="/admin/obligaciones">
-              Postergar desde una obligación
-            </Link>
-          </div>
-          <section className="tk-card">
-            <div className="tk-table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Cliente</th>
-                    <th>Origen</th>
-                    <th>Monto</th>
-                    <th>Vencimiento</th>
-                    <th>Saldo</th>
-                    <th>Estado</th>
-                    <th></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {meta.deferrals
-                    .filter(
-                      (d) =>
-                        visible.some((c) => c.id === d.clientId) &&
-                        d.period <= period,
-                    )
-                    .map((d) => {
-                      const left = deferralBalance(data, d);
-                      const now = today();
-                      const near = new Date(`${now}T12:00:00`);
-                      near.setDate(near.getDate() + 7);
-                      const state =
-                        left === 0
-                          ? "PAGADO"
-                          : d.due < now
-                            ? "VENCIDA"
-                            : new Date(`${d.due}T12:00:00`) <= near
-                              ? "PRÓXIMA"
-                              : "VIGENTE";
-                      return (
-                        <tr key={d.id}>
-                          <td>
-                            {clients.find((c) => c.id === d.clientId)?.name}
-                          </td>
-                          <td>
-                            {conceptLabel(d.concept)}
-                            <small>{periodLabel(d.period)}</small>
-                          </td>
-                          <td>
-                            <Money value={d.amount} hidden={hidden} />
-                          </td>
-                          <td>{d.due}</td>
-                          <td>
-                            <Money value={left} hidden={hidden} />
-                          </td>
-                          <td>
-                            <Badge>{state}</Badge>
-                          </td>
-                          <td>
-                            <div className="tk-actions">
-                              <button
-                                disabled={!left}
-                                onClick={() => setDeferred(d)}
-                              >
-                                Abonar
-                              </button>
-                              <button
-                                disabled={hidden}
-                                onClick={() => setEditDeferred(d)}
-                              >
-                                Editar
-                              </button>
-                              <button
-                                className="danger"
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      "¿Eliminar la postergación y devolver el saldo a su período original?",
-                                    )
-                                  )
-                                    run(() => save(removeDeferral(data, d.id)));
-                                }}
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-            </div>
-            {!meta.deferrals.length && (
-              <Empty>No hay postergaciones registradas.</Empty>
-            )}
-          </section>
-        </>
-      )}
-      {view === "formalizaciones" && (
-        <section className="tk-card">
-          <div className="tk-card-head">
-            <h2>Creación de empresas</h2>
-          </div>
-          <div className="tk-table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Progreso</th>
-                  <th>Próximo paso</th>
-                  <th></th>
-                </tr>
-              </thead>
-              <tbody>
-                {visible.map((c) => {
-                  // Fuente de verdad: cabecera (parentId null) + sus 11 pasos.
-                  const cabecera = gestiones.find(
-                    (g) => g.clienteId === c.id && !g.parentId,
-                  );
-                  const all = cabecera
-                    ? gestiones
-                        .filter((g) => g.parentId === cabecera.id)
-                        .filter((s) => s.estado !== "No corresponde")
-                    : [];
-                  const done = all.filter(
-                    (s) => s.estado === "Completado",
-                  ).length;
-                  return (
-                    <tr key={c.id}>
-                      <td>
-                        <strong>{c.name}</strong>
-                        <small>{c.rut}</small>
-                      </td>
-                      <td>
-                        {done}/{all.length || "—"}
-                        <div className="tk-progress">
-                          <span
-                            style={{
-                              width: `${all.length ? (done / all.length) * 100 : 0}%`,
-                            }}
-                          />
-                        </div>
-                      </td>
-                      <td>
-                        {all.find((s) => s.estado !== "Completado")?.titulo ||
-                          (!cabecera ? "Sin iniciar" : "Completado")}
-                      </td>
-                      <td>
-                        <button onClick={() => setProcessClient(c)}>
-                          {cabecera ? "Ver proceso" : "Iniciar proceso"}
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-          {!visible.length && <Empty>No hay clientes para mostrar.</Empty>}
-        </section>
-      )}
-      <details className="tk-privacy">
-        <summary>Almacenamiento y respaldo</summary>
-        <p>
-          Clientes y documentos: servidor. Gestión mensual, pagos, facturación y
-          procesos: este navegador.
-        </p>
-        <button
-          onClick={() =>
-            downloadBlob(
-              new Blob([JSON.stringify(data, null, 2)], {
-                type: "application/json",
-              }),
-              `tributek-respaldo-${today()}.json`,
-            )
-          }
-        >
-          Descargar respaldo local
-        </button>
-        <Field label="Restaurar respaldo JSON">
-          <input
-            type="file"
-            accept=".json,application/json"
-            onChange={async (e) => {
-              const file = e.target.files?.[0];
-              if (!file) return;
-              const revision = data.revision;
-              try {
-                if (file.size > 10000000)
-                  throw new Error("El respaldo supera 10 MB.");
-                const restored = validateLedger(JSON.parse(await file.text()));
-                if (
-                  window.confirm(
-                    "Se reemplazará la gestión local por este respaldo. Descarga primero tu copia actual. ¿Continuar?",
-                  )
-                )
-                  save(restored, revision);
-              } catch (error) {
-                setError((error as Error).message);
-              }
-              e.target.value = "";
-            }}
-          />
-        </Field>
-      </details>
-      {selected && (
-        <ClientSheet
-          client={selected.client}
-          data={selected.data}
-          period={period}
-          accumulated={view === "clientes"}
-          save={save}
-          onClose={() => setSelected(null)}
-          hidden={hidden}
-        />
-      )}
-      {clientModal && (
-        <ClientCreateModal
-          client={clientModal === "new" ? undefined : clientModal}
-          onClose={() => setClientModal(null)}
-          onSaved={(client) => {
-            setRemote((current) => [
-              ...current.filter((item) => item.id !== client.id),
-              client,
-            ]);
-            setLoad("ready");
-            setReload((n) => n + 1);
-            setNotice("Cliente guardado en el servidor. Comparte la invitación desde el formulario si se habilitó el portal.");
-          }}
-        />
-      )}
-      {paymentClient && (
-        <Modal
-          title={editingPayment ? "Corregir pago" : "Registrar pago"}
-          onClose={() => setPaymentClient("")}
-        >
-          <div className="tk-dialog-body">
-            {!editingPayment && (
-              <Field label="Cliente">
-                <select
-                  value={paymentClient}
-                  onChange={(e) => setPaymentClient(e.target.value)}
-                >
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            )}
-            <PaymentForm
-              key={paymentClient + (editingPayment || "")}
-              data={data}
-              clientId={paymentClient}
-              period={period}
-              save={save}
-              onClose={() => setPaymentClient("")}
-              editingKey={editingPayment}
-            />
-          </div>
-        </Modal>
-      )}
-      {deferred && (
-        <Modal title="Abonar postergación" onClose={() => setDeferred(null)}>
-          <div className="tk-dialog-body">
-            <PaymentForm
-              data={data}
-              clientId={deferred.clientId}
-              period={period}
-              deferredId={deferred.id}
-              save={save}
-              onClose={() => setDeferred(null)}
-            />
-          </div>
-        </Modal>
-      )}
-      {editDeferred && (
-        <Modal
-          title="Editar postergación"
-          onClose={() => setEditDeferred(null)}
-        >
-          <form
-            className="tk-dialog-body tk-stack"
-            onSubmit={(e) => {
-              e.preventDefault();
-              run(() => {
-                save({
-                  ...data,
-                  management: {
-                    ...meta,
-                    deferrals: meta.deferrals.map((d) =>
-                      d.id === editDeferred.id ? editDeferred : d,
-                    ),
-                  },
-                });
-                setEditDeferred(null);
-              });
-            }}
-          >
-            {error && (
-              <p role="alert" className="tk-error">
-                {error}
-              </p>
-            )}
-            <Field label="Monto">
-              <input
-                type="number"
-                min="1"
-                step="1"
-                value={editDeferred.amount}
-                onChange={(e) =>
-                  setEditDeferred({
-                    ...editDeferred,
-                    amount: Number(e.target.value),
-                  })
-                }
-              />
-            </Field>
-            <Field label="Vencimiento confirmado">
-              <input
-                type="date"
-                required
-                value={editDeferred.due}
-                onChange={(e) =>
-                  setEditDeferred({ ...editDeferred, due: e.target.value })
-                }
-              />
-            </Field>
-            <Field label="Observación">
-              <textarea
-                value={editDeferred.note}
-                maxLength={500}
-                onChange={(e) =>
-                  setEditDeferred({ ...editDeferred, note: e.target.value })
-                }
-              />
-            </Field>
-            <button className="primary">Guardar cambios</button>
-          </form>
-        </Modal>
-      )}
-      {invoice && (
-        <InvoiceEditor
-          initial={invoice}
-          clients={clients}
-          onClose={() => setInvoice(null)}
-          onSave={(i) => {
-            save({
-              ...data,
-              management: {
-                ...meta,
-                invoices: meta.invoices.some((x) => x.id === i.id)
-                  ? meta.invoices.map((x) => (x.id === i.id ? i : x))
-                  : [...meta.invoices, i],
-              },
-            });
-            setInvoice(null);
-          }}
-        />
-      )}
-      {processClient && (
-        <Formalization
-          client={processClient}
-          period={period}
-          onSaved={() => setGestionesReload((r) => r + 1)}
-          onClose={() => setProcessClient(null)}
-        />
-      )}
-    </div>
-  );
-}
-function InvoiceEditor({
-  initial,
-  clients,
-  onSave,
-  onClose,
-}: {
-  initial: Invoice;
-  clients: ClientView[];
-  onSave: (i: Invoice) => void;
-  onClose: () => void;
-}) {
-  const [i, setI] = useState(initial);
-  const [error, setError] = useState("");
-  return (
-    <Modal
-      title={i.kind === "monthly" ? "Servicio mensual" : "Otro servicio"}
-      onClose={onClose}
-    >
-      <form
-        className="tk-dialog-body tk-stack"
-        onSubmit={(e) => {
-          e.preventDefault();
-          try {
-            onSave(i);
-          } catch (e) {
-            setError((e as Error).message);
-          }
-        }}
-      >
-        {error && (
-          <p role="alert" className="tk-error">
-            {error}
-          </p>
-        )}
-        {i.kind === "extra" ? (
-          <Field label="Cliente">
-            <select
-              value={i.clientId}
-              onChange={(e) => {
-                const c = clients.find((c) => c.id === e.target.value)!;
-                setI({ ...i, clientId: c.id, name: c.name, rut: c.rut });
-              }}
-            >
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </Field>
-        ) : (
-          <p>
-            {i.name} · {i.rut}
-          </p>
-        )}
-        <Field label="Honorarios">
-          <input
-            type="number"
-            min="0"
-            step="1"
-            value={i.amount}
-            readOnly={i.kind === "monthly"}
-            onChange={(e) => setI({ ...i, amount: Number(e.target.value) })}
-          />
-        </Field>
-        <Field label="Glosa">
-          <input
-            required
-            maxLength={300}
-            value={i.description}
-            readOnly={i.kind === "monthly"}
-            onChange={(e) => setI({ ...i, description: e.target.value })}
-          />
-        </Field>
-        <div className="tk-grid">
-          <Field label="N° factura">
-            <input
-              value={i.number}
-              maxLength={50}
-              onChange={(e) => setI({ ...i, number: e.target.value })}
-            />
-          </Field>
-          <Field label="Fecha">
-            <input
-              type="date"
-              value={i.date}
-              onChange={(e) => setI({ ...i, date: e.target.value })}
-            />
-          </Field>
-        </div>
-        <Field label="Observación">
-          <textarea
-            maxLength={1000}
-            value={i.note}
-            onChange={(e) => setI({ ...i, note: e.target.value })}
-          />
-        </Field>
-        <footer>
-          <button className="primary">Guardar</button>
-        </footer>
-      </form>
-    </Modal>
-  );
-}
-function InvoiceComparison({
-  invoices,
-  hidden,
-}: {
-  invoices: Invoice[];
-  hidden: boolean;
-}) {
+
+function InvoiceComparison({ invoices, hidden }: { invoices: Invoice[]; hidden: boolean }) {
   const [reference, setReference] = useState("");
   const total = invoices
     .filter((i) => i.number && i.date)
@@ -1500,5 +83,772 @@ function InvoiceComparison({
         </p>
       )}
     </section>
+  );
+}
+
+// Shape de respuesta del backend GET /obligaciones
+type ObligacionesResponse = {
+  clients: Array<{
+    id: string;
+    tipoCliente: string;
+    rut: string;
+    nombreRazonSocial: string;
+    contactoPrincipal: string;
+    emailContacto: string;
+    telefono: string;
+    direccion: string;
+    estado: string;
+    creadoEn: string;
+    actualizadoEn: string;
+  }>;
+  months: Array<{
+    clientId: string;
+    period: string;
+    amounts: Record<string, number>;
+    sent: boolean;
+    steps: { id: string; text: string; done: boolean }[];
+    followDate: string;
+    followNote: string;
+    followDone: boolean;
+  }>;
+  payments: Array<{
+    id: string;
+    clientId: string;
+    period: string;
+    concept: string;
+    amount: number;
+    date: string;
+    note: string;
+    createdAt: string;
+    transferId: string | null;
+    method: string | null;
+    originAccount: string | null;
+    receivingAccount: string | null;
+    destination: string | null;
+    deferredId: string | null;
+  }>;
+  deferrals: Array<{
+    id: string;
+    clientId: string;
+    period: string;
+    concept: string;
+    amount: number;
+    due: string;
+    note: string;
+  }>;
+  invoices: Array<{
+    id: string;
+    clienteId: string;
+    anio: number;
+    mes: number;
+    tipo: string;
+    nombre: string;
+    rut: string;
+    descripcion: string;
+    monto: number;
+    numero: string;
+    fecha: string;
+    nota: string;
+    creadoEn: string;
+  }>;
+};
+
+// Convierte la respuesta del backend al Ledger que consumen las vistas.
+function serverToLedger(s: ObligacionesResponse, base: Ledger): Ledger {
+  return {
+    version: base.version,
+    clients: s.clients.map((c) => ({
+      id: c.id,
+      name: c.nombreRazonSocial,
+      phone: c.telefono || "",
+      note: "",
+      documentUrl: "",
+    })),
+    months: s.months,
+    payments: s.payments.map((p) => ({
+      ...p,
+      concept: p.concept as Concept,
+      transferId: p.transferId ?? undefined,
+      method: p.method ?? undefined,
+      originAccount: p.originAccount ?? undefined,
+      receivingAccount: p.receivingAccount ?? undefined,
+      deferredId: p.deferredId ?? undefined,
+      destination: p.destination === "institution"
+        ? ("institution" as const)
+        : p.destination === "tributek"
+          ? ("tributek" as const)
+          : undefined,
+    })),
+    management: {
+      profiles: {},
+      processes: [],
+      deferrals: s.deferrals.map((d) => ({ ...d, concept: d.concept as Concept })),
+      invoices: s.invoices.map((inv) => ({
+        id: inv.id,
+        clientId: inv.clienteId,
+        period: `${inv.anio}-${String(inv.mes).padStart(2, "0")}`,
+        kind: inv.tipo === "monthly" ? ("monthly" as const) : ("extra" as const),
+        name: inv.nombre,
+        rut: inv.rut,
+        amount: inv.monto,
+        description: inv.descripcion,
+        number: inv.numero,
+        date: inv.fecha,
+        note: inv.nota,
+      })),
+    },
+    revision: base.revision,
+  };
+}
+
+export default function Workspace({ view }: { view: View }) {
+  const store = useData();
+  const localData = store.data as Ledger;
+  const [serverData, setServerData] = useState<ObligacionesResponse | null>(null);
+  const [load, setLoad] = useState<"loading" | "ready" | "error">("loading");
+  const [reload, setReload] = useState(0);
+  const [periodValue, setPeriod] = useState("");
+  const period = periodValue || (store.ready ? today().slice(0, 7) : "2026-09");
+  const [search, setSearch] = useState("");
+  const [concept, setConcept] = useState("");
+  const [status, setStatus] = useState("");
+  const [machine, setMachine] = useState("");
+  const [active, setActive] = useState("");
+  const [hidden, setHidden] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [selected, setSelected] = useState<{ client: ClientView; data: Ledger } | null>(null);
+  const [clientModal, setClientModal] = useState<ClientRecord | "new" | null>(null);
+  const [paymentClient, setPaymentClient] = useState("");
+  const [editingPayment, setEditingPayment] = useState<string | undefined>();
+  const [deferred, setDeferred] = useState<Deferral | null>(null);
+  const [editDeferred, setEditDeferred] = useState<Deferral | null>(null);
+  const [invoice, setInvoice] = useState<Invoice | null>(null);
+  const [facturaNueva, setFacturaNueva] = useState(false);
+  const [processClient, setProcessClient] = useState<ClientView | null>(null);
+  const [gestionesReload, setGestionesReload] = useState(0);
+  const [gestiones, setGestiones] = useState<
+    { id: string; clienteId: string; parentId: string | null; titulo: string; estado: string }[]
+  >([]);
+  const [paymentFilter, setPaymentFilter] = useState("");
+  const allPayments = false;
+
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search);
+    const id = q.get("cliente");
+    if (id) queueMicrotask(() => setPaymentFilter(id));
+  }, []);
+
+  // Consulta de Obligaciones al backend. `load` arranca en "loading" y solo
+  //   cambia cuando llega la respuesta (o al reintentar): así el efecto no
+  //   hace setState sincrónico al montarse. `reload` fuerza recargar tras
+  //   guardar o al pulsar «Reintentar».
+  useEffect(() => {
+    const controller = new AbortController();
+    void (async () => {
+      try {
+        const r = await authenticatedFetch("/obligaciones", { signal: controller.signal });
+        if (!r.ok) {
+          const body = await r.json().catch(() => null) as { message?: string | string[] } | null;
+          const message = Array.isArray(body?.message) ? body.message.join(" ") : body?.message;
+          throw new Error(message || `No se pudo cargar obligaciones (HTTP ${r.status}).`);
+        }
+        const data: ObligacionesResponse = await r.json();
+        if (controller.signal.aborted) return;
+        setServerData(data);
+        setLoad("ready");
+      } catch (e) {
+        if (!controller.signal.aborted) {
+          setLoad("error");
+          setError(e instanceof Error ? e.message : "No se pudo conectar con el servidor.");
+        }
+      }
+    })();
+    return () => controller.abort();
+  }, [reload]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    authenticatedFetch(
+      `/gestiones?tipo=${encodeURIComponent("Formalización")}`,
+      { signal: controller.signal },
+    )
+      .then(async (r) => {
+        if (!r.ok) return;
+        const rows = (await r.json()) as { clienteId: unknown; parentId: unknown }[];
+        if (controller.signal.aborted || !Array.isArray(rows)) return;
+        setGestiones(
+          rows.map((g) => ({
+            id: String((g as { id?: unknown }).id ?? ""),
+            clienteId: String(g.clienteId),
+            parentId: g.parentId === null || g.parentId === undefined ? null : String(g.parentId),
+            titulo: String((g as { titulo?: unknown }).titulo ?? ""),
+            estado: String((g as { estado?: unknown }).estado ?? ""),
+          })),
+        );
+      })
+      .catch(() => { /* sin conexión la tabla queda vacía */ });
+    return () => controller.abort();
+  }, [gestionesReload]);
+
+  // Vistas cuya fuente de verdad es PostgreSQL: clientes, obligaciones,
+  //   facturación y formalizaciones. Si el backend falla NO se cae al ledger
+  //   local: se muestra el error y una lista vacía. El resto de vistas
+  //   (inicio, pagos, postergaciones) usa el ledger local porque todavía no
+  //   están migradas.
+  const isServerView =
+    view === "clientes" ||
+    view === "obligaciones" ||
+    view === "facturacion" ||
+    view === "formalizaciones";
+  const blankLedger: Ledger = {
+    version: localData.version,
+    clients: [],
+    months: [],
+    payments: [],
+    revision: "",
+    management: { profiles: {}, deferrals: [], invoices: [], processes: [] },
+  };
+  const vista: Ledger = isServerView
+    ? (serverData ? serverToLedger(serverData, localData) : blankLedger)
+    : localData;
+  const metaVista = extra(vista);
+
+  // Metadatos de cliente que vienen de la BD (`clientes`): la ficha necesita
+  //   RUT, tipo, contacto, correo, dirección y estado, que no caben en el
+  //   tipo Client del ledger (solo guarda id/nombre/teléfono).
+  const clientMeta = new Map(
+    (serverData?.clients ?? []).map((c) => [c.id, c] as const),
+  );
+
+  const clients: ClientView[] = vista.clients.map((c) => {
+    const profile = metaVista.profiles[c.id];
+    const meta = clientMeta.get(c.id);
+    return {
+      id: c.id,
+      name: meta?.nombreRazonSocial || c.name,
+      phone: meta?.telefono || c.phone,
+      note: c.note,
+      documentUrl: c.documentUrl,
+      rut: meta?.rut ?? "",
+      machine: profile?.machine || "",
+      fee: profile?.fee || 0,
+      active: profile?.active ?? (meta ? meta.estado.toLowerCase() !== "inactivo" : true),
+      tipoCliente: meta?.tipoCliente || "",
+      contactoPrincipal: meta?.contactoPrincipal || "",
+      emailContacto: meta?.emailContacto || "",
+      direccion: meta?.direccion || "",
+      estadoCliente: meta?.estado || "",
+    };
+  });
+
+  const visible = clients.filter(
+    (c) =>
+      `${c.name} ${c.rut}`.toLocaleLowerCase("es").includes(search.toLocaleLowerCase("es")) &&
+      (!machine || c.machine === machine) &&
+      (!active || (active === "active") === c.active) &&
+      (!status || totals(vista, getMonth(vista, c.id, period)).status === status) &&
+      (!concept ||
+        (view === "clientes"
+          ? debt(vista, c.id, period, [concept as Concept])
+          : balance(vista, getMonth(vista, c.id, period), concept as Concept)) > 0),
+  );
+
+  const openDeferrals = metaVista.deferrals.filter((d) => deferralBalance(vista, d) > 0);
+
+  function save(next: Ledger, revision = vista.revision) {
+    const previo = vista;
+    setError("");
+    if (!isServerView) {
+      persist(validateLedger(next), revision);
+      setNotice("Cambios guardados.");
+      return;
+    }
+    // Vistas con fuente en la BD: NO se confirma nada hasta tener respuesta
+    //   del servidor. Si falla se avisa y se deja la ficha abierta para
+    //   reintentar; no se cierra ni se recarga con datos no confirmados.
+    void (async () => {
+      try {
+        const meses = next.months.filter((m) => {
+          const antes = previo.months.find((x) => x.clientId === m.clientId && x.period === m.period);
+          return !antes || !mesIgual(antes, m);
+        });
+        const avisos: string[] = [];
+        for (const month of meses) {
+          const cliente = clients.find((c) => c.id === month.clientId);
+          if (!cliente) {
+            avisos.push(`No se encontró el cliente del período ${month.period}.`);
+            continue;
+          }
+          const aviso = await sincronizarMes(month, cliente);
+          if (aviso) avisos.push(aviso);
+        }
+        setReload((n) => n + 1);
+        setSelected(null);
+        setNotice(avisos.length
+          ? `Guardado con avisos: ${avisos.join(" ")}`
+          : "Cambios guardados en TRIBUTEK.");
+      } catch (e) {
+        setError("No se pudo guardar en el servidor: "
+          + (e instanceof Error ? e.message : String(e)));
+      }
+    })();
+  }
+
+  function run(action: () => void) {
+    try { action(); } catch (e) { setError(e instanceof Error ? e.message : "No se pudo guardar."); }
+  }
+
+  async function removePayments(key: string) {
+    if (!window.confirm("¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?")) return;
+    try {
+      const payment = vista.payments.find((p) => (p.transferId || p.id) === key);
+      if (!payment) return;
+      const response = await authenticatedFetch(`/payment-evidence/${payment.clientId}/${key}`, { method: "DELETE" });
+      if (!response.ok) throw new Error("No se pudo archivar la carpeta de comprobantes. El pago no fue eliminado.");
+      save({ ...vista, payments: vista.payments.filter((p) => (p.transferId || p.id) !== key) });
+    } catch (e) { setError((e as Error).message); }
+  }
+
+  const received = receivedByCategory(vista, period);
+  const pendingMonths = clients.filter(
+    (c) => vista.months.some((m) => m.clientId === c.id && m.period === period) && totals(vista, getMonth(vista, c.id, period)).status === "NO ENVIADO",
+  );
+  const payments = vista.payments.filter(
+    (p) => (allPayments || p.date.slice(0, 7) === period) && (!paymentFilter || p.clientId === paymentFilter) && (!concept || p.concept === concept) &&
+      `${clients.find((c) => c.id === p.clientId)?.name} ${clients.find((c) => c.id === p.clientId)?.rut} ${p.note}`.toLowerCase().includes(search.toLowerCase()),
+  );
+  const groups = Array.from(new Set(payments.map((p) => p.transferId || p.id))).map((key) => {
+    const rows = payments.filter((p) => (p.transferId || p.id) === key);
+    return { key, rows, first: rows[0], amount: rows.reduce((s, p) => s + p.amount, 0) };
+  });
+  const dueRows = clients.flatMap((c) =>
+    ["Cotizaciones", "Impuestos"].flatMap((co) => {
+      const value = balance(vista, getMonth(vista, c.id, period), co as Concept);
+      return value > 0 ? [{ client: c, concept: co, amount: value, day: co === "Cotizaciones" ? 12 : 20 }] : [];
+    }),
+  );
+
+  // --- Facturación contra PostgreSQL --------------------------------------
+  // QUÉ HACE: crea o edita una factura en el backend y devuelve la fila
+  //   confirmada por el servidor. La vista se recarga con `setReload`.
+  // EVITAR: reflejar el cambio en pantalla antes de la respuesta.
+  async function guardarFactura(invoice: Invoice, esNueva: boolean) {
+    const [anio, mes] = invoice.period.split("-");
+    const url = esNueva
+      ? `/facturas/${encodeURIComponent(invoice.clientId)}`
+      : `/facturas/${encodeURIComponent(invoice.id)}`;
+    const r = await authenticatedFetch(url, {
+      method: esNueva ? "POST" : "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        anio: Number(anio),
+        mes: Number(mes),
+        kind: invoice.kind,
+        name: invoice.name,
+        rut: invoice.rut,
+        amount: invoice.amount,
+        description: invoice.description,
+        number: invoice.number,
+        date: invoice.date,
+        note: invoice.note,
+      }),
+    });
+    if (!r.ok) {
+      const detalle = await r.json().catch(() => null) as { message?: string | string[] } | null;
+      const message = Array.isArray(detalle?.message)
+        ? detalle.message.join(" ")
+        : detalle?.message;
+      throw new Error(message || `No se pudo guardar la factura (HTTP ${r.status}).`);
+    }
+    return (await r.json()) as Invoice;
+  }
+
+  async function eliminarFactura(id: string) {
+    const r = await authenticatedFetch(`/facturas/${encodeURIComponent(id)}`, {
+      method: "DELETE",
+    });
+    if (!r.ok) {
+      const detalle = await r.json().catch(() => null) as { message?: string | string[] } | null;
+      const message = Array.isArray(detalle?.message)
+        ? detalle.message.join(" ")
+        : detalle?.message;
+      throw new Error(message || `No se pudo eliminar la factura (HTTP ${r.status}).`);
+    }
+  }
+
+  // QUÉ HACE: prepara un servicio mensual por cliente activo que aún no tenga
+  //   uno en el período. El monto sale de los Honorarios del mes guardado en
+  //   PostgreSQL; si el cliente no tiene mes, queda en 0 (no hay columna de
+  //   honorario acordado en la BD, así que no se inventa un valor).
+  async function prepareInvoices() {
+    const pendientes = visible.filter(
+      (c) =>
+        c.active &&
+        !metaVista.invoices.some(
+          (i) => i.clientId === c.id && i.period === period && i.kind === "monthly",
+        ),
+    );
+    if (!pendientes.length) {
+      setNotice("Todos los clientes activos ya tienen su servicio mensual de este período.");
+      return;
+    }
+    if (!window.confirm(
+      `¿Preparar servicios mensuales de ${periodLabel(period)} para ${pendientes.length} cliente(s)?`,
+    )) return;
+    setError("");
+    try {
+      for (const c of pendientes) {
+        const honorarios = vista.months.some(
+          (m) => m.clientId === c.id && m.period === period,
+        )
+          ? getMonth(vista, c.id, period).amounts.Honorarios
+          : 0;
+        await guardarFactura(
+          {
+            id: "",
+            clientId: c.id,
+            period,
+            kind: "monthly",
+            name: c.name,
+            rut: c.rut,
+            amount: honorarios,
+            description: `Servicios mensuales ${periodLabel(period)}`,
+            number: "",
+            date: "",
+            note: "",
+          },
+          true,
+        );
+      }
+      setReload((n) => n + 1);
+      setNotice(`Servicios mensuales preparados (${pendientes.length}) en TRIBUTEK.`);
+    } catch (e) {
+      setError(
+        "No se pudieron preparar todos los servicios: "
+        + (e instanceof Error ? e.message : String(e)),
+      );
+    }
+  }
+
+  if (!store.ready) return <div className="tk"><Empty>Cargando gestión…</Empty></div>;
+
+  return (
+    <div className="tk">
+      <header className="tk-header">
+        <div>
+          <p className="tk-eyebrow">TRIBUTEK / Gestión</p>
+          <h1>{names[view]}</h1>
+        </div>
+        <div className="tk-actions">
+          <button onClick={() => setHidden(!hidden)}>{hidden ? "Mostrar montos" : "Ocultar montos"}</button>
+          {view === "clientes" && <button className="primary" onClick={() => setClientModal("new")}>Nuevo cliente</button>}
+          {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
+        </div>
+      </header>
+      {store.error && <p role="alert" className="tk-error">{store.error}</p>}
+      {error && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
+      {notice && <p role="status" className="tk-success">{notice} <button onClick={() => setNotice("")}>Cerrar</button></p>}
+      <div className="tk-toolbar">
+        <Field label={view === "pagos" ? "Mes de recepción" : "Período de trabajo"}>
+          <input type="month" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); } }} />
+        </Field>
+        {view !== "inicio" && <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>}
+        {(view === "clientes" || view === "obligaciones") && (
+          <>
+            <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
+            <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
+            <details className="tk-details"><summary>Más filtros</summary><div className="tk-actions">
+              <Field label="Máquina"><select value={machine} onChange={(e) => setMachine(e.target.value)}><option value="">Todas</option>{Array.from(new Set(clients.map((c) => c.machine).filter(Boolean))).map((m) => <option key={m}>{m}</option>)}</select></Field>
+              <Field label="Clientes"><select value={active} onChange={(e) => setActive(e.target.value)}><option value="">Activos e inactivos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></Field>
+            </div></details>
+          </>
+        )}
+      </div>
+      {load === "loading" && <p role="status" className="tk-subtle">Cargando datos de TRIBUTEK…</p>}
+      {view === "inicio" && (
+        <>
+          <div className="tk-metrics">
+            <Metric label="Recibido por servicios"><Money value={received.services} hidden={hidden} /></Metric>
+            <Metric label="Reembolsos recibidos"><Money value={received.reimbursements} hidden={hidden} /></Metric>
+            <Metric label="Clientes con deuda de servicios">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric label="Postergaciones pendientes"><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
+            <Metric label="Obligaciones no enviadas">{pendingMonths.length}</Metric>
+          </div>
+          <section className="tk-card">
+            <div className="tk-card-head"><h2>Control de vencimientos</h2><Link className="tk-button" href="/admin/obligaciones">Ver obligaciones</Link></div>
+            <div className="tk-panel">
+              <div className="tk-grid">
+                {[{ c: "Cotizaciones", day: 12 }, { c: "Impuestos", day: 20 }].map(({ c, day }) => (
+                  <div className="tk-due" key={conceptLabel(c)}>
+                    <span>{conceptLabel(c)} · referencia interna día {day}</span>
+                    <strong>{dueRows.filter((r) => r.concept === c).length} clientes</strong>
+                    <Money value={dueRows.filter((r) => r.concept === c).reduce((s, r) => s + r.amount, 0)} hidden={hidden} />
+                  </div>
+                ))}
+              </div>
+            </div>
+            {dueRows.length ? (
+              <div className="tk-table-wrap">
+                <table><thead><tr><th>Cliente</th><th>Concepto</th><th>Saldo</th><th></th></tr></thead><tbody>
+                  {dueRows.map((r) => (
+                    <tr key={r.client.id + r.concept}>
+                      <td><strong>{r.client.name}</strong><small>{r.client.rut}</small></td>
+                      <td>{conceptLabel(r.concept)}</td>
+                      <td><Money value={r.amount} hidden={hidden} /></td>
+                      <td><button disabled={hidden} onClick={() => setSelected({ client: r.client, data: vista })}>Ver ficha</button></td>
+                    </tr>
+                  ))}
+                </tbody></table>
+              </div>
+            ) : <Empty>No hay impuestos ni cotizaciones previsionales pendientes en este período.</Empty>}
+          </section>
+          <p className="tk-subtle">Ingresos: abonos de honorarios, formalización, cobranza y otro recibidos en {periodLabel(period)}. Las fechas de referencia no sustituyen el vencimiento confirmado del trámite.</p>
+        </>
+      )}
+      {(view === "clientes" || view === "obligaciones") && (
+        <>
+          <div className="tk-metrics">
+            <Metric label="Clientes visibles">{visible.length}</Metric>
+            <Metric label="Con deuda de servicios">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric label="Deuda acumulada con TRIBUTEK"><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
+          </div>
+          <section className="tk-card">
+            <div className="tk-card-head"><h2>Clientes</h2></div>
+            <div className="tk-table-wrap">
+              <table><thead><tr><th>Cliente</th><th>RUT</th><th>Deuda acumulada</th><th>Estado del mes</th><th>Estado</th><th>Máquina</th><th>Honorario</th><th></th></tr></thead><tbody>
+                {visible.map((c) => {
+                  const m = getMonth(vista, c.id, period);
+                  const t = totals(vista, m);
+                  // Misma función que usa el indicador "Deuda acumulada": así la
+                  //   suma de esta columna coincide exactamente con la métrica.
+                  const deuda = debt(vista, c.id, period);
+                  return (
+                    <tr key={c.id}>
+                      <td><strong>{c.name}</strong><small>{c.rut}</small></td>
+                      <td>{c.rut}</td>
+                      <td>{deuda > 0 ? <strong><Money value={deuda} hidden={hidden} /></strong> : <Money value={deuda} hidden={hidden} />}</td>
+                      <td><Badge>{t.status}</Badge></td>
+                      <td>{c.estadoCliente || (c.active ? "Activo" : "Inactivo")}</td>
+                      <td>{c.machine || "—"}</td>
+                      <td><Money value={c.fee} hidden={hidden} /></td>
+                      <td>
+                        <div className="tk-actions">
+                          <button disabled={hidden} onClick={() => setSelected({ client: c, data: vista })}>Ver ficha</button>
+                          {view === "clientes" && <button onClick={() => setClientModal(serverData?.clients.find((r) => r.id === c.id) ?? null)}>Editar</button>}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody></table>
+            </div>
+            {load === "error" && <Empty>No se pudieron cargar los clientes desde TRIBUTEK. Revisa el mensaje de error y reintenta.</Empty>}
+            {!visible.length && load === "ready" && <Empty>{search || status || concept ? "No hay clientes para estos filtros." : "No hay clientes registrados."}</Empty>}
+          </section>
+        </>
+      )}
+      {view === "facturacion" && (
+        <>
+          <div className="tk-actions" style={{ marginBottom: 20 }}>
+            <button className="primary" onClick={prepareInvoices}>Preparar servicios mensuales</button>
+            <button disabled={!visible.length} onClick={() => { const c = visible[0]; setInvoice({ id: "", clientId: c.id, name: c.name, rut: c.rut, period, kind: "extra", amount: 0, description: "", number: "", date: "", note: "" }); setFacturaNueva(true); }}>Agregar otro servicio</button>
+          </div>
+          {["monthly", "extra"].map((kind) => {
+            // El buscador sigue aplicando: solo se muestran facturas de
+            //   clientes que pasen el filtro de la vista.
+            const delPeriodo = metaVista.invoices.filter(
+              (i) => i.period === period && i.kind === kind,
+            );
+            const filas = delPeriodo.filter((i) => visible.some((c) => c.id === i.clientId));
+            return (
+            <section className="tk-card" key={kind}>
+              <div className="tk-card-head"><h2>{kind === "monthly" ? "Servicios mensuales" : "Otros servicios"}</h2></div>
+              {load === "error" && <Empty>No se pudieron cargar las facturas desde TRIBUTEK. Revisa el mensaje de error y reintenta.</Empty>}
+              <div className="tk-table-wrap">
+                <table><thead><tr>{["Nombre / RUT", "Honorarios", "Glosa", "N° factura", "Fecha", "Observación", ""].map((h, i) => <th key={i}>{h}</th>)}</tr></thead><tbody>
+                  {filas.map((i) => (
+                      <tr key={i.id}>
+                        <td><strong>{i.name}</strong><small>{i.rut}</small></td>
+                        <td><Money value={i.amount} hidden={hidden} /></td>
+                        <td>{i.description}</td>
+                        <td>{i.number || "—"}</td>
+                        <td>{i.date || "—"}</td>
+                        <td>{i.note || "—"}</td>
+                        <td>
+                          <div className="tk-actions">
+                            <button disabled={hidden} onClick={() => { setInvoice({ ...i }); setFacturaNueva(false); }}>Editar</button>
+                            <button
+                              className="danger"
+                              onClick={async () => {
+                                if (!window.confirm("¿Eliminar esta factura?")) return;
+                                setError("");
+                                try {
+                                  await eliminarFactura(i.id);
+                                  setReload((n) => n + 1);
+                                  setNotice("Factura eliminada en TRIBUTEK.");
+                                } catch (e) {
+                                  setError((e as Error).message);
+                                }
+                              }}
+                            >
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody></table>
+              </div>
+              {!filas.length && load === "ready" && <Empty>No hay {kind === "monthly" ? "servicios mensuales" : "otros servicios"} para este período.</Empty>}
+            </section>
+            );
+          })}
+          <section className="tk-card"><div className="tk-card-head"><h2>Comparativa mensual</h2></div><InvoiceComparison invoices={metaVista.invoices.filter((i) => i.period === period)} hidden={hidden} /></section>
+        </>
+      )}
+      {view === "pagos" && (
+        <>
+          <section className="tk-card">
+            <div className="tk-card-head"><h2>Historial de pagos</h2></div>
+            <div className="tk-table-wrap">
+              <table><thead><tr><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Destino</th><th>Glosa</th><th></th></tr></thead><tbody>
+                {groups.map((g) => (
+                  <tr key={g.key}>
+                    <td>{g.first.date}</td>
+                    <td>
+                      <strong>{clients.find((c) => c.id === g.first.clientId)?.name}</strong>
+                      <small>{clients.find((c) => c.id === g.first.clientId)?.rut}</small>
+                    </td>
+                    <td>
+                      {g.rows.map((r) => (
+                        <span key={r.concept} style={{ display: "inline-block", marginRight: 8 }}>
+                          {conceptLabel(r.concept)} <Money value={r.amount} hidden={hidden} />
+                        </span>
+                      ))}
+                    </td>
+                    <td><Money value={g.amount} hidden={hidden} /></td>
+                    <td>{g.first.method}</td>
+                    <td>{g.first.destination === "institution" ? "Institución" : "TRIBUTEK"}</td>
+                    <td>{g.first.note || "—"}</td>
+                    <td>
+                      <div className="tk-actions">
+                        <button disabled={hidden} onClick={() => { setEditingPayment(g.key); setPaymentClient(g.first.clientId); }}>Editar</button>
+                        <button className="danger" onClick={() => removePayments(g.key)}>Eliminar</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody></table>
+            </div>
+            {!payments.length && <Empty>No hay pagos para estos filtros.</Empty>}
+          </section>
+        </>
+      )}
+      {view === "postergaciones" && (
+        <>
+          <section className="tk-card"><div className="tk-card-head"><h2>Postergaciones</h2></div><div className="tk-table-wrap"><table><thead><tr><th>Cliente</th><th>Concepto</th><th>Período</th><th>Monto</th><th>Vence</th><th>Saldo</th><th></th></tr></thead><tbody>
+            {metaVista.deferrals.filter((d) => visible.some((c) => c.id === d.clientId) && d.period <= period).map((d) => {
+              const left = deferralBalance(vista, d);
+              const now = today();
+              const near = new Date(`${now}T12:00:00`);
+              const due = new Date(`${d.due}T12:00:00`);
+              return (
+                <tr key={d.id}><td><strong>{clients.find((c) => c.id === d.clientId)?.name}</strong><small>{clients.find((c) => c.id === d.clientId)?.rut}</small></td><td>{conceptLabel(d.concept)}</td><td>{d.period}</td><td><Money value={d.amount} hidden={hidden} /></td><td>{d.due} {left > 0 && due < near && <span className="tk-alert"> (próximo)</span>}</td><td><Money value={left} hidden={hidden} /></td><td><div className="tk-actions"><button disabled={hidden} onClick={() => setEditDeferred(d)}>Editar</button><button className="danger" onClick={() => { if (window.confirm("¿Eliminar la postergación y devolver el saldo a su período original?")) run(() => save(removeDeferral(vista, d.id))); }}>Eliminar</button></div></td></tr>
+              );
+            })}
+          </tbody></table></div>{!metaVista.deferrals.length && <Empty>No hay postergaciones registradas.</Empty>}</section>
+        </>
+      )}
+      {view === "formalizaciones" && (
+        <>
+          <section className="tk-card"><div className="tk-card-head"><h2>Creación de empresas</h2></div><div className="tk-table-wrap"><table><thead><tr><th>Cliente</th><th>Progreso</th><th>Próximo paso</th><th></th></tr></thead><tbody>
+{visible.map((c) => {
+                const cabecera = gestiones.find((g) => g.clienteId === c.id && !g.parentId);
+                const all = cabecera ? gestiones.filter((g) => g.parentId === cabecera.id).filter((s) => s.estado !== "No corresponde") : [];
+                const done = all.filter((s) => s.estado === "Completado").length;
+                return (
+                  <tr key={c.id}>
+                    <td><strong>{c.name}</strong><small>{c.rut}</small></td>
+                    <td>{done}/{all.length || "—"}<div className="tk-progress"><span style={{ width: `${all.length ? (done / all.length) * 100 : 0}%` }} /></div></td>
+                    <td>{all.find((s) => s.estado !== "Completado")?.titulo || (!cabecera ? "Sin iniciar" : "Completado")}</td>
+                    <td><button onClick={() => setProcessClient(c)}>{cabecera ? "Ver proceso" : "Iniciar proceso"}</button></td>
+                  </tr>
+                );
+              })}
+          </tbody></table></div>{!visible.length && <Empty>No hay clientes para mostrar.</Empty>}</section>
+        </>
+      )}
+      <details className="tk-privacy"><summary>Almacenamiento y respaldo</summary><p>Clientes y documentos: servidor. Gestión mensual, pagos, facturación y procesos: este navegador.</p><button onClick={() => downloadBlob(new Blob([JSON.stringify(vista, null, 2)], { type: "application/json" }), `tributek-respaldo-${today()}.json`)}>Descargar respaldo local</button><Field label="Restaurar respaldo JSON"><input type="file" accept=".json,application/json" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; const revision = vista.revision; try { if (file.size > 10000000) throw new Error("El respaldo supera 10 MB."); const restored = validateLedger(JSON.parse(await file.text())); if (window.confirm("Se reemplazará la gestión local por este respaldo. Descarga primero tu copia actual. ¿Continuar?")) save(restored, revision); } catch (error) { setError((error as Error).message); } e.target.value = ""; }} /></Field></details>
+      {selected && <ClientSheet client={selected.client} data={selected.data} period={period} accumulated={view === "clientes"} save={save} onClose={() => setSelected(null)} hidden={hidden} />}
+      {clientModal && <ClientCreateModal client={clientModal === "new" ? undefined : clientModal} onClose={() => setClientModal(null)} onSaved={() => { setReload((n) => n + 1); setNotice("Cliente guardado en el servidor. Comparte la invitación desde el formulario si se habilitó el portal."); }} />}
+      {paymentClient && <Modal title={editingPayment ? "Corregir pago" : "Registrar pago"} onClose={() => setPaymentClient("")}><div className="tk-dialog-body">{!editingPayment && <Field label="Cliente"><select value={paymentClient} onChange={(e) => setPaymentClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>}<PaymentForm key={paymentClient + (editingPayment || "")} data={vista} clientId={paymentClient} period={period} save={save} onClose={() => setPaymentClient("")} editingKey={editingPayment} /></div></Modal>}
+      {deferred && <Modal title="Abonar postergación" onClose={() => setDeferred(null)}><div className="tk-dialog-body"><PaymentForm data={vista} clientId={deferred.clientId} period={period} deferredId={deferred.id} save={save} onClose={() => setDeferred(null)} /></div></Modal>}
+      {editDeferred && <Modal title="Editar postergación" onClose={() => setEditDeferred(null)}><form className="tk-dialog-body tk-stack" onSubmit={(e) => { e.preventDefault(); const f = new FormData(e.currentTarget); try { save({ ...vista, management: { ...metaVista, deferrals: (vista.management?.deferrals ?? []).map((d) => d.id === editDeferred.id ? { ...d, amount: Number(f.get("amount")), due: String(f.get("due")), note: String(f.get("note")) } : d) } }); setEditDeferred(null); } catch (e) { setError((e as Error).message); } }}><Field label="Monto"><input name="amount" type="number" defaultValue={editDeferred.amount} required /></Field><Field label="Nuevo vencimiento"><input name="due" type="date" defaultValue={editDeferred.due} required /></Field><Field label="Observación"><textarea name="note" defaultValue={editDeferred.note} maxLength={500} /></Field><footer><button className="primary">Guardar</button></footer></form></Modal>}
+      {invoice && (
+        <Modal
+          title={facturaNueva ? "Nueva factura" : "Editar factura"}
+          onClose={() => setInvoice(null)}
+        >
+          <form
+            className="tk-dialog-body tk-stack"
+            onSubmit={async (e) => {
+              e.preventDefault();
+              const f = new FormData(e.currentTarget);
+              // El cliente no se cambia al editar: la fila mantiene su cliente
+              //   salvo que el body lo indique (no lo hacemos desde aquí).
+              const siguiente: Invoice = {
+                ...invoice,
+                amount: Number(f.get("amount")),
+                description: String(f.get("description")),
+                number: String(f.get("number")),
+                date: String(f.get("date")),
+                note: String(f.get("note")),
+              };
+              setError("");
+              try {
+                await guardarFactura(siguiente, facturaNueva);
+                setReload((n) => n + 1);
+                setInvoice(null);
+                setNotice(
+                  facturaNueva
+                    ? "Factura creada en TRIBUTEK."
+                    : "Cambios guardados en TRIBUTEK.",
+                );
+              } catch (err) {
+                // Falló el backend: se conserva el formulario abierto con lo
+                //   escrito para poder corregir y reintentar.
+                setError((err as Error).message);
+              }
+            }}
+          >
+            <Field label="Cliente">
+              <input value={clients.find((c) => c.id === invoice.clientId)?.name || invoice.name} readOnly />
+            </Field>
+            <Field label="Monto">
+              <input name="amount" type="number" defaultValue={invoice.amount} required />
+            </Field>
+            <Field label="Glosa">
+              <input name="description" defaultValue={invoice.description} required />
+            </Field>
+            <Field label="N° factura">
+              <input name="number" defaultValue={invoice.number} />
+            </Field>
+            <Field label="Fecha">
+              <input name="date" type="date" defaultValue={invoice.date} />
+            </Field>
+            <Field label="Observación">
+              <textarea name="note" defaultValue={invoice.note} maxLength={1000} />
+            </Field>
+            <p className="tk-subtle">
+              Los datos se guardan en PostgreSQL al confirmar.
+            </p>
+            <footer>
+              <button className="primary">Guardar</button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+      {processClient && <Formalization client={processClient} period={period} onClose={() => setProcessClient(null)} onSaved={() => { setGestionesReload((n) => n + 1); }} />}
+    </div>
   );
 }

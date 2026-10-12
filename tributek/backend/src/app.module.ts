@@ -9,6 +9,8 @@ import { ServiciosModule } from './servicios/servicios.module.js';
 import { DocumentosModule } from './documentos/documentos.module.js';
 import { GestionesModule } from './gestiones/gestiones.module.js';
 import { PeriodosModule } from './periodos/periodos.module.js';
+import { ObligacionesModule } from './obligaciones/obligaciones.module.js';
+import { FacturasModule } from './facturas/facturas.module.js';
 import { F29Module } from './f29/f29.module.js';
 
 @Module({
@@ -21,6 +23,8 @@ import { F29Module } from './f29/f29.module.js';
     PaymentEvidenceModule,
     GestionesModule,
     PeriodosModule,
+    ObligacionesModule,
+    FacturasModule,
     F29Module,
   ],
   controllers: [AppController],

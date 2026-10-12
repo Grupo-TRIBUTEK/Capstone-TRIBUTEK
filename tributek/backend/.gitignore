@@ -47,6 +47,15 @@ lerna-debug.log*
 .temp
 .tmp
 
+# Prisma agent skills (los genera `prisma skills sync` en el postinstall).
+# `prisma-composer-core-concepts` ya está versionado y se regenera idéntico,
+# pero `skills sync` añade skills nuevos (p. ej. `prisma-8`, ~280 archivos por
+# agente) que ensucian el árbol. Se ignoran las carpetas nuevas.
+/.agents/
+/.claude/
+/.cursor/
+/.devin/
+
 # Runtime data
 pids
 *.pid

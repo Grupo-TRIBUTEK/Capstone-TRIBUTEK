@@ -100,6 +100,33 @@ export class PeriodosService {
     return creado.id;
   }
 
+  // Devuelve todos los IDs de períodos para una lista de clientes
+  async obtenerIdsPorClientes(clienteIds: bigint[]): Promise<bigint[]> {
+    if (!clienteIds.length) return [];
+    const periodos = await this.prisma.db.orm.public.PeriodoCliente
+      .where((p) => p.clienteId.in(clienteIds))
+      .all();
+    return periodos.map((p) => p.id);
+  }
+
+  // Asegura que exista un período (año, mes) para TODOS los clientes
+  // y devuelve el ID del primero encontrado/creado (para filtrar).
+  async asegurarIds(anio: number, mes: number): Promise<bigint | null> {
+    const existente = await this.prisma.db.orm.public.PeriodoCliente
+      .where({ anio, mes }).first();
+    if (existente) return existente.id;
+    return null; // No creamos automáticamente para todos, solo devolvemos null
+  }
+
+  // Devuelve períodos por sus IDs
+  async obtenerPorIds(periodoIds: bigint[]): Promise<Map<bigint, any>> {
+    if (!periodoIds.length) return new Map();
+    const periodos = await this.prisma.db.orm.public.PeriodoCliente
+      .where((p) => p.id.in(periodoIds))
+      .all();
+    return new Map(periodos.map((p) => [p.id, p]));
+  }
+
   private parseId(raw: unknown, campo: string): bigint {
     if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
       throw new BadRequestException(`${campo} inválido: debe ser un número.`);
