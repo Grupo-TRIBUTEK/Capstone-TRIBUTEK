@@ -9,7 +9,7 @@ export default function ContactPage() {
         <div className="mx-auto max-w-7xl">
           <header className="mx-auto max-w-3xl text-center">
             <p className="text-sm font-semibold uppercase tracking-widest text-secondary-strong">Contacto</p>
-            <h1 className="mt-3 font-[Georgia,serif] text-[35px] font-normal leading-tight text-text-primary md:text-[48px]">
+            <h1 className="mt-3 font-display text-[35px] font-normal leading-tight text-text-primary md:text-[48px]">
               Contáctanos por nuestros canales principales.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-text-muted">
@@ -73,7 +73,7 @@ export default function ContactPage() {
               </div>
             </div>
             <div className="min-h-[320px] rounded-card border border-border bg-background p-6 md:p-8">
-              <h2 className="font-[Georgia,serif] text-2xl font-normal text-text-primary">Formulario</h2>
+              <h2 className="font-display text-2xl font-normal text-text-primary">Formulario</h2>
             </div>
           </div>
         </div>

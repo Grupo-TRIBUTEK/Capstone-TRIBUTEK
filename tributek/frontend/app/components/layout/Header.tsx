@@ -8,17 +8,17 @@ export default function Header({
   description,
 }: HeaderProps) {
   return (
-    <header className="border-b border-slate-200 pb-6">
-      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">
+    <header className="border-b border-border pb-6">
+      <p className="text-xs font-semibold uppercase tracking-widest text-text-muted">
         TRIBUTEK
       </p>
 
-      <h1 className="mt-2 text-2xl font-bold text-[#252f46]">
+      <h1 className="mt-2 text-2xl font-bold text-text-primary">
         {title}
       </h1>
 
       {description && (
-        <p className="mt-2 text-sm text-slate-600">
+        <p className="mt-2 text-sm text-text-muted">
           {description}
         </p>
       )}

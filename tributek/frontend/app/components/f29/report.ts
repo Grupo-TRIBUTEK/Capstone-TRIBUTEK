@@ -1,3 +1,4 @@
+import { reportTheme } from "../ui/reportTheme";
 import { associated, calculate, money, periodLabel, type Client, type Projection } from './model';
 
 export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
@@ -11,16 +12,17 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     const canvas = document.createElement('canvas');
     const ctx = canvas.getContext('2d');
     if (!ctx) throw new Error('No se pudo crear la imagen.');
-    const navy = '#223559', rose = '#B98B7B', pale = '#F5EBE7', ink = '#26334A', muted = '#667184', line = '#E4E7EC', red = '#B42332';
+    const theme = reportTheme();
+    const { primary: navy, accent: rose, soft: pale, ink, muted, line, error: red } = theme;
     const commands: (() => void)[] = [];
     function box(x: number, y: number, w: number, h: number, fill: string, radius = 0) {
         commands.push(() => { ctx!.fillStyle = fill; ctx!.beginPath(); ctx!.roundRect(x, y, w, h, radius); ctx!.fill(); });
     }
     function text(value: string, x: number, y: number, size = 20, bold = false, color = ink, align: CanvasTextAlign = 'left') {
-        commands.push(() => { ctx!.font = `${bold ? 700 : 400} ${size}px Arial`; ctx!.fillStyle = value.startsWith('$ -') ? red : color; ctx!.textAlign = align; ctx!.fillText(value, x, y); });
+        commands.push(() => { ctx!.font = `${bold ? 700 : 400} ${size}px ${theme.font}`; ctx!.fillStyle = value.startsWith('$ -') ? red : color; ctx!.textAlign = align; ctx!.fillText(value, x, y); });
     }
     function lines(value: string, width: number, size = 20, bold = false) {
-        ctx!.font = `${bold ? 700 : 400} ${size}px Arial`;
+        ctx!.font = `${bold ? 700 : 400} ${size}px ${theme.font}`;
         const output: string[] = []; let current = '';
         for (const word of value.split(/\s+/)) {
             if (current && ctx!.measureText(`${current} ${word}`).width > width) { output.push(current); current = ''; }
@@ -50,9 +52,9 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     y += 42;
     const cardY = y;
     box(64, y, 760, 194, navy, 18);
-    text(r.remainder > 0 ? 'REMANENTE ESTIMADO A FAVOR' : 'TOTAL ESTIMADO A PAGAR', 94, y + 43, 18, true, '#E9D4CB');
-    text(money(r.remainder > 0 ? r.remainder : r.total), 94, y + 118, 60, true, '#FFFFFF');
-    text(r.remainder > 0 ? 'Crédito disponible para el cálculo de próximos períodos.' : 'Incluye impuestos y otras obligaciones informadas.', 94, y + 160, 18, false, '#E0E5EF');
+    text(r.remainder > 0 ? 'REMANENTE ESTIMADO A FAVOR' : 'TOTAL ESTIMADO A PAGAR', 94, y + 43, 18, true, theme.onPrimary);
+    text(money(r.remainder > 0 ? r.remainder : r.total), 94, y + 118, 60, true, theme.paper);
+    text(r.remainder > 0 ? 'Crédito disponible para el cálculo de próximos períodos.' : 'Incluye impuestos y otras obligaciones informadas.', 94, y + 160, 18, false, theme.onPrimary);
     box(844, y, 492, 194, pale, 18);
     text(r.remainder > 0 ? 'OTRAS OBLIGACIONES A PAGAR' : 'COMPOSICIÓN DEL TOTAL', 870, y + 38, 17, true, navy);
     const metrics: [string, number][] = [['IVA del período', r.ivaPayable], ['Otras obligaciones', r.other], ['Total a pagar', r.total]];
@@ -69,12 +71,12 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     y += 25;
     text('01', 64, y, 18, true, rose); text('Detalle del cálculo', 105, y, 27, true, navy); y += 27;
     function panel(x: number, top: number, title: string, rows: [string, number][]) {
-        box(x, top, 620, 48, navy, 8); text(title, x + 20, top + 31, 19, true, '#FFFFFF');
+        box(x, top, 620, 48, navy, 8); text(title, x + 20, top + 31, 19, true, theme.paper);
         let cursor = top + 52;
         rows.forEach(([label, value], i) => {
             const labelLines = lines(label, 375, 19, i === rows.length - 1);
             const height = Math.max(43, labelLines.length * 26 + 18), final = i === rows.length - 1;
-            box(x, cursor, 620, height, final ? pale : i % 2 === 0 ? '#F7F8FA' : '#FFFFFF');
+            box(x, cursor, 620, height, final ? pale : i % 2 === 0 ? theme.stripe : theme.paper);
             labelLines.forEach((row, j) => text(row, x + 18, cursor + 28 + j * 26, 19, final));
             amount(value, x + 600, cursor + 28, 21); cursor += height;
         });
@@ -95,7 +97,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
         const docs = list.reduce((sum, item) => sum + item.docs, 0);
         text(`${docs} documentos`, 1336, y, 18, false, muted, 'right');
         y += 23;
-        box(64, y, 1272, 43, '#EDF0F5', 7);
+        box(64, y, 1272, 43, theme.stripe, 7);
         text(firstColumn, 80, y + 28, 17, true, navy);
         const columns = [686, 839, 1000, 1154, 1320];
         ['Docs.', 'Exento', 'Neto', 'IVA', 'Total'].forEach((label, i) => text(label, columns[i], y + 28, 17, true, navy, 'right'));
@@ -104,7 +106,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
         list.forEach((item, index) => {
             const nameLines = lines(item.name, 555, 19);
             const height = Math.max(64, nameLines.length * 26 + (item.rut ? 35 : 20));
-            if (index % 2 === 0) box(64, y, 1272, height, '#F8F9FB');
+            if (index % 2 === 0) box(64, y, 1272, height, theme.stripe);
             nameLines.forEach((row, i) => text(row, 80, y + 25 + i * 26, 19));
             if (item.rut) text(`RUT ${item.rut}`, 80, y + nameLines.length * 26 + 21, 15, false, muted);
             [String(item.docs), money(item.exempt), money(item.net), money(item.iva), money(item.total)].forEach((value, i) => text(value, columns[i], y + 30, 18, false, ink, 'right'));
@@ -126,7 +128,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     const height = Math.ceil(y + 50);
     if (height > 30000) throw new Error('El detalle es demasiado extenso para una sola imagen. Reduce el alcance del informe antes de exportar.');
     canvas.height = height;
-    ctx.fillStyle = '#FFFFFF'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = theme.paper; ctx.fillRect(0, 0, canvas.width, canvas.height);
     commands.forEach(draw => draw());
     return canvas;
 }

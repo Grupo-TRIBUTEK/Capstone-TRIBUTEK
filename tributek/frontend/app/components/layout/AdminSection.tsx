@@ -29,8 +29,8 @@ export default function AdminSection(props: AdminSectionProps) {
       <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-secondary/40 bg-secondary-surface p-4">
         <p className="max-w-xl text-sm leading-6 text-text-primary"><strong>Vista en preparación.</strong> Puedes recorrer las secciones. Los registros y las acciones todavía no están disponibles.</p>
         <div>
-          <button type="button" disabled aria-describedby="pending-action" className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-slate-200 px-4 py-3 text-sm font-semibold text-slate-600"><Icon name="plus" />{props.action}</button>
-          <p id="pending-action" className="mt-1 text-xs text-slate-600">Disponible en una próxima entrega</p>
+          <button type="button" disabled aria-describedby="pending-action" className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-surface-muted px-4 py-3 text-sm font-semibold text-text-muted"><Icon name="plus" />{props.action}</button>
+          <p id="pending-action" className="mt-1 text-xs text-text-muted">Disponible en una próxima entrega</p>
         </div>
       </div>
       <dl className="grid gap-4 sm:grid-cols-3">

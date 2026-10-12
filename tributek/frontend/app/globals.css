@@ -1,61 +1,63 @@
 @import "tailwindcss";
-/* --- Tokens del tema claro --- */
-/* Aplicando las mejores practicas para definir el diseño del sistema. A medida que el proyecto crece, se hace mas complejo la mantencion a futuro. Tomar en cuenta que el proyecto sufre modificaciones constantemente*/
-/*Puede convivir el uso de talwind y global.css index.css etc*/
 
-/* 
-Tareas pendiente en global
-
- - limpiar y definir los colores de hover y seprarlo bien en 
- - definir los movimientos de hover y animaciones de los elementos en .global.css (Verificar si hay que aplicarlo)
- - definir los bordes de cada elemento y su radio de borde (Verificar si hay que aplicarlo)
- - definir espaciado en los textos (no se como se llama realmente pero a mi no me da mucha gana hacer eso)
-*/
-
+/* Paleta compartida. Los componentes consumen roles, no colores locales. */
 :root {
-  /* Fondos */
-  --background:  #F7F8FA;           /* Fondo principal */
-  --background-subtle: #EEF2F6;     /* Fondo secundario */
+  --brand-primary: #252f46;
+  --brand-accent: #b98b7b;
+  --white: #ffffff;
+  --black: #000000;
+  --light-background: #f7f8fa;
+  --light-muted: #64748b;
+  --light-border: #e2e8f0;
+  --light-accent-surface: #faf5f3;
+  --light-error: #b91c1c;
 
-  /* Superficies */
-  --surface: #FFFFFF;               /* Tarjetas y paneles */
-  --surface-muted: #F1F4F7;         /* Superficies secundarias */
+  --background: var(--light-background);
+  --background-subtle: #eef2f6;
+  --surface: var(--white);
+  --surface-muted: #f1f4f7;
+  --foreground: var(--brand-primary);
+  --text: var(--foreground);
+  --text-primary: var(--foreground);
+  --text-muted: var(--light-muted);
+  --border: var(--light-border);
+  --border-muted: #cbd5e1;
+  --primary: var(--brand-primary);
+  --primary-hover: var(--brand-primary);
+  --primary-strong: var(--brand-primary);
+  --primary-strong-hover: var(--brand-primary);
+  --navy: var(--brand-primary);
+  --on-primary: var(--white);
+  --on-primary-muted: #e2e8f0;
+  --on-secondary: var(--brand-primary);
+  --secondary: var(--brand-accent);
+  --secondary-strong: #735044;
+  --secondary-surface: var(--light-accent-surface);
+  --secondary-soft: #efe0da;
+  --success: #166534;
+  --success-surface: #f0fdf4;
+  --success-border: #bbf7d0;
+  --warning: #92400e;
+  --warning-surface: #fffbeb;
+  --warning-border: #fde68a;
+  --error: var(--light-error);
+  --error-surface: #fef2f2;
+  --error-border: #fecaca;
+  --overlay: #252f4688;
+  --shadow-dialog: #252f4644;
+  --shadow-soft: #252f4604;
 
-  /* Texto */
-  --foreground: #171717;            /* Texto principal */
-  --text: #171717;                  /* Texto general */
-  --text-primary: #252f46;          /* Información principal */
-  --text-muted: #64748b;            /* Texto de menor énfasis */
-
-  /* Bordes */
-  --border: #e2e8f0;                /* Bordes principales */
-  --border-muted: #cbd5e1;          /* Bordes sutiles */
-
-  /* Marca */
-  --primary: #252f46;               /* Acción principal */
-  --primary-hover: #1f2842;         /* Estado hover */
-  --primary-strong: #252f46;        /* Énfasis principal */
-  --primary-strong-hover: #344463;  /* Hover del énfasis */
-  --navy: #10254A;
-
-  --secondary: #b98b7b;             /* Acento secundario */
-  --secondary-strong: #735044;      /* Acento destacado */
-  --secondary-surface: #faf5f3;     /* Fondo del acento */
-  --secondary-soft: #efe0da;        /* Acento suave */
-
-  /* Estados */
-  --success: #166534;               /* Estado exitoso */
-  --success-surface: #f0fdf4;       /* Fondo de éxito */
-  --success-border: #bbf7d0;        /* Borde de éxito */
-
-  --warning: #92400e;               /* Advertencia */
-  --warning-surface: #fffbeb;       /* Fondo de advertencia */
-  --warning-border: #fde68a;        /* Borde de advertencia */
-
-  --error: #b91c1c;                 /* Error */
-  --error-surface: #fef2f2;         /* Fondo de error */
-  --error-border: #fecaca;          /* Borde de error */
-
+  /* Las exportaciones conservan una paleta clara en ambos temas. */
+  --report-primary: var(--brand-primary);
+  --report-accent: var(--brand-accent);
+  --report-paper: var(--white);
+  --report-ink: var(--brand-primary);
+  --report-muted: var(--light-muted);
+  --report-line: var(--light-border);
+  --report-soft: var(--light-accent-surface);
+  --report-stripe: var(--light-background);
+  --report-error: var(--light-error);
+  --report-on-primary: var(--white);
   /* Tipografía base de la interfaz: párrafos, formularios y navegación.
      Arial es la primera opción; Helvetica y sans-serif actúan como respaldo. */
   --font-body: Arial, Helvetica, sans-serif;
@@ -97,49 +99,37 @@ Tareas pendiente en global
 /* --- Tokens del tema oscuro --- */
 
 :root.dark {
-  /* Fondos */
-    /*Color original #101a2d;   */
-  --background: #091426;           /* Fondo principal */
-  --background-subtle: #263349;     /* Fondo secundario */
-
-  /* Superficies */
-  --surface: #0d1728;               /* Tarjetas y paneles */
-  --surface-muted: #263349;         /* Superficies secundarias */
-
-  /* Texto */
-  --foreground: #edf1f7;            /* Texto principal */
-  --text: #edf1f7;                  /* Texto general */
-  --text-primary: #edf1f7;          /* Información principal */
-  --text-muted: #bac5d6;            /* Texto de menor énfasis */
-
-  /* Bordes */
-  --border: #43516a;                /* Bordes principales */
-  --border-muted: #52617a;          /* Bordes sutiles */
-
-  /* Marca */
-  --primary: #344967;               /* Acción principal */
-  --primary-hover: #415b80;         /* Estado hover */
-  --secondary: #cba294;             /* Acento secundario */
-  --secondary-strong: #ebc1b2;      /* Acento destacado */
-  --secondary-surface: #211f29;     /* Fondo del acento */
-  --secondary-soft: #4a3534;        /* Acento suave */
-
-  /* Estados */
-  --success: #b1e9c8;               /* Estado exitoso */
-  --success-surface: #183d31;       /* Fondo de éxito */
-
-  --warning: #ffe29a;               /* Advertencia */
-  --warning-surface: #40331e;       /* Fondo de advertencia */
-
-  --error: #ffc4c8;                 /* Error */
-  --error-surface: #49252e;         /* Fondo de error */
-
+  --background: #091426;
+  --background-subtle: #263349;
+  --surface: #0d1728;
+  --surface-muted: #263349;
+  --foreground: #edf1f7;
+  --text-muted: #bac5d6;
+  --border: #43516a;
+  --border-muted: #52617a;
+  --secondary-strong: #ebc1b2;
+  --secondary-surface: #211f29;
+  --secondary-soft: #4a3534;
+  --success: #b1e9c8;
+  --success-surface: #183d31;
+  --success-border: #386a50;
+  --warning: #ffe29a;
+  --warning-surface: #40331e;
+  --warning-border: #806529;
+  --error: #ffc4c8;
+  --error-surface: #49252e;
+  --error-border: #83505a;
+  --overlay: #060b14b8;
   color-scheme: dark;
 }
 
 /* --- Integración con Tailwind --- */
 
 @theme inline {
+  --color-on-primary: var(--on-primary);
+  --color-on-primary-muted: var(--on-primary-muted);
+  --color-on-secondary: var(--on-secondary);
+  --color-overlay: var(--overlay);
   /* Fondos */
   --color-background: var(--background);
   --color-background-subtle: var(--background-subtle);
@@ -225,7 +215,7 @@ body {
 
 ::selection {
   background-color: var(--navy);
-  color: #fff;
+  color: var(--on-primary);
 }
 
 .hero-left-shadow {
@@ -329,7 +319,7 @@ body {
   background-image: repeating-radial-gradient(
     circle at 0% 118%,
     transparent 0 75px,
-    color-mix(in srgb, #ffffff 5%, transparent) 74px 76px
+    color-mix(in srgb, var(--white) 5%, transparent) 74px 76px
   );
 }
 

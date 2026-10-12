@@ -223,7 +223,7 @@ export default function ClientCreateModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/55 p-4 sm:p-8"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-primary/55 p-4 sm:p-8"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose();
@@ -257,13 +257,13 @@ export default function ClientCreateModal({
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto px-6 py-6 sm:grid-cols-2 sm:px-8">
             {activationUrl && (
-              <section className="sm:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
+              <section className="sm:col-span-2 rounded-lg border border-success-border bg-success-surface p-4 text-sm text-success">
                 <h3 className="font-semibold">Cliente creado correctamente</h3>
                 <p className="mt-2 font-medium">Acceso al portal: Pendiente de activaci&oacute;n</p>
                 <p className="mt-2">Enlace de activaci&oacute;n (vence en 24 horas):</p>
                 <p className="mt-2 text-sm">El enlace está oculto. Usa <span className="font-semibold">Copiar enlace</span> para compartirlo.</p>
-                <button type="button" className="mt-3 rounded-lg border border-emerald-800 px-3 py-2 font-semibold" onClick={() => void copyInvitation(activationUrl)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
-                <button type="button" disabled={generandoEnlace} className="ml-2 mt-3 rounded-lg border border-emerald-800 px-3 py-2 font-semibold disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
+                <button type="button" className="mt-3 rounded-lg border border-success-border px-3 py-2 font-semibold" onClick={() => void copyInvitation(activationUrl)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
+                <button type="button" disabled={generandoEnlace} className="ml-2 mt-3 rounded-lg border border-success-border px-3 py-2 font-semibold disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
               </section>
             )}
             {!activationUrl && (<>
@@ -304,22 +304,22 @@ export default function ClientCreateModal({
               </select>
             </Field>
             {(!client || portalAccess !== null) && (
-              <section className="sm:col-span-2 rounded-xl border border-slate-200 p-4">
+              <section className="sm:col-span-2 rounded-xl border border-border p-4">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold uppercase tracking-wide text-[#252f46]">Acceso al portal</h3>
-                  <span className="group relative inline-flex size-5 cursor-help items-center justify-center rounded-full border border-slate-400 text-xs font-bold text-slate-600" tabIndex={0} aria-label="Ayuda sobre el acceso al portal">
+                  <h3 className="text-sm font-bold uppercase tracking-wide text-text-primary">Acceso al portal</h3>
+                  <span className="group relative inline-flex size-5 cursor-help items-center justify-center rounded-full border border-border text-xs font-bold text-text-muted" tabIndex={0} aria-label="Ayuda sobre el acceso al portal">
                     ?
-                    <span className="invisible absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg bg-slate-900 p-3 text-left text-xs font-normal normal-case tracking-normal text-white shadow-lg group-hover:visible group-focus:visible">Al habilitar el acceso, se crea un enlace de invitación. El cliente lo usa para configurar su nombre de usuario y contraseña.</span>
+                    <span className="invisible absolute left-1/2 top-full z-10 mt-2 w-64 -translate-x-1/2 rounded-lg bg-primary p-3 text-left text-xs font-normal normal-case tracking-normal text-white shadow-lg group-hover:visible group-focus:visible">Al habilitar el acceso, se crea un enlace de invitación. El cliente lo usa para configurar su nombre de usuario y contraseña.</span>
                   </span>
                 </div>
                 {client && portalAccess?.tieneAcceso && !revocarAccesoPortal && (
                   <div className="mt-3 space-y-3">
                     {portalAccess.activo ? (
                       <>
-                        <p className="text-sm text-slate-700">Estado: <span className="font-semibold text-emerald-700">Activo</span></p>
-                        <p className="text-sm text-slate-700">Cuenta: <span className="font-semibold">{portalAccess.nombre || "-"}</span></p>
-                        <p className="text-sm text-slate-700">Nombre de usuario: <span className="font-semibold">{portalAccess.nombreUsuario}</span></p>
-                        <p className="text-sm text-slate-700">Correo: <span className="font-semibold">{portalAccess.email || "Sin correo registrado"}</span></p>
+                        <p className="text-sm text-text-primary">Estado: <span className="font-semibold text-success">Activo</span></p>
+                        <p className="text-sm text-text-primary">Cuenta: <span className="font-semibold">{portalAccess.nombre || "-"}</span></p>
+                        <p className="text-sm text-text-primary">Nombre de usuario: <span className="font-semibold">{portalAccess.nombreUsuario}</span></p>
+                        <p className="text-sm text-text-primary">Correo: <span className="font-semibold">{portalAccess.email || "Sin correo registrado"}</span></p>
                         {modificarUsuario && <Field label="Nuevo nombre de usuario" required>
                           <input autoComplete="username" value={nombreUsuario} onChange={(event) => updateNombreUsuario(event.target.value)} className={inputClassName} required />
                         </Field>}
@@ -327,25 +327,25 @@ export default function ClientCreateModal({
                           <input type="email" autoComplete="email" maxLength={150} value={emailUsuario} onChange={(event) => updateEmailUsuario(event.target.value)} className={inputClassName} required />
                         </Field>}
                         <div className="flex flex-wrap gap-2">
-                          <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => { setModificarUsuario((current) => !current); setNombreUsuario(portalAccess.nombreUsuario ?? ""); setEmailUsuario(portalAccess.email ?? ""); }}>{modificarUsuario ? "Cancelar cambios" : "Modificar usuario"}</button>
-                          <button type="button" disabled={generandoEnlace} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-60" onClick={() => void generatePortalLink("reset")}>{generandoEnlace ? "Generando..." : "Generar enlace de restablecimiento"}</button>
+                          <button type="button" className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-primary" onClick={() => { setModificarUsuario((current) => !current); setNombreUsuario(portalAccess.nombreUsuario ?? ""); setEmailUsuario(portalAccess.email ?? ""); }}>{modificarUsuario ? "Cancelar cambios" : "Modificar usuario"}</button>
+                          <button type="button" disabled={generandoEnlace} className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-primary disabled:opacity-60" onClick={() => void generatePortalLink("reset")}>{generandoEnlace ? "Generando..." : "Generar enlace de restablecimiento"}</button>
                         </div>
-                        {resetUrl && <div className="rounded-lg bg-slate-50 p-3 text-sm">
+                        {resetUrl && <div className="rounded-lg bg-surface-muted p-3 text-sm">
                           <p className="font-medium">Enlace para restablecer contraseña:</p>
-                          <p className="mt-1 text-slate-600">El enlace está oculto. Usa el botón para copiarlo.</p>
-                          <button type="button" className="mt-2 rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => void copyInvitation(resetUrl)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
+                          <p className="mt-1 text-text-muted">El enlace está oculto. Usa el botón para copiarlo.</p>
+                          <button type="button" className="mt-2 rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-primary" onClick={() => void copyInvitation(resetUrl)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
                         </div>}
                       </>
                     ) : (
                       <>
-                        <p className="text-sm text-slate-700">Acceso pendiente de configuración por el cliente.</p>
+                        <p className="text-sm text-text-primary">Acceso pendiente de configuración por el cliente.</p>
                         {portalAccess.activationUrl && (
                           <div className="space-y-2">
-                            <p className="text-xs text-slate-500">La invitación vence en 24 horas.</p>
-                            <p className="text-sm text-slate-600">El enlace está oculto. Usa <span className="font-semibold">Copiar enlace</span> para compartirlo.</p>
+                            <p className="text-xs text-text-muted">La invitación vence en 24 horas.</p>
+                            <p className="text-sm text-text-muted">El enlace está oculto. Usa <span className="font-semibold">Copiar enlace</span> para compartirlo.</p>
                             <div className="flex flex-wrap gap-2">
-                              <button type="button" className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46]" onClick={() => void copyInvitation(portalAccess.activationUrl!)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
-                              <button type="button" disabled={generandoEnlace} className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-[#252f46] disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
+                              <button type="button" className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-primary" onClick={() => void copyInvitation(portalAccess.activationUrl!)}>{linkCopiado ? "Enlace copiado" : "Copiar enlace"}</button>
+                              <button type="button" disabled={generandoEnlace} className="rounded-lg border border-border px-3 py-2 text-sm font-semibold text-text-primary disabled:opacity-60" onClick={() => void generatePortalLink("invite")}>{generandoEnlace ? "Generando..." : "Reenviar invitación"}</button>
                             </div>
                           </div>
                         )}
@@ -354,32 +354,32 @@ export default function ClientCreateModal({
                   </div>
                 )}
                 {client && portalAccess?.tieneAcceso && (
-                  <div className="mt-4 border-t border-slate-200 pt-3">
-                    <label className="flex items-center gap-2 text-sm font-medium text-red-800">
+                  <div className="mt-4 border-t border-border pt-3">
+                    <label className="flex items-center gap-2 text-sm font-medium text-error">
                       <input type="checkbox" checked={revocarAccesoPortal} onChange={(event) => setRevocarAccesoPortal(event.target.checked)} className="size-4 accent-red-700" />
                       Desactivar acceso al portal
                     </label>
-                    {revocarAccesoPortal && <p className="mt-2 text-xs text-slate-600">Se quitará la asociación con este cliente al guardar. El acceso a otras empresas asociadas se conservará.</p>}
+                    {revocarAccesoPortal && <p className="mt-2 text-xs text-text-muted">Se quitará la asociación con este cliente al guardar. El acceso a otras empresas asociadas se conservará.</p>}
                   </div>
                 )}
                 {(!client || portalAccess?.tieneAcceso === false) && (
                   <>
-                    <label className="mt-3 flex items-center gap-2 text-sm font-medium text-[#252f46]">
-                      <input type="checkbox" checked={crearAccesoPortal} onChange={(event) => setCrearAccesoPortal(event.target.checked)} className="size-4 accent-[#252f46]" />
+                    <label className="mt-3 flex items-center gap-2 text-sm font-medium text-text-primary">
+                      <input type="checkbox" checked={crearAccesoPortal} onChange={(event) => setCrearAccesoPortal(event.target.checked)} className="size-4 accent-primary" />
                       Habilitar acceso al portal
                     </label>
-                    <p className="ml-6 mt-2 text-sm text-slate-600">El acceso al portal es opcional. Act&iacute;valo &uacute;nicamente para los clientes que necesiten ingresar a TRIBUTEK y consultar o gestionar su informaci&oacute;n.</p>
-                    {crearAccesoPortal && <p className="ml-6 mt-3 text-sm text-slate-600">Al habilitar el acceso, se crea un enlace de invitaci&oacute;n. El cliente lo usar&aacute; para configurar su nombre de usuario y contrase&ntilde;a.</p>}
+                    <p className="ml-6 mt-2 text-sm text-text-muted">El acceso al portal es opcional. Act&iacute;valo &uacute;nicamente para los clientes que necesiten ingresar a TRIBUTEK y consultar o gestionar su informaci&oacute;n.</p>
+                    {crearAccesoPortal && <p className="ml-6 mt-3 text-sm text-text-muted">Al habilitar el acceso, se crea un enlace de invitaci&oacute;n. El cliente lo usar&aacute; para configurar su nombre de usuario y contrase&ntilde;a.</p>}
                   </>
                 )}
               </section>
             )}
             </>)}
-            {error && <p className="sm:col-span-2 text-sm font-medium text-red-700" role="alert">{error}</p>}
+            {error && <p className="sm:col-span-2 text-sm font-medium text-error" role="alert">{error}</p>}
           </div>
 
           <footer className="flex shrink-0 flex-col-reverse gap-3 border-t border-border bg-surface px-6 py-5 sm:flex-row sm:justify-end sm:px-8">
-            <button type="button" onClick={requestClose} className="rounded-lg border border-slate-300 px-5 py-3 text-sm font-semibold text-text-primary hover:bg-background-subtle">{activationUrl ? "Cerrar" : "Cancelar"}</button>
+            <button type="button" onClick={requestClose} className="rounded-lg border border-border px-5 py-3 text-sm font-semibold text-text-primary hover:bg-background-subtle">{activationUrl ? "Cerrar" : "Cancelar"}</button>
             <button type="submit" disabled={isSubmitting || Boolean(activationUrl)} className="rounded-lg bg-primary px-5 py-3 text-sm font-semibold text-white hover:bg-primary-strong-hover disabled:cursor-wait disabled:opacity-60">
               {activationUrl ? "Invitación creada" : isSubmitting
                 ? client ? "Guardando cambios..." : "Creando cliente..."
@@ -390,7 +390,7 @@ export default function ClientCreateModal({
       </section>
 
       {showDiscardConfirmation && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-950/40 p-4" role="presentation">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-primary/40 p-4" role="presentation">
           <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-2xl">
             <h3 id="discard-title" className="text-lg font-bold text-text-primary">¿Deseas salir?</h3>
             <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>

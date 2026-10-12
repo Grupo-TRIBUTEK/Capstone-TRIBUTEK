@@ -15,7 +15,7 @@ export default function ReviewCard({ name, role, review, rating = 5 }: ReviewCar
           <h3 className="font-semibold text-text-primary">{name}</h3>
           <span className="text-sm text-text-muted">{role}</span>
         </div>
-        <span className="shrink-0 text-amber-500" aria-label={`Calificación: ${score} de 5`}>
+        <span className="shrink-0 text-warning" aria-label={`Calificación: ${score} de 5`}>
           <span aria-hidden="true">{"★".repeat(score)}{"☆".repeat(5 - score)}</span>
         </span>
       </header>

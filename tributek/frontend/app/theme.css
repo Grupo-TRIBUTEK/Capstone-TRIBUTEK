@@ -1,50 +1,50 @@
-.theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px Arial, sans-serif; }
+.theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px var(--font-body); }
 .theme-select-menu { position: relative; }
-.theme-select-menu summary { display: inline-flex; min-height: 40px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--background) 97%, #000 3%); color: var(--text-primary); cursor: pointer; list-style: none; }
+.theme-select-menu summary { display: inline-flex; min-height: 40px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--background) 97%, var(--black) 3%); color: var(--text-primary); cursor: pointer; list-style: none; }
 .theme-select-menu summary::-webkit-details-marker { display: none; }
 .theme-select-menu summary:focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
 .theme-select-chevron { width: 7px; height: 7px; margin: -4px 0 0 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
-.theme-select-options { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; display: grid; min-width: 144px; gap: 2px; padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--background) 97%, #000 3%); color: var(--text-primary); box-shadow: 0 10px 28px rgb(15 23 42 / 18%); }
+.theme-select-options { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; display: grid; min-width: 144px; gap: 2px; padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--background) 97%, var(--black) 3%); color: var(--text-primary); box-shadow: 0 10px 28px var(--shadow-dialog); }
 .theme-select-options button { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; border: 0; border-radius: 6px; padding: 8px 10px; background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
 .theme-select-options button:hover, .theme-select-options button[aria-pressed="true"] { background: var(--secondary-surface); color: var(--text-primary); }
 .theme-select-options button:focus-visible { outline: 2px solid var(--secondary); outline-offset: 1px; }
 /* Los iconos del selector de tema (claro/oscuro/sistema) usan el color secundario. */
 .theme-select-menu summary svg,
 .theme-select-options button svg { color: var(--secondary); }
-.theme-control-sidebar { color: white; display: flex; width: 100%; justify-content: space-between; }
-.theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: white; border-color: #8a96ab; }
+.theme-control-sidebar { color: var(--on-primary); display: flex; width: 100%; justify-content: space-between; }
+.theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: var(--on-primary); border-color: var(--border); }
 .login-theme { position: absolute; top: 18px; right: 20px; }
 .tk-login main { position: relative; padding-top: 85px; }
 
 @media screen {
   .dark .tk-login, .dark .tk-login main { background: var(--background); }
-  .dark .tk { --navy: #edf1f7; --line: #43516a; --rose: #cba294; --rose-light: #4a3534; }
+  .dark .tk { --navy: var(--text-primary); --line: var(--border); --rose: var(--secondary); --rose-light: var(--secondary-soft); }
   .dark .tk :is(button, .tk-button, input, select, textarea),
   .dark :is(.tk-toolbar, .tk-metric, .tk-card, .tk-dialog, .tk-dialog-head) { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
   .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
-  .dark .tk :is(button.primary, .primary) { background: #cba294; border-color: #cba294; color: #172238; }
-  .dark .tk :is(button.primary:hover, .primary:hover) { background: #deb6a8; }
-  .dark .tk-login form button.primary { background: var(--primary); border-color: var(--primary); color: white; }
+  .dark .tk :is(button.primary, .primary) { background: var(--primary); border-color: var(--border); color: var(--on-primary); }
+  .dark .tk :is(button.primary:hover, .primary:hover) { background: var(--primary-hover); }
+  .dark .tk-login form button.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
   .dark .tk-login form button.primary:hover { background: var(--primary-hover); }
-  .dark .tk button.rose, .dark .tk-tabs button[aria-pressed="true"] { background: #4a3534; border-color: #cba294; color: #f3d5c9; }
-  .dark .tk button.danger { background: #49252e; color: #ffc4c8; }
-  .dark .tk :is(input, select, textarea) { background: #151e2d; }
-  .dark .tk input[type="checkbox"] { accent-color: #cba294; }
-  .dark .tk input::placeholder, .dark .tk textarea::placeholder { color: #9baac0; opacity: 1; }
-  .dark .tk th { background: #263349; color: #d4dce9; }
-  .dark .tk td { border-color: #35435a; }
-  .dark :is(.tk-subtle, .tk-empty, .tk-detail, .tk-privacy), .dark .tk td small, .dark .tk-metric > span { color: #bac5d6; }
-  .dark .tk-eyebrow { color: #deb6a8; }
-  .dark .tk-report { background: #2a252c; border-color: #66504c; }
-  .dark .tk-due { background: #40331e; color: #ffe29a; }
-  .dark .tk-progress { background: #43516a; }
-  .dark .tk-badge.green, .dark .tk-success { background: #183d31; color: #b1e9c8; }
-  .dark .tk-badge.red, .dark .tk-error { background: #49252e; color: #ffc4c8; }
-  .dark .tk-badge.amber { background: #40331e; color: #ffe29a; }
-  .dark .tk-badge.neutral { background: #35435a; color: #e0e7f2; }
-  .dark .tk-dialog::backdrop { background: #060b14b8; }
-  .dark .tk :is(button, a, input, select, textarea):focus-visible { outline-color: #deb6a8; }
-  .dark .text-brand-primary, .dark a.text-primary { color: #edf1f7; }
+  .dark .tk button.rose, .dark .tk-tabs button[aria-pressed="true"] { background: var(--secondary-soft); border-color: var(--secondary); color: var(--secondary-strong); }
+  .dark .tk button.danger { background: var(--error-surface); color: var(--error); }
+  .dark .tk :is(input, select, textarea) { background: var(--surface); }
+  .dark .tk input[type="checkbox"] { accent-color: var(--secondary); }
+  .dark .tk input::placeholder, .dark .tk textarea::placeholder { color: var(--text-muted); opacity: 1; }
+  .dark .tk th { background: var(--surface-muted); color: var(--text-primary); }
+  .dark .tk td { border-color: var(--border); }
+  .dark :is(.tk-subtle, .tk-empty, .tk-detail, .tk-privacy), .dark .tk td small, .dark .tk-metric > span { color: var(--text-muted); }
+  .dark .tk-eyebrow { color: var(--secondary); }
+  .dark .tk-report { background: var(--secondary-surface); border-color: var(--secondary-soft); }
+  .dark .tk-due { background: var(--warning-surface); color: var(--warning); }
+  .dark .tk-progress { background: var(--border); }
+  .dark .tk-badge.green, .dark .tk-success { background: var(--success-surface); color: var(--success); }
+  .dark .tk-badge.red, .dark .tk-error { background: var(--error-surface); color: var(--error); }
+  .dark .tk-badge.amber { background: var(--warning-surface); color: var(--warning); }
+  .dark .tk-badge.neutral { background: var(--border); color: var(--text-primary); }
+  .dark .tk-dialog::backdrop { background: var(--overlay); }
+  .dark .tk :is(button, a, input, select, textarea):focus-visible { outline-color: var(--secondary); }
+  .dark .text-brand-primary, .dark a.text-primary { color: var(--text-primary); }
 }
 @media (max-width: 400px) {
   .theme-control { gap: 4px; }
@@ -52,6 +52,13 @@
 }
 @media print {
   .theme-control, .login-theme { display: none !important; }
-  html.dark { color-scheme: light; --background: white; --foreground: #171717; --surface: white; --text: #171717; --text-primary: #252f46; --text-muted: #52617a; --border: #ddd; }
-  body { background: white; color: #171717; }
+  html, html.dark {
+    color-scheme: light;
+    --background: var(--report-paper); --surface: var(--report-paper);
+    --foreground: var(--report-ink); --text-muted: var(--report-muted);
+    --surface-muted: var(--report-stripe); --border: var(--report-line);
+    --secondary-surface: var(--report-soft); --secondary-soft: var(--report-soft);
+    --error: var(--report-error);
+  }
+  body { background: var(--report-paper); color: var(--report-ink); }
 }

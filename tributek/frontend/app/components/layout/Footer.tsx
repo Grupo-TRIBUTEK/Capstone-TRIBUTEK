@@ -6,7 +6,7 @@ export default function Footer() {
     <footer className="border-t border-border bg-surface">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-8 px-6 py-10">
         <div>
-          <a href="/#inicio" aria-label="Volver al inicio"><BrandLogo width={110} height={75} className="h-auto" /></a>
+          <Link href="/#inicio" aria-label="Volver al inicio"><BrandLogo width={110} height={75} className="h-auto" /></Link>
           <p className="mt-3 text-sm text-text-muted">Contabilidad que impulsa tu futuro.</p>
         </div>
         <nav aria-label="Navegación del pie de página" className="flex flex-wrap gap-6 text-sm text-text-primary">

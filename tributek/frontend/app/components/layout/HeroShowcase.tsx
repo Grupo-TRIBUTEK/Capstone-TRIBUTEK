@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import Fade from "embla-carousel-fade";
@@ -29,7 +29,6 @@ const slides = [
 
 export default function HeroShowcase() {
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(true);
   const resumeTimeoutRef = useRef<number | null>(null);
 
   const [emblaRef, emblaApi] = useEmblaCarousel(
@@ -45,15 +44,14 @@ export default function HeroShowcase() {
     ],
   );
 
-  const stopAutoplay = () => {
+  const stopAutoplay = useCallback(() => {
     const autoplay = emblaApi?.plugins().autoplay;
     if (!autoplay) return;
 
     autoplay.stop();
-    setIsPlaying(false);
-  };
+  }, [emblaApi]);
 
-  const scheduleResumeAutoplay = () => {
+  const scheduleResumeAutoplay = useCallback(() => {
     const autoplay = emblaApi?.plugins().autoplay;
     if (!autoplay) return;
 
@@ -63,21 +61,14 @@ export default function HeroShowcase() {
 
     resumeTimeoutRef.current = window.setTimeout(() => {
       autoplay.play();
-      setIsPlaying(true);
     }, 1200);
-  };
+  }, [emblaApi]);
 
   useEffect(() => {
     if (!emblaApi) return;
 
-    const syncAutoplayState = () => {
-      const autoplay = emblaApi.plugins().autoplay;
-      setIsPlaying(autoplay ? autoplay.isPlaying() : false);
-    };
-
     const onSelect = () => {
       setSelectedIndex(emblaApi.selectedScrollSnap());
-      syncAutoplayState();
     };
 
     onSelect();
@@ -100,7 +91,7 @@ export default function HeroShowcase() {
         window.clearTimeout(resumeTimeoutRef.current);
       }
     };
-  }, [emblaApi]);
+  }, [emblaApi, stopAutoplay, scheduleResumeAutoplay]);
 
   const handleDotClick = (index: number) => {
     emblaApi?.scrollTo(index);

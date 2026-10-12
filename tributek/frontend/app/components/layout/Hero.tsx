@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import Icon, { type IconName } from "../ui/Icon";
 
@@ -18,7 +17,7 @@ export default function Hero() {
             <span className="hero-badge-dot h-2 w-2 shrink-0 rounded-full" aria-hidden="true" />
             <span className="hero-label-gradient">SERVICIOS CONTABLES Y TRIBUTARIOS</span>
           </div>
-          <h1 className="font-[Georgia,serif] text-display font-normal leading-[0.99] tracking-[-0.03em] text-text-primary">
+          <h1 className="font-display text-display font-normal leading-[0.99] tracking-[-0.03em] text-text-primary">
             Gestión contable para el crecimiento de tu empresa
           </h1>
           <p className="my-7 max-w-lg text-body-lg leading-relaxed text-text-muted">

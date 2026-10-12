@@ -98,7 +98,7 @@ export default function PortalHome() {
           </div>
 
           <article className="mt-6 overflow-hidden rounded-2xl border border-border bg-surface shadow-sm md:grid md:grid-cols-[1.1fr_1fr]">
-            <div className="flex min-h-56 flex-col justify-between bg-gradient-to-br from-[#252f46] via-[#344463] to-[#8b6254] p-6 text-white md:min-h-64 md:p-8">
+            <div className="flex min-h-56 flex-col justify-between bg-gradient-to-br from-primary via-primary to-secondary p-6 text-white md:min-h-64 md:p-8">
               <span className="w-fit rounded-full border border-white/30 bg-white/10 px-3 py-1 text-label font-semibold uppercase tracking-wide">Presentación destacada</span>
               <div>
                 <div aria-hidden="true" className="mb-4 flex size-12 items-center justify-center rounded-full bg-white/15 text-xl">▶</div>

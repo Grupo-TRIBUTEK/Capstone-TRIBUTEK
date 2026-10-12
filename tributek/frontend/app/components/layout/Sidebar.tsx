@@ -25,7 +25,7 @@ export default function Sidebar() {
       <div className={`flex items-start border-b border-white/20 pb-5 ${collapsed ? "justify-center" : "justify-between gap-3"}`}>
         <div className={collapsed ? "md:hidden" : ""}>
           <p className="text-2xl font-bold tracking-wide">TRIBUTEK</p>
-          <p className="mt-1 text-sm text-slate-300">Gestión administrativa</p>
+          <p className="mt-1 text-sm text-on-primary-muted">Gestión administrativa</p>
         </div>
         <button
           type="button"
@@ -49,7 +49,7 @@ export default function Sidebar() {
               )
             }
           >
-            <summary className={`mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-slate-300 ${collapsed ? "md:hidden" : ""}`}>
+            <summary className={`mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-on-primary-muted ${collapsed ? "md:hidden" : ""}`}>
               {group === "Gestión" ? "Gestión mensual" : "Más herramientas"}
             </summary>
             <ul className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1 ${collapsed ? "md:gap-2" : ""}`}>
@@ -67,7 +67,7 @@ export default function Sidebar() {
                         aria-current={isActive ? "page" : undefined}
                         aria-label={collapsed ? item.label : undefined}
                         title={collapsed ? item.label : undefined}
-                        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${collapsed ? "md:justify-center md:px-2" : ""} ${isActive ? "bg-secondary text-text-primary" : "text-slate-200 hover:bg-white/10 hover:text-white"}`}
+                        className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${collapsed ? "md:justify-center md:px-2" : ""} ${isActive ? "bg-secondary text-on-secondary" : "text-on-primary-muted hover:bg-white/10 hover:text-white"}`}
                       >
                         <Icon name={item.icon} />
                         <span className={collapsed ? "md:hidden" : ""}>{item.label}</span>

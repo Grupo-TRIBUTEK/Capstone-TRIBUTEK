@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
+import { reportTheme } from "../ui/reportTheme";
 import { money } from "../ficha/model";
 
 export function Money({
@@ -105,35 +106,36 @@ export async function copyReportImage(
   rows: { label: string; amount: number }[],
   total: number,
 ) {
+  const theme = reportTheme();
   const canvas = document.createElement("canvas");
   canvas.width = 1100;
   canvas.height = 210 + rows.length * 90;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("No se pudo generar la imagen.");
-  ctx.fillStyle = "#fff";
+  ctx.fillStyle = theme.paper;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "#252f46";
+  ctx.fillStyle = theme.primary;
   ctx.fillRect(0, 0, 1100, 90);
-  ctx.fillStyle = "#fff";
-  ctx.font = "bold 27px Arial";
+  ctx.fillStyle = theme.paper;
+  ctx.font = `bold 27px ${theme.font}`;
   ctx.fillText(title, 30, 55, 1030);
-  ctx.fillStyle = "#4c586c";
-  ctx.font = "22px Arial";
+  ctx.fillStyle = theme.muted;
+  ctx.font = `22px ${theme.font}`;
   ctx.fillText(subtitle, 30, 130, 1030);
   rows.forEach((r, i) => {
     const y = 175 + i * 90;
-    ctx.fillStyle = i % 2 ? "#fff" : "#faf5f3";
+    ctx.fillStyle = i % 2 ? theme.paper : theme.soft;
     ctx.fillRect(20, y - 28, 1060, 82);
-    ctx.fillStyle = "#252f46";
-    ctx.font = "20px Arial";
+    ctx.fillStyle = theme.primary;
+    ctx.font = `20px ${theme.font}`;
     ctx.textAlign = "left";
     ctx.fillText(r.label, 35, y, 760);
     ctx.textAlign = "right";
-    ctx.font = "bold 24px Arial";
+    ctx.font = `bold 24px ${theme.font}`;
     ctx.fillText(money(r.amount), 1060, y + 28);
   });
-  ctx.fillStyle = "#252f46";
-  ctx.font = "bold 27px Arial";
+  ctx.fillStyle = theme.primary;
+  ctx.font = `bold 27px ${theme.font}`;
   ctx.textAlign = "left";
   ctx.fillText("Total", 35, canvas.height - 20);
   ctx.textAlign = "right";
@@ -166,11 +168,12 @@ export function printReport(
   rows: { label: string; amount: number }[],
   total: number,
 ) {
+  const theme = reportTheme();
   const w = window.open("", "_blank");
   if (!w)
     throw new Error("Permite la ventana de impresión para guardar el PDF.");
   w.document.write(
-    `<html lang="es"><head><title>${escapeHtml(title)}</title><style>html{color-scheme:light}body{background:#fff;font:16px Arial;color:#252f46;padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:14px;border-bottom:1px solid #ddd;text-align:left}td:last-child{text-align:right}button{padding:12px}@media print{button{display:none}}</style></head><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p><table>${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td><td>${money(r.amount)}</td></tr>`).join("")}</table><h2>Total: ${money(total)}</h2><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`,
+    `<html lang="es"><head><title>${escapeHtml(title)}</title><style>html{color-scheme:light}body{background:${escapeHtml(theme.paper)};font:16px ${escapeHtml(theme.font)};color:${escapeHtml(theme.ink)};padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:14px;border-bottom:1px solid ${escapeHtml(theme.line)};text-align:left}td:last-child{text-align:right}button{padding:12px}@media print{button{display:none}}</style></head><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p><table>${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td><td>${money(r.amount)}</td></tr>`).join("")}</table><h2>Total: ${money(total)}</h2><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`,
   );
   w.document.close();
 }
