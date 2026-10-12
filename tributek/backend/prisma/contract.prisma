@@ -62,6 +62,8 @@ model Cliente {
   documentos        Documento[]
   transacciones     Transaccion[]
   gestiones         Gestion[]
+  facturas          Factura[]
+  postergaciones    PostergacionMes[]
 
   @@map("clientes")
 }
@@ -120,9 +122,118 @@ model PeriodoCliente {
   proyeccionesF29  ProyeccionF29[]
   transacciones    Transaccion[]
   gestiones        Gestion[]
+  meses            MesCliente[]
 
   @@unique([clienteId, anio, mes])
   @@map("periodos_cliente")
+}
+
+model MesCliente {
+  id                 BigInt          @id @default(autoincrement())
+  periodoId          BigInt          @map("periodo_id")
+  creadoEn           Timestamptz?    @map("creado_en")
+  actualizadoEn      Timestamptz?    @map("actualizado_en")
+  enviado            Boolean         @default(false) @map("enviado")
+  seguimientoFecha   Date?           @map("seguimiento_fecha")
+  seguimientoHecho   Boolean         @default(false) @map("seguimiento_hecho")
+  seguimientoNota    VarChar(500)?   @map("seguimiento_nota")
+
+  // La BD real (migración 20261009T2333) NO declara onDelete para
+  //   meses_cliente_periodo_id_fkey, es decir usa NO ACTION. Se elimina
+  //   el Cascade para que la definición refleje el comportamiento real.
+  periodo            PeriodoCliente  @relation(fields:[periodoId], references:[id])
+  montos             MontoConcepto[]
+  pasos              PasoMes[]
+  abonos             AbonoMes[]
+
+  @@unique([periodoId])
+  @@map("meses_cliente")
+}
+
+model MontoConcepto {
+  id        BigInt     @id @default(autoincrement())
+  mesId     BigInt     @map("mes_id")
+  concepto  VarChar(60)
+  monto     Numeric(14, 2)
+
+  mes       MesCliente @relation(fields:[mesId], references:[id], onDelete: Cascade)
+
+  @@unique([mesId, concepto])
+  @@map("montos_concepto")
+}
+
+model PasoMes {
+  id     BigInt      @id @default(autoincrement())
+  mesId  BigInt      @map("mes_id")
+  orden  SmallInt
+  texto  VarChar(180)
+  hecho  Boolean     @default(false)
+
+  mes    MesCliente  @relation(fields:[mesId], references:[id], onDelete: Cascade)
+
+  @@map("pasos_mes")
+}
+
+model AbonoMes {
+  id           BigInt         @id @default(autoincrement())
+  mesId        BigInt         @map("mes_id")
+  concepto     VarChar(60)
+  fecha        Date
+  monto        Numeric(14, 2)
+  nota         VarChar(300)?
+  creadoEn     Timestamptz?   @map("creado_en")
+  metodo       VarChar(30)?
+  cuentaOrigen VarChar(200)?  @map("cuenta_origen")
+  cuentaDestino VarChar(200)? @map("cuenta_destino")
+  destino      VarChar(20)?
+  transferId   VarChar(255)?  @map("transfer_id")
+  postergacionId BigInt?      @map("postergacion_id")
+
+  mes          MesCliente     @relation(fields:[mesId], references:[id], onDelete: Cascade)
+  postergacion PostergacionMes? @relation(fields:[postergacionId], references:[id])
+
+  @@index([mesId])
+  @@index([postergacionId])
+  @@map("abonos_mes")
+}
+
+model PostergacionMes {
+  id         BigInt         @id @default(autoincrement())
+  clienteId  BigInt         @map("cliente_id")
+  anio       SmallInt
+  mes        SmallInt
+  concepto   VarChar(60)
+  monto      Numeric(14, 2)
+  vencimiento Date
+  nota       VarChar(500)?
+  creadoEn   Timestamptz?   @map("creado_en")
+
+  cliente     Cliente        @relation(fields:[clienteId], references:[id])
+  abonos     AbonoMes[]
+
+  @@index([clienteId])
+  @@map("postergaciones_mes")
+}
+
+model Factura {
+  id          BigInt         @id @default(autoincrement())
+  clienteId   BigInt         @map("cliente_id")
+  anio        SmallInt
+  mes         SmallInt
+  tipo        VarChar(10)
+  nombre      VarChar(180)
+  rut         VarChar(20)
+  descripcion VarChar(300)
+  monto       Numeric(14, 2)
+  numero      VarChar(30)?
+  fecha       Date?
+  nota        VarChar(1000)?
+  creadoEn    Timestamptz?   @map("creado_en")
+
+  cliente     Cliente        @relation(fields:[clienteId], references:[id])
+
+  @@index([clienteId])
+  @@map("facturas")
 }
 
 model Trabajador {

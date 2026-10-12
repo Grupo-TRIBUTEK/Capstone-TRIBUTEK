@@ -1,0 +1,527 @@
+[
+  {
+    "id": "table.abonos_mes",
+    "label": "Create table \"abonos_mes\"",
+    "summary": "Creates table \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"abonos_mes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"abonos_mes\"",
+        "sql": "CREATE TABLE \"public\".\"abonos_mes\" (\n  \"concepto\" character varying(60) NOT NULL,\n  \"creado_en\" timestamptz,\n  \"fecha\" date NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes_id\" int8 NOT NULL,\n  \"monto\" numeric(14,2) NOT NULL,\n  \"nota\" character varying(300),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"abonos_mes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.meses_cliente",
+    "label": "Create table \"meses_cliente\"",
+    "summary": "Creates table \"meses_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "meses_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"meses_cliente\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"meses_cliente\"",
+        "sql": "CREATE TABLE \"public\".\"meses_cliente\" (\n  \"actualizado_en\" timestamptz,\n  \"creado_en\" timestamptz,\n  \"enviado\" bool DEFAULT false NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"periodo_id\" int8 NOT NULL,\n  \"seguimiento_fecha\" date,\n  \"seguimiento_hecho\" bool DEFAULT false NOT NULL,\n  \"seguimiento_nota\" character varying(500),\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"meses_cliente\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.montos_concepto",
+    "label": "Create table \"montos_concepto\"",
+    "summary": "Creates table \"montos_concepto\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "montos_concepto"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"montos_concepto\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"montos_concepto\"",
+        "sql": "CREATE TABLE \"public\".\"montos_concepto\" (\n  \"concepto\" character varying(60) NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes_id\" int8 NOT NULL,\n  \"monto\" numeric(14,2) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"montos_concepto\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "table.pasos_mes",
+    "label": "Create table \"pasos_mes\"",
+    "summary": "Creates table \"pasos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "table",
+        "name": "pasos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure table \"pasos_mes\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pasos_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create table \"pasos_mes\"",
+        "sql": "CREATE TABLE \"public\".\"pasos_mes\" (\n  \"hecho\" bool DEFAULT false NOT NULL,\n  \"id\" BIGSERIAL NOT NULL,\n  \"mes_id\" int8 NOT NULL,\n  \"orden\" int2 NOT NULL,\n  \"texto\" character varying(180) NOT NULL,\n  PRIMARY KEY (\"id\")\n)",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify table \"pasos_mes\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pasos_mes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.meses_cliente.meses_cliente_periodo_id_key",
+    "label": "Add unique constraint on \"meses_cliente\" (periodo_id)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "meses_cliente_periodo_id_key",
+        "table": "meses_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"meses_cliente_periodo_id_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "meses_cliente_periodo_id_key",
+          "public",
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"meses_cliente_periodo_id_key\"",
+        "sql": "ALTER TABLE \"public\".\"meses_cliente\" ADD CONSTRAINT \"meses_cliente_periodo_id_key\" UNIQUE (\"periodo_id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"meses_cliente_periodo_id_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "meses_cliente_periodo_id_key",
+          "public",
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "unique.montos_concepto.montos_concepto_mes_id_concepto_key",
+    "label": "Add unique constraint on \"montos_concepto\" (mes_id, concepto)",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "unique",
+        "name": "montos_concepto_mes_id_concepto_key",
+        "table": "montos_concepto"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure constraint \"montos_concepto_mes_id_concepto_key\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "montos_concepto_mes_id_concepto_key",
+          "public",
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add unique constraint \"montos_concepto_mes_id_concepto_key\"",
+        "sql": "ALTER TABLE \"public\".\"montos_concepto\" ADD CONSTRAINT \"montos_concepto_mes_id_concepto_key\" UNIQUE (\"mes_id\", \"concepto\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify constraint \"montos_concepto_mes_id_concepto_key\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "montos_concepto_mes_id_concepto_key",
+          "public",
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.abonos_mes.abonos_mes_mes_id_idx_321dd52e",
+    "label": "Create index \"abonos_mes_mes_id_idx_321dd52e\" on \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "abonos_mes_mes_id_idx_321dd52e",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"abonos_mes_mes_id_idx_321dd52e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes_mes_id_idx_321dd52e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"abonos_mes_mes_id_idx_321dd52e\"",
+        "sql": "CREATE INDEX \"abonos_mes_mes_id_idx_321dd52e\" ON \"public\".\"abonos_mes\" (\"mes_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"abonos_mes_mes_id_idx_321dd52e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"abonos_mes_mes_id_idx_321dd52e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.montos_concepto.montos_concepto_mes_id_idx_321dd52e",
+    "label": "Create index \"montos_concepto_mes_id_idx_321dd52e\" on \"montos_concepto\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "montos_concepto_mes_id_idx_321dd52e",
+        "table": "montos_concepto"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"montos_concepto_mes_id_idx_321dd52e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"montos_concepto_mes_id_idx_321dd52e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"montos_concepto_mes_id_idx_321dd52e\"",
+        "sql": "CREATE INDEX \"montos_concepto_mes_id_idx_321dd52e\" ON \"public\".\"montos_concepto\" (\"mes_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"montos_concepto_mes_id_idx_321dd52e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"montos_concepto_mes_id_idx_321dd52e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "index.pasos_mes.pasos_mes_mes_id_idx_321dd52e",
+    "label": "Create index \"pasos_mes_mes_id_idx_321dd52e\" on \"pasos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "index",
+        "name": "pasos_mes_mes_id_idx_321dd52e",
+        "table": "pasos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure index \"pasos_mes_mes_id_idx_321dd52e\" does not exist",
+        "sql": "SELECT (to_regclass($1)) IS NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pasos_mes_mes_id_idx_321dd52e\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "create index \"pasos_mes_mes_id_idx_321dd52e\"",
+        "sql": "CREATE INDEX \"pasos_mes_mes_id_idx_321dd52e\" ON \"public\".\"pasos_mes\" (\"mes_id\")",
+        "params": []
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify index \"pasos_mes_mes_id_idx_321dd52e\" exists",
+        "sql": "SELECT (to_regclass($1)) IS NOT NULL AS \"result\"",
+        "params": [
+          "\"public\".\"pasos_mes_mes_id_idx_321dd52e\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.abonos_mes.abonos_mes_mes_id_fkey",
+    "label": "Add foreign key \"abonos_mes_mes_id_fkey\" on \"abonos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "abonos_mes_mes_id_fkey",
+        "table": "abonos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"abonos_mes_mes_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "abonos_mes_mes_id_fkey",
+          "public",
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"abonos_mes_mes_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"abonos_mes\"\nADD CONSTRAINT \"abonos_mes_mes_id_fkey\"\nFOREIGN KEY (\"mes_id\")\nREFERENCES \"public\".\"meses_cliente\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"abonos_mes_mes_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "abonos_mes_mes_id_fkey",
+          "public",
+          "\"public\".\"abonos_mes\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.meses_cliente.meses_cliente_periodo_id_fkey",
+    "label": "Add foreign key \"meses_cliente_periodo_id_fkey\" on \"meses_cliente\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "meses_cliente_periodo_id_fkey",
+        "table": "meses_cliente"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"meses_cliente_periodo_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "meses_cliente_periodo_id_fkey",
+          "public",
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"meses_cliente_periodo_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"meses_cliente\"\nADD CONSTRAINT \"meses_cliente_periodo_id_fkey\"\nFOREIGN KEY (\"periodo_id\")\nREFERENCES \"public\".\"periodos_cliente\" (\"id\")"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"meses_cliente_periodo_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "meses_cliente_periodo_id_fkey",
+          "public",
+          "\"public\".\"meses_cliente\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.montos_concepto.montos_concepto_mes_id_fkey",
+    "label": "Add foreign key \"montos_concepto_mes_id_fkey\" on \"montos_concepto\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "montos_concepto_mes_id_fkey",
+        "table": "montos_concepto"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"montos_concepto_mes_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "montos_concepto_mes_id_fkey",
+          "public",
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"montos_concepto_mes_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"montos_concepto\"\nADD CONSTRAINT \"montos_concepto_mes_id_fkey\"\nFOREIGN KEY (\"mes_id\")\nREFERENCES \"public\".\"meses_cliente\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"montos_concepto_mes_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "montos_concepto_mes_id_fkey",
+          "public",
+          "\"public\".\"montos_concepto\""
+        ]
+      }
+    ]
+  },
+  {
+    "id": "foreignKey.pasos_mes.pasos_mes_mes_id_fkey",
+    "label": "Add foreign key \"pasos_mes_mes_id_fkey\" on \"pasos_mes\"",
+    "operationClass": "additive",
+    "target": {
+      "id": "postgres",
+      "details": {
+        "schema": "public",
+        "objectType": "foreignKey",
+        "name": "pasos_mes_mes_id_fkey",
+        "table": "pasos_mes"
+      }
+    },
+    "precheck": [
+      {
+        "description": "ensure FK \"pasos_mes_mes_id_fkey\" does not exist",
+        "sql": "SELECT NOT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pasos_mes_mes_id_fkey",
+          "public",
+          "\"public\".\"pasos_mes\""
+        ]
+      }
+    ],
+    "execute": [
+      {
+        "description": "add FK \"pasos_mes_mes_id_fkey\"",
+        "sql": "ALTER TABLE \"public\".\"pasos_mes\"\nADD CONSTRAINT \"pasos_mes_mes_id_fkey\"\nFOREIGN KEY (\"mes_id\")\nREFERENCES \"public\".\"meses_cliente\" (\"id\")\nON DELETE CASCADE"
+      }
+    ],
+    "postcheck": [
+      {
+        "description": "verify FK \"pasos_mes_mes_id_fkey\" exists",
+        "sql": "SELECT EXISTS (SELECT 1 AS \"one\" FROM \"pg_constraint\" AS \"c\" INNER JOIN \"pg_namespace\" AS \"n\" ON \"n\".\"oid\" = \"c\".\"connamespace\" WHERE (\"c\".\"conname\" = $1 AND \"n\".\"nspname\" = $2 AND \"c\".\"conrelid\" = to_regclass($3))) AS \"result\"",
+        "params": [
+          "pasos_mes_mes_id_fkey",
+          "public",
+          "\"public\".\"pasos_mes\""
+        ]
+      }
+    ]
+  }
+]
