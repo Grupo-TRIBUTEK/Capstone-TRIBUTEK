@@ -1,210 +1,98 @@
 # Sistema web de gestión TRIBUTEK
 
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=next.js&logoColor=white)
-![React](https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black)
-![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?style=for-the-badge&logo=nestjs&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)
-![Prisma](https://img.shields.io/badge/Prisma-2D3748?style=for-the-badge&logo=prisma&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white)
-![Estado](https://img.shields.io/badge/Estado-En_desarrollo-orange?style=for-the-badge)
+
+TRIBUTEK es una oficina de contabilidad y remuneraciones que necesita reunir la información de sus clientes en un mismo lugar. Antes del proyecto, parte del trabajo se realizaba en planillas y otras herramientas separadas, lo que dificultaba revisar los pagos, los documentos y las obligaciones de cada mes.
+
+Este sistema busca apoyar esa gestión diaria. Permite trabajar por cliente y período, registrar movimientos, mantener sus respaldos y preparar información para entregar al cliente. Su desarrollo está a cargo de Nazaret González y Brandon Casas, como proyecto de Capstone, vinculado también a la práctica profesional de Nazaret en TRIBUTEK.
 
 <img src="tributek/img/TRIBUTEK-capstone.png" alt="Presentación del proyecto TRIBUTEK" width="800">
 
-## Índice (Por actualizar)
+**Estado - 13 de octubre de 2026**
 
-- [Introducción](#introducción)
-- [Estado del desarrollo](#estado-del-desarrollo)
-- [Tecnologías](#tecnologías)
-- [Arquitectura](#arquitectura)
-- [Preparación del entorno](#preparación-del-entorno)
-- [Ejecución local](#ejecución-local)
-- [Comprobaciones del frontend](#comprobaciones-del-frontend)
-- [Documentación](#documentación)
-- [Trabajo colaborativo](#trabajo-colaborativo)
+## El trabajo dentro del sistema
+La administradora selecciona el período que necesita revisar y busca al cliente por nombre o RUT. Desde su ficha puede consultar los conceptos del mes, registrar abonos y preparar un mensaje con los montos pendientes. Los períodos anteriores se conservan para consultar el historial.
 
-## Introducción
+Las secciones del panel cumplen las siguientes funciones:
 
-TRIBUTEK es un sistema web de gestión para una oficina contable,
-desarrollado por Nazaret González y Brandon Casas como proyecto de Capstone.
+| Sección | Para qué se utiliza |
+| --- | --- |
+| Inicio | Reúne indicadores y pendientes para orientar la revisión del mes. |
+| Clientes | Permite registrar y actualizar antecedentes, abrir la ficha y gestionar el acceso al portal. |
+| Obligaciones | Organiza los conceptos y montos de cada período, los abonos y los saldos pendientes. |
+| Facturación | Prepara el registro de los servicios mensuales y otros servicios. Permite anotar el número de factura, la fecha y las observaciones. No emite documentos tributarios electrónicos ante el SII. |
+| Pagos | Muestra los movimientos registrados, su aplicación, el método de pago y las cuentas de origen y destino cuando corresponda. |
+| Postergaciones | Registra un monto postergado desde su obligación de origen, con vencimiento y saldo propios. |
+| Constitución de empresas | Permite dar seguimiento a las etapas del proceso, sus fechas, observaciones y documentos. La ruta interna conserva el nombre `formalizaciones`. |
+| Proyección F29 | Prepara una estimación mensual a partir de registros de compras, ventas y antecedentes ingresados por la administradora. |
 
-El alcance contiene gestión de clientes y servicios, antecedentes,
-documentos, seguimiento mensual, cobranzas y un Portal Cliente.
+Los nombres de los conceptos se han precisado según el trabajo de la oficina. Por ejemplo, se utiliza **Cotizaciones previsionales** y **Cuotas de convenio de deuda con TGR**, en referencia a la Tesorería General de la República. El **Reembolso de gastos por cuenta del cliente** corresponde a dinero que TRIBUTEK pagó en su momento por el cliente y que este debe devolver. Se considera un monto por cobrar, pero se presenta separado de los ingresos por servicios. En los registros internos se mantiene la clave histórica `Cobranza` para conservar la compatibilidad con los datos anteriores.
 
-Las cuentas previstas son Administradora y Cliente, sin registro público.
-Cada cliente deberá acceder únicamente a su información y a los documentos
-habilitados para él por las Administradoras/Equipo encargado.
+### Pagos y sus respaldos
+Un pago puede aplicarse a un concepto determinado o distribuirse entre deudas, comenzando por las más antiguas. El sistema calcula el saldo restante y valida que el abono no supere lo pendiente. La glosa es opcional, ya que el método de pago tiene su propio campo.
 
-La proyección F29 será un documento de apoyo descargable, no incluye
-presentación oficial al SII hasta el momento. Los mensajes serán revisables para su posterior envío por WhatsApp.
+Cada movimiento puede tener una carpeta con varios comprobantes en PDF, PNG o JPG. Esto permite respaldar, por ejemplo, un pago realizado en dos transferencias o mediante distintos medios. Tanto la administradora como el cliente autorizado pueden adjuntar archivos.
 
-## Objetivos 
+Los datos ingresados al adjuntar un comprobante sirven como respaldo. Cargar una imagen no registra un nuevo abono ni modifica por sí solo el saldo del cliente.
 
-### Objetivo general
+### Proyección mensual F29
+La sección F29 reúne en una hoja de trabajo la información que necesita la administradora para preparar la proyección. Admite archivos CSV del Registro de Compras y Ventas (RCV), permite buscar archivos por RUT y período en una carpeta autorizada y también ofrece importación manual.
 
-Desarrollar una plataforma web para TRIBUTEK que permita centralizar y gestionar la información, documentación y servicios asociados a sus clientes, facilitando los procesos de gestión contable, tributaria y laboral.
+Con los antecedentes cargados, calcula el IVA estimado por pagar o el remanente y presenta por separado las otras obligaciones. Incluye campos para el remanente anterior, PPM, retenciones, cotizaciones previsionales y honorarios, entre otros. Las notas de crédito se muestran con valores negativos y en rojo.
 
+La administradora puede revisar el resultado, copiar el mensaje correspondiente y generar una imagen del informe para el cliente. La exportación conserva un fondo claro aunque la página esté en modo oscuro.
 
-### Objetivos específicos
+Esta sección prepara una **proyección informativa**. No presenta el Formulario 29 ante el Servicio de Impuestos Internos ni realiza su pago. Los mensajes se copian para que la administradora los revise y envíe, no se despachan automáticamente por WhatsApp.
 
-- Diseñar una base de datos que permita almacenar y relacionar información de clientes, empresas, documentos y servicios.
+### Portal del cliente
+El portal permite consultar y entregar documentos, revisar material de presentación y acceder a las carpetas de comprobantes de las empresas vinculadas a la cuenta.
 
-- Desarrollar módulos que permitan a TRIBUTEK gestionar clientes, documentación y actividades asociadas a sus servicios.
+No existe inscripción pública. La administradora habilita el acceso desde la gestión de clientes y entrega un enlace para configurar la cuenta. También puede gestionar el restablecimiento de la contraseña. Un cliente puede estar registrado en TRIBUTEK sin tener acceso al portal.
 
-- Implementar un portal para que los clientes puedan consultar y entregar la información y documentación requerida.
+## Dónde se guarda la información
+La conexión con la base de datos se ha incorporado por etapas. Por eso, actualmente conviven información del servidor y registros locales del navegador.
 
-- Implementar mecanismos de autenticación y control de acceso según los diferentes tipos de usuario.
+| Información | Situación actual |
+| --- | --- |
+| Clientes y accesos | Se gestionan mediante el servidor y PostgreSQL. |
+| Clientes, Obligaciones y Facturación en el panel | Estas vistas toman los datos del servidor. La ficha también mantiene información local de apoyo y respaldo. |
+| Constitución de empresas | El seguimiento de etapas se consulta y guarda mediante el servidor. |
+| Inicio, Pagos y Postergaciones | Sus vistas todavía utilizan el registro local del navegador. La sincronización de la gestión mensual está en desarrollo. |
+| Proyecciones F29 | Se guardan primero en el navegador y luego se intenta enviarlas al servidor, asociadas al cliente y período. La apertura de la hoja todavía recupera la copia local. |
+| Documentos | Sus registros se guardan en la base de datos y los archivos en `tributek/backend/uploads/documentos`. |
+| Comprobantes de pago | Los archivos y su índice se guardan en el servidor, en `tributek/backend/uploads/payment-evidence`, salvo que se configure otra ubicación. |
 
+Un aviso de guardado local no confirma que la información haya llegado al servidor. En particular, F29 informa cuando la sincronización no se pudo completar. Todavía no debe asumirse que todas las pantallas mostrarán lo mismo al cambiar de navegador o computador. El respaldo JSON disponible en la interfaz permite conservar los datos locales que exporta cada módulo. No reemplaza el respaldo de PostgreSQL ni incluye los archivos adjuntos guardados en el servidor.
 
-## Estado del desarrollo
-
-Estado revisado al 10 de septiembre de 2026:
-
-- Frontend con interfaz de login, layout administrativo, encabezado,
-  menú de navegación y componentes reutilizables Button e Input.
-
-- Páginas provisionales de Auditoría, Documentos, Proyección F29,
-  Pagos y Recursos Humanos. Muestran que la sección aún no está disponible.
-
-- Compilación del frontend y comprobación de TypeScript completadas
-  en las entregas de estructura y navegación.
-
-- Backend  aún básico de NestJS con una operación GET / este devuelve
-  "Hello World!" únicamente para primera prueba.
-
-- Contrato de Prisma con modelos de usuarios, roles, clientes, servicios,
-  períodos, trabajadores, documentos, proyecciones F29, transacciones,
-  gestiones y auditoría.
-
-- Artefactos del contrato y archivos de migraciones registrados
-  en el repositorio.
-
-## Tecnologías
-
-| Capa | Tecnología | Versión | Uso |
-| --- | --- | --- | --- |
-| Frontend | Next.js | 16.3.4 | Framework de la aplicación web |
-| Frontend | React | 19.2.8 | Construcción de la interfaz |
-| Frontend | TypeScript | ^5 | Tipado estático |
-| Frontend | Tailwind CSS | ^4 | Estilos y diseño de la interfaz |
-| Backend | NestJS | ^12.0.1 | Framework de la API REST |
-| Backend | TypeScript | ^6.0.2 | Desarrollo del backend |
-| Backend | ES Modules | — | Sistema de módulos |
-| Datos | Prisma | ^8.0.0-rc.13 | ORM y acceso a datos |
-| Datos | @prisma/orm-postgres | ^8.0.0-rc.8 | Integración de Prisma con PostgreSQL |
-| Base de datos | PostgreSQL | 18.6 | Gestión y almacenamiento de datos |
-| Desarrollo | concurrently | ^9.0.0 | Ejecución simultánea de frontend y backend |
-
-> **Versiones:** los `package-lock.json` fijan las versiones exactas de las dependencias instaladas.
->
-> **Configuración:** frontend y backend mantienen configuraciones independientes.
-
-## Arquitectura
-
-### Estructura de carpetas del proyecto
+## Organización del proyecto
+La aplicación está dentro de la carpeta `tributek`. Las evidencias académicas se mantienen aparte, en `Fase 1`.
 
 ```text
 Capstone-TRIBUTEK/
-├── README.md                    # Descripción, arquitectura y guía del proyecto
-├── Fase 1/                      # Evidencias grupales e individuales del capstone fase 1
-├── Fase 2/                      # Evidencias grupales e individuales del capstone fase 2
-│
-└── tributek/                    # Aplicación y documentación del sistema
-    ├── package.json             # Comandos generales para ejecutar frontend y backend
-    ├── package-lock.json        # Versiones de las herramientas generales
-    ├── backend/                 # API, lógica de negocio y acceso a datos
-    │   ├── src/                 # Módulos, controladores y servicios NestJS
-    │   ├── prisma/              # Contrato y modelos de datos
-    │   ├── migrations/          # Cambios versionados de la base de datos
-    │   ├── scripts/             # Tareas auxiliares del backend
-    │   ├── test/                # Pruebas del backend
-    │   ├── uploads/             # Archivos cargados durante el desarrollo local
-    │   └── prisma.config.ts     # Configuración de Prisma y conexión a la base de datos
-    │
-    ├── docs/                    # Guías técnicas y material de referencia
-    │   ├── backend/             # Documentación de la API y sus módulos
-    │   ├── frontend/            # Documentación de interfaz y componentes
-    │   ├── img/                 # Imágenes para las guías
-    │   └── instalacion/         # Instrucciones de preparación del entorno
-    │
-    ├── frontend/                # Aplicación web Next.js y React
-    │   ├── app/                 # Rutas, páginas, layouts y componentes
-    │   ├── public/              # Recursos estáticos servidos por la aplicación
-    │   └── tests/               # Pruebas del frontend
-    │
-    └── img/                     # Imágenes generales del proyecto
+├── README.md
+├── Fase 1/
+└── tributek/
+    ├── frontend/       Pantallas, formularios, estilos e informes
+    ├── backend/        Accesos, operaciones y conexión con los datos
+    ├── docs/           Documentación de instalación y desarrollo
+    ├── img/            Imágenes del proyecto
+    └── package.json    Comando para iniciar ambas aplicaciones
 ```
 
-Next.js organiza las rutas y la interfaz. NestJS implementa la API,
-la lógica de negocio y los permisos. Prisma conecta el contrato de datos
-con PostgreSQL.
+El frontend utiliza **Next.js, React y TypeScript**. Los estilos combinan **Tailwind CSS y CSS compartido**. El backend utiliza **NestJS**, mientras que **Prisma** permite trabajar con **PostgreSQL**. Las dependencias están declaradas en los archivos `package.json` y sus versiones de instalación se conservan en los respectivos `package-lock.json`.
 
-### Arquitectura de infraestructura actual
+Los colores y las tipografías se definen en `tributek/frontend/app/globals.css`. Los componentes usan esas definiciones para mantener una presentación consistente. La base visual utiliza el azul `#252F46` y el acento `#B98B7B`, con colores específicos para estados, textos y fondos. El sistema dispone de tema claro, oscuro y según la preferencia del equipo.
 
-El siguiente diagrama representa la configuración de desarrollo local comprobada
-en el proyecto. Las llamadas a la API pasan por los rewrites configurados en
-Next.js; el backend usa Prisma para conectarse a PostgreSQL y guarda los archivos
-de documentos en el disco local.
+## Cómo ejecutar una copia local
+Se necesita Git, Node.js con npm y una base de datos PostgreSQL. La versión de Prisma incluida requiere Node.js **22.18.0 o superior**. El equipo ha trabajado con Node.js 22.23.2.
 
-```mermaid
-flowchart TB
-    usuarios["Administradoras y clientes"]
-    navegador["Navegador web"]
-
-    usuarios --> navegador
-    navegador --> frontend
-
-    subgraph desarrollo["Desarrollo local"]
-        direction LR
-
-        frontend["Frontend<br/>Next.js + React<br/>localhost:3000"]
-        backend["Backend / API<br/>NestJS<br/>localhost:3001"]
-
-        postgres[("PostgreSQL")]
-        archivos[("Documentos<br/>uploads/")]
-
-        frontend -->|"HTTP / REST"| backend
-        backend -->|"Prisma 8"| postgres
-        backend -->|"Lectura / escritura"| archivos
-    end
-
-    subgraph despliegue["Despliegue"]
-        direction LR
-
-        frontend_prod["Frontend<br/>Next.js + React<br/>Proveedor o unidificado para b y f: pendiente"]
-        backend_prod["Backend / API<br/>NestJS<br/>Proveedor o unidificado para b y f: pendiente"]
-
-        frontend_prod --- backend_prod
-    end
-
-    desarrollo -.->|"Pendiente de definir"| despliegue
-```
-
-## Preparación del entorno
-
-### Requisitos
-
-- Git.
-- Node.js compatible con las dependencias fijadas.
-  Prisma 8.0.0-rc.13 exige Node >=22.18.0.
-  El entorno de desarrollo de Nazaret utiliza Node 22.23.2.
-- npm.
-- PostgreSQL para trabajar con la base de datos.
-
-### Instalar una copia existente
-
-Si todavía no tienes una copia del repositorio:
+Si aún no se tiene una copia del proyecto:
 
 ```powershell
 git clone https://github.com/Grupo-TRIBUTEK/Capstone-TRIBUTEK.git
 cd Capstone-TRIBUTEK
 ```
 
-Si ya tienes una copia, utiliza esa carpeta y conserva sus cambios.
-
-Desde la raíz `Capstone-TRIBUTEK`, instala las dependencias de los tres proyectos
-(raíz de `tributek`, frontend y backend), en este orden:
+Desde la carpeta principal, instalar las dependencias de cada parte. Ejecutar los comandos uno por uno:
 
 ```powershell
 npm ci --prefix tributek
@@ -212,136 +100,85 @@ npm ci --prefix tributek/frontend
 npm ci --prefix tributek/backend
 ```
 
-Ejecuta los comandos uno por uno. Si alguno falla, detente y resuelve el error
-antes de continuar.
+### Conexión y cuentas
+El backend carga su configuración desde el entorno. Para trabajar localmente, se debe preparar `tributek/backend/.env` con los valores del equipo:
 
-[`npm ci`](https://docs.npmjs.com/cli/commands/npm-ci) requiere el
-`package-lock.json` de cada proyecto. Si ya existe `node_modules`, lo elimina
-y lo instala de nuevo según ese archivo. No modifica `package.json` ni
-`package-lock.json`.
+```dotenv
+DATABASE_URL=postgresql://USUARIO:CLAVE@localhost:5432/BASE_DE_DATOS
+JWT_SECRET=REEMPLAZAR_POR_UNA_CLAVE_PRIVADA_LARGA_Y_ALEATORIA
+FRONTEND_URL=http://localhost:3000
+PORT=3001
+```
 
-**Nota:** el backend tiene un script `postinstall` que ejecuta
-`prisma skills sync || exit 0`. Revisa su salida y el estado de Git después
-de instalar.
+Estos valores son ejemplos. Las credenciales reales no se incluyen en el repositorio. La cuenta administrativa inicial y la preparación de la base deben coordinarse con quien mantiene el backend, porque no hay un formulario público para crear administradores.
 
-No es necesario volver a crear las aplicaciones Next.js o NestJS,
-ni reinicializar Prisma. Las guías históricas incluyen comandos
-utilizados durante la creación original del proyecto.
+Descargar el código con `git pull` no actualiza las tablas de PostgreSQL. La estructura se encuentra en `tributek/backend/prisma/contract.prisma` y los cambios de base de datos están en `tributek/backend/migrations`. Para aplicarlos, consultar el [procedimiento de migraciones](tributek/docs/03-backend/01-base-datos/03-flujo-prisma-migracion.md) y confirmar a qué base apunta `DATABASE_URL`.
 
-### Configurar PostgreSQL y Prisma
-
-La configuración existente está en:
-
-- tributek/backend/prisma.config.ts
-- tributek/backend/prisma/contract.prisma
-
-prisma.config.ts carga dotenv y utiliza DATABASE_URL como conexión.
-
-Configura DATABASE_URL en el entorno del backend con las credenciales
-de tu base local, sin publicar contraseñas en el repositorio.
-
-Consulta la [guía del backend, sus datos y contratos](tributek/docs/backend/README.md)
-y coordina con Brandon la aplicación o actualización de la estructura.
-
-La prueba histórica con `db init --dry-run` comprobó una conexión sin crear
-tablas. El contrato actual ya contiene modelos del sistema y debe
-distinguirse de aquella prueba con Test.
-
-Descargar los archivos del repositorio no actualiza automáticamente
-PostgreSQL. Los comandos que aplican la estructura se eligen según el
-estado de la base de datos y se coordinan antes de ejecutarlos.
-
-## Ejecución local
-
-### Frontend y backend juntos
-
-Con las dependencias instaladas, desde la carpeta tributek:
+### Iniciar la aplicación
+Desde la carpeta `tributek`:
 
 ```powershell
 npm run dev
 ```
 
-El script utiliza concurrently para iniciar ambos servicios:
+Este comando inicia el frontend y el backend. La página queda disponible en **http://localhost:3000** y el servidor en **http://localhost:3001**.
 
-- Frontend: http://localhost:3000
-- Backend: http://localhost:3001, salvo que PORT indique otro puerto.
-
-### Solo frontend
-
-Desde tributek/frontend:
+También pueden iniciarse por separado, dejando una terminal abierta para cada uno:
 
 ```powershell
-npm run dev -- --hostname 127.0.0.1
+# Desde tributek/frontend
+npm run dev
 ```
 
-Rutas para revisar la interfaz hasta el momento:
-
-- http://127.0.0.1:3000/login
-- http://127.0.0.1:3000/admin
-
-### Solo backend
-
-Desde tributek/backend:
-
 ```powershell
+# Desde tributek/backend
 npm run start:dev
 ```
 
-Se deben mantener abiertas las terminales de los servidores.
-Para detener un proceso, se debe pulsar Ctrl+C en la terminal.
+Para detenerlos, presionar `Ctrl + C` en la terminal correspondiente. Si la página abre, pero el inicio de sesión indica que no puede conectarse al puerto 3001, revisar que el backend haya iniciado correctamente. Las direcciones del servidor están configuradas en `tributek/frontend/next.config.ts`. Si se cambia el puerto del backend, esa configuración también debe ajustarse.
 
-## Comprobaciones del frontend
+## Revisión antes de integrar cambios
+Desde `tributek/frontend`, ejecutar:
 
-Desde tributek/frontend:
+```powershell
+npm run lint -- app
+npx tsc --noEmit
+npm run build -- --webpack
+```
+
+Estas comprobaciones revisan el código, los tipos de datos y la construcción de la aplicación. En la revisión de estilos del 12 de octubre de 2026, las tres finalizaron sin errores.
+
+Las pruebas de reglas y sincronización del frontend pueden ejecutarse desde la misma carpeta:
+
+```powershell
+node --test tests/ficha.test.mjs tests/management.test.mjs tests/mergeClients.test.mjs tests/f29.test.mjs tests/syncObligaciones.test.mjs
+```
+
+Desde `tributek/backend`, los comandos disponibles para revisar el servidor son:
 
 ```powershell
 npm run lint
+npm test
 npm run build
 ```
 
-lint revisa el código con ESLint.
-build comprueba la compilación de producción y los tipos de TypeScript.
+Que una aplicación compile no confirma por sí solo que un proceso esté completo. También se deben probar las operaciones con ambas cuentas, comprobar los datos guardados y revisar la navegación en distintos tamaños de pantalla y en ambos temas.
 
-Para repetir la comprobación de compilación del equipo,
-debes detener primero el servidor de desarrollo
+## Trabajo pendiente
+La prioridad es completar y validar la sincronización de los módulos que todavía dependen del navegador, incluida la recuperación de las proyecciones F29 desde el servidor. También falta consolidar la preparación del entorno, los respaldos y la configuración de despliegue para el uso de la oficina.
 
-En LoginForm.tsx se ha observado una advertencia de ESLint por el uso de
-<img>. La comprobación específica de Button, Input y LoginForm finalizó
-con cero errores y esa advertencia preexistente.
+Las revisiones con TRIBUTEK permiten ajustar los conceptos y comprobar que los resultados coincidan con su forma de trabajar. Cada incorporación debe probarse junto con los módulos existentes, especialmente cuando cambia el registro de pagos, períodos o saldos.
 
-Las comprobaciones automáticas se complementan con revisión de navegación,
-foco de teclado, etiquetas de campos y presentación en distintos tamaños.
+## Documentación y coordinación
+Nazaret González y Brandon Casas desarrollan e integran el sistema de manera conjunta. La distribución de tareas y las evidencias de las entregas se mantienen en el repositorio y en los antecedentes del proyecto académico.
 
-## Documentación (Por actualizar)
+Para revisar una parte específica:
 
-### Instalación y datos
-
-Estas guías describen las etapas del proyecto, sus apartados de estado
-pueden corresponder al momento en que fueron escritos.
-
-- [Creación inicial de las herramientas](tributek/docs/instalacion/1.instalaci%C3%B3n.md)
-- [Guía de PostgreSQL y Prisma](tributek/docs/instalacion/2.Instalacion-prisma-PostgreSQL.md)
-- [Prueba de integración mediante dry run](tributek/docs/instalacion/3.Instalacion-prisma-PostgreSQL.md)
-- [Guía del backend, rutas y flujo de Prisma](tributek/docs/backend/README.md)
-
-### Frontend
-
-- [Organización de componentes](tributek/docs/frontend/componentes.md)
-- [Páginas y layouts](tributek/docs/frontend/page-layout.md)
-
-Antes de modificar el frontend, consulta el AGENTS.md y las guías
-pertinentes de la versión instalada de Next.js en
-frontend/node_modules/next/dist/docs/.
-
-## Trabajo colaborativo
-
-- Nazaret González mantiene requisitos, criterios de aceptación, RACI y trazabilidad, también
-  desarrolla sus interfaces y módulos asignados, realiza pruebas y también reúne evidencias.
-- Brandon dirige arquitectura, BDD, autenticación y permisos, y ademas desarrolla
-  sus módulos asignados, respaldos y documentación técnica.
-- Ambos coordinan la integración y los datos y respuestas necesarios de la API.
-- Los cambios se trabajan en ramas y se presentan mediante pull requests en github.
-- Cada entrega indica alcance, pruebas realizadas y dependencias.
-- Si un PR depende de otro, se registra y se coordina su orden de integración.
-- Los conflictos se resuelven conservando los aportes de ambos.
-- Los datos simulados se consideran temporales y son llamados así.
+- [Instalación de herramientas](tributek/docs/01-instalacion/01-instalacion-herramientas.md).
+- [Configuración de PostgreSQL](tributek/docs/03-backend/01-base-datos/01-configuracion-postgresql.md).
+- [Trabajo con el contrato de datos](tributek/docs/03-backend/01-base-datos/02-flujo-prisma.md).
+- [Migraciones de la base de datos](tributek/docs/03-backend/01-base-datos/03-flujo-prisma-migracion.md).
+- [Acceso desde el frontend](tributek/docs/02-frontend/frontend-auth.md).
+- [Organización de componentes](tributek/docs/02-frontend/componentes.md).
+- [Funcionamiento de la vista Obligaciones](tributek/frontend/app/components/management/README.md).
+- [Almacenamiento de comprobantes de pago](tributek/backend/src/payment-evidence/README.md).
