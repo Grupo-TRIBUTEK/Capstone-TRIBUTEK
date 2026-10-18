@@ -38,4 +38,5 @@ export const adminNavigation: {
     icon: "briefcase",
     group: "Gestión",
   },
+  { href: "/admin/auditoria", label: "Trazabilidad", icon: "shield", group: "Gestión" },
 ];
