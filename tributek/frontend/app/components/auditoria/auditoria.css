@@ -1,0 +1,39 @@
+.audit { color: var(--text-primary); font-family: var(--font-body); max-width: 1500px; margin: auto; }
+.audit-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
+.audit h1 { font-size: 2rem; font-weight: 700; margin: .3rem 0; }
+.audit h2 { font-size: 1.2rem; font-weight: 700; }
+.audit h3 { font-weight: 700; }
+.audit-heading p { color: var(--text-muted); }
+.audit .audit-eyebrow { color: var(--secondary-strong); font-size: .75rem; letter-spacing: .14em; font-weight: 700; }
+.audit button, .audit input, .audit select { border: 1px solid var(--border); border-radius: var(--control-radius); padding: .7rem .85rem; color: var(--text-primary); background: var(--surface); font: inherit; }
+.audit button { cursor: pointer; font-weight: 600; font-size: .875rem; }
+.audit button:hover:not(:disabled) { background: var(--surface-muted); }
+.audit button:disabled { opacity: .5; cursor: not-allowed; }
+.audit :is(button,input,select):focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.audit .audit-primary { background: var(--primary); color: var(--on-primary); }
+.audit .audit-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.audit-filters { background: var(--surface); border: 1px solid var(--border); border-radius: var(--card-radius); padding: 1.25rem; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.audit-filters label { display: flex; flex-direction: column; gap: .5rem; font-size: .875rem; font-weight: 600; }
+.audit-filters input,.audit-filters select { width: 100%; min-width: 0; font-weight: 400; }
+.audit-search { grid-column: span 2; }
+.audit-buttons { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; }
+.audit-filters .audit-buttons { grid-column: span 2; align-self: end; justify-content: flex-end; }
+.audit-records { border: 1px solid var(--border); border-radius: var(--card-radius); background: var(--surface); overflow: hidden; }
+.audit-records-title,.audit-pagination { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem; flex-wrap: wrap; }
+.audit-records-title span,.audit-pagination span { color: var(--text-muted); font-size: .875rem; }
+.audit-table-wrap { overflow-x: auto; }
+.audit table { width: 100%; border-collapse: collapse; font-size: .875rem; text-align: left; }
+.audit th { background: var(--surface-muted); color: var(--text-muted); font-weight: 600; }
+.audit th,.audit td { padding: 1rem; border-bottom: 1px solid var(--border); }
+.audit td { max-width: 18rem; overflow-wrap: anywhere; }
+.audit-tag { display: inline-block; background: var(--secondary-surface); color: var(--secondary-strong); border-radius: var(--control-radius); padding: .3rem .6rem; }
+.audit-state { min-height: 15rem; display: flex; flex-direction: column; gap: .8rem; align-items: center; justify-content: center; padding: 2rem; text-align: center; color: var(--text-muted); }
+.audit-dialog { margin: auto; width: min(38rem,calc(100% - 2rem)); max-height: 85vh; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--dialog-radius); background: var(--surface); color: var(--text-primary); padding: 1.5rem; }
+.audit-dialog::backdrop { background: var(--overlay); }
+.audit-dialog dl { display: grid; grid-template-columns: 8rem minmax(0,1fr); gap: .8rem; }
+.audit-dialog dt { color: var(--text-muted); }
+.audit-dialog dd { overflow-wrap: anywhere; }
+.audit-description { white-space: pre-wrap; }
+.audit-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+@media(max-width: 800px) { .audit-filters { grid-template-columns: repeat(2,minmax(0,1fr)); } .audit table { min-width: 780px; } }
+@media(max-width: 480px) { .audit-filters { grid-template-columns: minmax(0,1fr); } .audit-search,.audit-filters .audit-buttons { grid-column: auto; } .audit-dialog dl { grid-template-columns: minmax(0,1fr); gap: .4rem; } .audit-dialog dd { margin-bottom: .75rem; } }
