@@ -42,7 +42,11 @@
   .dark .tk-badge.red, .dark .tk-error { background: var(--error-surface); color: var(--error); }
   .dark .tk-badge.amber { background: var(--warning-surface); color: var(--warning); }
   .dark .tk-badge.neutral { background: var(--border); color: var(--text-primary); }
-  .dark .tk-dialog::backdrop { background: var(--overlay); }
+  .dark .tk-dialog::backdrop {
+  background: var(--overlay);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
   .dark .tk :is(button, a, input, select, textarea):focus-visible { outline-color: var(--secondary); }
   .dark .text-brand-primary, .dark a.text-primary { color: var(--text-primary); }
 }

@@ -44,8 +44,17 @@
   --error-surface: #fef2f2;
   --error-border: #fecaca;
   --overlay: #252f4688;
+  --overlay-hover: #252f46cc;
   --shadow-dialog: #252f4644;
+  --shadow-modal: #252f4644;
+  --shadow-overlay: #252f4644;
+  --shadow-card: #252f461a;
   --shadow-soft: #252f4604;
+  --modal-backdrop-blur: 4px;
+  --modal-backdrop-opacity: 0.53;
+  --modal-shadow: var(--shadow-modal);
+  --modal-backdrop-blur: 8px;
+  --modal-backdrop-color: rgba(37, 47, 70, 0.53);
 
   /* Las exportaciones conservan una paleta clara en ambos temas. */
   --report-primary: var(--brand-primary);
