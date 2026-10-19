@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useData, persist } from "../ficha/store";
-import { sincronizarMes } from "./syncObligaciones";
+import { sincronizarMes, sincronizarPostergaciones } from "./syncObligaciones";
 import { mesIgual } from "./syncHelpers";
 import { conceptLabel, concepts, receivables, services, today, type Concept } from "../ficha/model";
 import { authenticatedFetch } from "../../features/auth/auth-client";
@@ -300,7 +300,9 @@ export default function Workspace({ view }: { view: View }) {
     view === "clientes" ||
     view === "obligaciones" ||
     view === "facturacion" ||
-    view === "formalizaciones";
+    view === "formalizaciones" ||
+    view === "postergaciones" ||
+    view === "pagos";
   const blankLedger: Ledger = {
     version: localData.version,
     clients: [],
@@ -383,6 +385,14 @@ export default function Workspace({ view }: { view: View }) {
           const aviso = await sincronizarMes(month, cliente);
           if (aviso) avisos.push(aviso);
         }
+        // Sincronizar postergaciones (deferrals) al backend
+        const avisoPostergaciones = await sincronizarPostergaciones(
+          extra(next).deferrals,
+          extra(previo).deferrals,
+          next.payments,
+          clients
+        );
+        if (avisoPostergaciones) avisos.push(avisoPostergaciones);
         setReload((n) => n + 1);
         setSelected(null);
         setNotice(avisos.length

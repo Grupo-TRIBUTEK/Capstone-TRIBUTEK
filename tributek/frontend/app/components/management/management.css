@@ -325,7 +325,9 @@
   width: min(1050px, calc(100vw - 28px));
 }
 .tk-dialog::backdrop {
-  background: var(--overlay);
+  background: var(--modal-backdrop-color);
+  backdrop-filter: blur(var(--modal-backdrop-blur));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
 }
 .tk-dialog-head {
   display: flex;
