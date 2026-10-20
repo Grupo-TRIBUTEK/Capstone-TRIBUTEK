@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useData, persist } from "../ficha/store";
 import { sincronizarMes, sincronizarPostergaciones } from "./syncObligaciones";
 import { mesIgual } from "./syncHelpers";
-import { conceptLabel, concepts, receivables, services, today, type Concept } from "../ficha/model";
+import { conceptLabel, concepts, receivables, services, today, validPeriod, type Concept } from "../ficha/model";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import ClientCreateModal, {
   type ClientRecord,
@@ -237,6 +237,8 @@ export default function Workspace({ view }: { view: View }) {
     const q = new URLSearchParams(window.location.search);
     const id = q.get("cliente");
     if (id) queueMicrotask(() => setPaymentFilter(id));
+    const periodo = q.get("periodo") ?? q.get("period");
+    if (periodo && validPeriod(periodo)) queueMicrotask(() => setPeriod(periodo));
   }, []);
 
   // Consulta de Obligaciones al backend. `load` arranca en "loading" y solo
@@ -247,7 +249,12 @@ export default function Workspace({ view }: { view: View }) {
     const controller = new AbortController();
     void (async () => {
       try {
-        const r = await authenticatedFetch("/obligaciones", { signal: controller.signal });
+        const params = new URLSearchParams();
+        if (period) params.set("periodo", period);
+        const r = await authenticatedFetch(
+          `/obligaciones${params.toString() ? `?${params}` : ""}`,
+          { signal: controller.signal },
+        );
         if (!r.ok) {
           const body = await r.json().catch(() => null) as { message?: string | string[] } | null;
           const message = Array.isArray(body?.message) ? body.message.join(" ") : body?.message;
@@ -265,7 +272,7 @@ export default function Workspace({ view }: { view: View }) {
       }
     })();
     return () => controller.abort();
-  }, [reload]);
+  }, [reload, period]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -291,12 +298,13 @@ export default function Workspace({ view }: { view: View }) {
     return () => controller.abort();
   }, [gestionesReload]);
 
-  // Vistas cuya fuente de verdad es PostgreSQL: clientes, obligaciones,
+  // Vistas cuya fuente de verdad es PostgreSQL: inicio, clientes, obligaciones,
   //   facturación y formalizaciones. Si el backend falla NO se cae al ledger
   //   local: se muestra el error y una lista vacía. El resto de vistas
-  //   (inicio, pagos, postergaciones) usa el ledger local porque todavía no
+  //   (pagos, postergaciones) usa el ledger local porque todavía no
   //   están migradas.
-  const isServerView =
+const isServerView =
+    view === "inicio" ||
     view === "clientes" ||
     view === "obligaciones" ||
     view === "facturacion" ||
@@ -356,7 +364,7 @@ export default function Workspace({ view }: { view: View }) {
           : balance(vista, getMonth(vista, c.id, period), concept as Concept)) > 0),
   );
 
-  const openDeferrals = metaVista.deferrals.filter((d) => deferralBalance(vista, d) > 0);
+  const openDeferrals = metaVista.deferrals.filter((d) => d.period <= period && deferralBalance(vista, d) > 0);
 
   function save(next: Ledger, revision = vista.revision) {
     const previo = vista;
@@ -586,7 +594,7 @@ export default function Workspace({ view }: { view: View }) {
             <Metric label="Obligaciones no enviadas">{pendingMonths.length}</Metric>
           </div>
           <section className="tk-card">
-            <div className="tk-card-head"><h2>Control de vencimientos</h2><Link className="tk-button" href="/admin/obligaciones">Ver obligaciones</Link></div>
+            <div className="tk-card-head"><h2>Control de vencimientos</h2><Link className="tk-button" href={`/admin/obligaciones${period ? `?period=${period}` : ""}`}>Ver obligaciones</Link></div>
             <div className="tk-panel">
               <div className="tk-grid">
                 {[{ c: "Cotizaciones", day: 12 }, { c: "Impuestos", day: 20 }].map(({ c, day }) => (
@@ -702,6 +710,7 @@ export default function Workspace({ view }: { view: View }) {
                                 }
                               }}
                             >
+                              Eliminar
                             </button>
                           </div>
                         </td>
