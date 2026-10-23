@@ -54,3 +54,9 @@ test('mensaje de remanente no recomienda compras y conserva obligaciones; cero n
  assert.match(value,/remanente de crédito fiscal/);assert.match(value,/Otras obligaciones estimadas a pagar:\*\n\$ 15.000/);assert.ok(!value.includes('compras con factura recomendado'));
  p.manual.previousCredit=0;value=m.message(client,p);assert.match(value,/No se genera IVA a pagar/);assert.ok(!value.includes('remanente de crédito fiscal'));
 });
+
+test('detecta períodos del cliente sin mezclar RUT ni archivos inválidos', () => {
+ const clients=[{id:'a',name:'Ensayo',rut:'11111111-1'}];
+ assert.deepEqual(m.rcvPeriods(['RCV_COMPRA_REGISTRO_11111111-1_202609.csv','RCV_VENTA_11111111_202608.csv','RCV_VENTA_11111111-1_202609.csv','RCV_VENTA_22222222-2_202610.csv','otro.csv'],clients),['2026-09','2026-08']);
+ assert.deepEqual(m.rcvPeriods(['RCV_VENTA_22222222-2_202610.csv'],clients),[]);
+});

@@ -33,7 +33,7 @@ export type ClientView = Client & {
   direccion: string;
   estadoCliente: string;
 };
-export type Save = (next: Ledger, revision: string) => void;
+export type Save = (next: Ledger, revision: string) => void | Promise<boolean>;
 export function PaymentForm({
   data,
   clientId,
@@ -311,13 +311,19 @@ export default function ClientSheet({
     setError("");
     setTab(t);
   }
-  function persistMonth() {
+  const [savingMonth, setSavingMonth] = useState(false);
+  async function persistMonth() {
+    if (savingMonth) return;
+    setSavingMonth(true);
+    setError("");
     try {
-      save(updateMonth(data, draft), data.revision);
+      const result = await save(updateMonth(data, draft), data.revision);
+      if (result === false) { setError("No se pudo guardar. Tus cambios siguen aquí para reintentar. Revisa el aviso del servidor."); return; }
+      setDirty(false);
       onClose();
     } catch (e) {
       setError((e as Error).message);
-    }
+    } finally { setSavingMonth(false); }
   }
   async function copyText() {
     try {
@@ -534,8 +540,8 @@ export default function ClientSheet({
             </div>
             <footer>
               <button onClick={close}>Cancelar</button>
-              <button className="primary" onClick={persistMonth}>
-                Guardar conceptos
+              <button className="primary" disabled={savingMonth} onClick={persistMonth}>
+                {savingMonth ? "Guardando…" : "Guardar conceptos"}
               </button>
             </footer>
           </>

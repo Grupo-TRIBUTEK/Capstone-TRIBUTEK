@@ -5,7 +5,7 @@ import { useData } from '../ficha/store';
 import { extra, type Ledger } from '../management/model';
 import { Modal } from '../management/ui';
 import { authenticatedFetch } from '../../features/auth/auth-client';
-import { associated, calculate, emptyDatabase, manualLabels, matchesFile, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validRut, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
+import { associated, calculate, emptyDatabase, manualLabels, matchesFile, rcvPeriods, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validRut, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
 import { folderFiles, readDatabase, writeDatabase } from './storage';
 import { download, exportImage, reportCanvas } from './report';
 import { importRcv } from './rcv';
@@ -24,6 +24,7 @@ export default function F29Workspace() {
     const [candidates, setCandidates] = useState<Candidate[] | null>(null), [acuse, setAcuse] = useState(false), [identity, setIdentity] = useState(false);
     const [editClient, setEditClient] = useState<Client | 'new' | null>(null), [preview, setPreview] = useState(false);
     const [available, setAvailable] = useState<Record<string, string>>({});
+    const [periodChoice, setPeriodChoice] = useState<{ pool: File[]; all: boolean; periods: string[] } | null>(null);
     const sourceMode = useRef<'folder' | 'files'>('folder');
     const pendingSearch = useRef<{ all: boolean; refresh: boolean } | null>(null);
     const directoryInput = useRef<HTMLInputElement>(null), csvInput = useRef<HTMLInputElement>(null), restoreInput = useRef<HTMLInputElement>(null);
@@ -84,15 +85,29 @@ export default function F29Workspace() {
     function open(c: Client) { if (!leave())
         return; setActive(c); setDraft(db.projections.find(p => p.clientId === c.id && p.period === period) ?? newProjection(c.id, period)); setDirty(false); setError(''); setNotice(''); }
     function change(p: Projection) { setDraft({ ...p, reviewed: false }); setDirty(true); }
-    function foundFiles(pool: File[], all: boolean, refresh = false) {
-        const list = (all ? db.clients : active ? [active] : []).map(client => ({ client, files: pool.filter(f => matchesFile(f.name, client, period)) }));
+    function foundFiles(pool: File[], all: boolean, refresh = false, targetPeriod = period) {
+        const list = (all ? db.clients : active ? [active] : []).map(client => ({ client, files: pool.filter(f => matchesFile(f.name, client, targetPeriod)) }));
         setAvailable(Object.fromEntries(list.map(c => [c.client.id, c.files.length ? `${c.files.length} RCV encontrados` : 'Sin RCV'])));
         if (refresh) { setNotice('Disponibilidad actualizada.'); return; }
-        if (!list.some(c => c.files.length))
-            throw new Error('No se encontraron CSV para el cliente y período seleccionados. Revisa el RUT y el período del nombre del archivo.');
+        if (!list.some(c => c.files.length)) {
+            const periods = rcvPeriods(pool.map(f => f.name), all ? db.clients : active ? [active] : []);
+            if (periods.length) { setPeriodChoice({ pool, all, periods }); return; }
+            throw new Error('No hay RCV que coincidan con el RUT del cliente. Revisa el RUT y el nombre de los archivos CSV.');
+        }
         setAcuse(false);
         setIdentity(false);
         setCandidates(list);
+    }
+    function useDetectedPeriod(next: string) {
+        if (!periodChoice || !leave()) return;
+        const { pool, all } = periodChoice;
+        setPeriod(next);
+        if (active) setDraft(db.projections.find(p => p.clientId === active.id && p.period === next) ?? newProjection(active.id, next));
+        setDirty(false);
+        setAvailable({});
+        setPeriodChoice(null);
+        setNotice(`Período detectado: ${periodLabel(next)}. Revisa los archivos antes de importarlos.`);
+        foundFiles(pool, all, false, next);
     }
     async function chooseFolder(choose = true, search?: { all: boolean; refresh: boolean }) {
         const found = await folderFiles(choose);
@@ -260,6 +275,11 @@ export default function F29Workspace() {
       <details className="f29-panel"><summary>Mensaje para el cliente</summary><pre>{message(active, draft)}</pre></details>
     </>}
     {editClient && <Modal title={editClient === 'new' ? 'Agregar cliente a F29' : 'Editar nombre en F29'} onClose={() => setEditClient(null)}><ClientForm client={editClient} save={saveClient}/></Modal>}
+    {periodChoice && <Modal title="Período detectado en los RCV" onClose={() => setPeriodChoice(null)}>
+      <p>Estás trabajando en {periodLabel(period)}, pero los archivos de este cliente corresponden a otro período. Selecciona el mes que deseas importar.</p>
+      {periodChoice.periods.map(value => <button key={value} onClick={() => useDetectedPeriod(value)}>Usar {periodLabel(value)}</button>)}
+      <button onClick={() => setPeriodChoice(null)}>Cancelar</button>
+    </Modal>}
     {candidates && <Modal title="Revisar archivos encontrados" onClose={() => { if (!busy)
         setCandidates(null); }} wide><div className="f29-candidates">{candidates.map(c => <section key={c.client.id}><strong>{c.client.name} · {c.client.rut} · {period}</strong><ul>{c.files.map((f, i) => <li key={i}>{f.name}</li>)}</ul>{!c.files.length && <p>Sin RCV.</p>}</section>)}</div><label className="f29-check"><input type="checkbox" checked={identity} onChange={e => setIdentity(e.target.checked)}/> Confirmo que estos archivos pertenecen a los clientes y al período indicados.</label><label className="f29-check"><input type="checkbox" checked={acuse} onChange={e => setAcuse(e.target.checked)}/> Sí, realicé el acuse de recibo.</label><button disabled={!acuse || !identity || busy} className="f29-primary" onClick={() => attempt(process)}>{busy ? 'Procesando…' : 'Usar archivos encontrados'}</button></Modal>}
     {preview && active && draft && <Modal title="Informe para el cliente" wide onClose={() => setPreview(false)}><ReportPreview client={active} p={draft}/><button onClick={() => attempt(async () => { setNotice(await exportImage(active, draft, false)); })}>Descargar PNG</button><button onClick={() => attempt(async () => { setNotice(await exportImage(active, draft, true)); })}>Copiar informe</button></Modal>}

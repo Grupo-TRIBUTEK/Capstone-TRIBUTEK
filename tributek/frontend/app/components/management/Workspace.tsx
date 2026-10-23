@@ -377,7 +377,7 @@ const isServerView =
     // Vistas con fuente en la BD: NO se confirma nada hasta tener respuesta
     //   del servidor. Si falla se avisa y se deja la ficha abierta para
     //   reintentar; no se cierra ni se recarga con datos no confirmados.
-    void (async () => {
+    return (async () => {
       try {
         const meses = next.months.filter((m) => {
           const antes = previo.months.find((x) => x.clientId === m.clientId && x.period === m.period);
@@ -401,14 +401,17 @@ const isServerView =
           clients
         );
         if (avisoPostergaciones) avisos.push(avisoPostergaciones);
+        if (avisos.length) throw new Error(avisos.join(" "));
         setReload((n) => n + 1);
         setSelected(null);
         setNotice(avisos.length
           ? `Guardado con avisos: ${avisos.join(" ")}`
           : "Cambios guardados en TRIBUTEK.");
+        return true;
       } catch (e) {
         setError("No se pudo guardar en el servidor: "
           + (e instanceof Error ? e.message : String(e)));
+        return false;
       }
     })();
   }

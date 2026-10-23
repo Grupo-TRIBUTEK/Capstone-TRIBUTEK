@@ -65,18 +65,20 @@ export class AuditoriaService {
         ];
       }
     }
-
-    const [items, totalResult] = await Promise.all([
+    const [items, todosLosRegistros] = await Promise.all([
       this.prisma.db.orm.public.Auditoria.where(where)
         .include('usuario')
         .orderBy((a) => a.creadoEn.desc())
         .offset(skip)
         .limit(limite)
         .all(),
-      this.prisma.db.orm.public.Auditoria.where(where).count(),
+
+      this.prisma.db.orm.public.Auditoria.where(where)
+        .all(),
     ]);
 
-    const total = Number(totalResult);
+    const total = todosLosRegistros.length;
+    
 
     return {
       items: items.map((a) => ({

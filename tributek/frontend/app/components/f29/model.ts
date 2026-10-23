@@ -187,6 +187,12 @@ export function matchesFile(name: string, client: Client, period: string) {
     const identity = fileIdentity(name), rut = normalizeRut(client.rut);
     return !!identity && identity.period === period && (identity.rut === rut || identity.rut === rut.split('-')[0]);
 }
+export function rcvPeriods(names: string[], clients: Client[]): string[] {
+    return [...new Set(names.flatMap(name => {
+        const identity = fileIdentity(name);
+        return identity && clients.some(client => matchesFile(name, client, identity.period)) ? [identity.period] : [];
+    }))].sort().reverse();
+}
 export const sumRows = (rows: Pick<Row, 'exempt' | 'net' | 'iva' | 'total'>[]) => rows.reduce((a, r) => ({ exempt: a.exempt + r.exempt, net: a.net + r.net, iva: a.iva + r.iva, total: a.total + r.total }), { exempt: 0, net: 0, iva: 0, total: 0 });
 export function calculate(p: Projection) {
     const sales = sumRows(p.sales?.rows ?? []), purchases = sumRows(p.purchases?.rows ?? []), m = p.manual;

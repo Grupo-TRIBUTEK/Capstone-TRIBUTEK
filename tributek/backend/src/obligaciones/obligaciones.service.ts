@@ -407,20 +407,6 @@ export class ObligacionesService {
           actualizadoEn: ahora,
         });
         mesId = actual.id;
-        // Reemplazar delete + create con upsert por concepto para evitar error de llave duplicada
-        for (const c of CONCEPTOS) {
-          const monto = num14(amounts[c]);
-          const existente = await tx.orm.public.MontoConcepto.where({ mesId, concepto: c as Varchar<60> }).first();
-          if (existente) {
-            await tx.orm.public.MontoConcepto.where({ id: existente.id }).update({ monto: num14(amounts[c]) });
-          } else {
-            await tx.orm.public.MontoConcepto.create({
-              mesId,
-              concepto: c as Varchar<60>,
-              monto: num14(amounts[c]),
-            });
-          }
-        }
       } else {
         const creado = await tx.orm.public.MesCliente.create({
           periodoId,
@@ -433,6 +419,19 @@ export class ObligacionesService {
         });
         mesId = creado.id;
       }
+      for (const c of CONCEPTOS) {
+        const existente = await tx.orm.public.MontoConcepto.where({ mesId, concepto: c as Varchar<60> }).first();
+        if (existente) {
+          await tx.orm.public.MontoConcepto.where({ id: existente.id }).update({ monto: num14(amounts[c]) });
+        } else {
+          await tx.orm.public.MontoConcepto.create({
+            mesId,
+            concepto: c as Varchar<60>,
+            monto: num14(amounts[c]),
+          });
+        }
+      }
+      await tx.orm.public.PasoMes.where({ mesId }).delete();
       for (const [i, paso] of steps.entries()) {
         await tx.orm.public.PasoMes.create({
           mesId,
