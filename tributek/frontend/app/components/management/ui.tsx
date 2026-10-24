@@ -3,6 +3,23 @@ import { useEffect, useRef, type ReactNode } from "react";
 import { reportTheme } from "../ui/reportTheme";
 import { money } from "../ficha/model";
 
+const statusActionPattern = /\b(guardad[oa]s?|guardar|agregad[oa]s?|agregaron|agregar|actualizad[oa]s?|actualizar|procesad[oa]s?|procesar|compartir|comparte|copiad[oa]s?|copiar|eliminad[oa]s?|eliminar|registrad[oa]s?|registrar|descargad[oa]s?|descargar|importad[oa]s?|importar)\b/gi;
+
+export function StatusMessage({ text }: { text: string }) {
+  return <>{text.split(statusActionPattern).map((part, index) =>
+    index % 2 === 1 ? <strong key={index}>{part}</strong> : part,
+  )}</>;
+}
+
+export function HelpTip({ label, text }: { label: string; text: string }) {
+  return (
+    <details className="tk-help">
+      <summary aria-label={`Información sobre ${label}`} title={`Información sobre ${label}`}>?</summary>
+      <div className="tk-help-panel">{text}</div>
+    </details>
+  );
+}
+
 export function Money({
   value,
   hidden = false,
@@ -27,13 +44,18 @@ export function Badge({ children }: { children: ReactNode }) {
 export function Metric({
   label,
   children,
+  help,
 }: {
   label: string;
   children: ReactNode;
+  help: string;
 }) {
   return (
     <div className="tk-metric">
-      <span>{label}</span>
+      <div className="tk-metric-heading">
+        <span>{label}</span>
+        <HelpTip label={label} text={help} />
+      </div>
       <strong>{children}</strong>
     </div>
   );
@@ -46,11 +68,13 @@ export function Modal({
   onClose,
   children,
   wide = false,
+  className = "",
 }: {
   title: string;
   onClose: () => void;
   children: ReactNode;
   wide?: boolean;
+  className?: string;
 }) {
   const ref = useRef<HTMLDialogElement>(null);
   useEffect(() => {
@@ -61,7 +85,7 @@ export function Modal({
   return (
     <dialog
       ref={ref}
-      className={`tk tk-dialog ${wide ? "wide" : ""}`}
+      className={`tk tk-dialog ${wide ? "wide" : ""} ${className}`}
       aria-label={title}
       onCancel={(e) => {
         e.preventDefault();

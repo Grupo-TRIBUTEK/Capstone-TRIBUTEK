@@ -1,10 +1,15 @@
-.audit { color: var(--text-primary); font-family: var(--font-body); max-width: 1500px; margin: auto; }
-.audit-heading { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.75rem; flex-wrap: wrap; }
-.audit h1 { font-size: 2rem; font-weight: 700; margin: .3rem 0; }
+.audit { color: var(--text-primary); font-family: var(--font-body); }
+.audit-heading { flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.audit > :not(.audit-heading):not(dialog) { width: calc(100% - 64px); max-width: 1500px; margin-left: auto; margin-right: auto; }
+.audit h1 { font-size: 30px; font-weight: 700; letter-spacing: -.8px; margin: 0; }
 .audit h2 { font-size: 1.2rem; font-weight: 700; }
 .audit h3 { font-weight: 700; }
-.audit-heading p { color: var(--text-muted); }
-.audit .audit-eyebrow { color: var(--secondary-strong); font-size: .75rem; letter-spacing: .14em; font-weight: 700; }
+.audit-heading > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.audit-heading button { padding: 9px 16px; }
 .audit button, .audit input, .audit select { border: 1px solid var(--border); border-radius: var(--control-radius); padding: .7rem .85rem; color: var(--text-primary); background: var(--surface); font: inherit; }
 .audit button { cursor: pointer; font-weight: 600; font-size: .875rem; }
 .audit button:hover:not(:disabled) { background: var(--surface-muted); }
@@ -36,4 +41,5 @@
 .audit-description { white-space: pre-wrap; }
 .audit-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media(max-width: 800px) { .audit-filters { grid-template-columns: repeat(2,minmax(0,1fr)); } .audit table { min-width: 780px; } }
-@media(max-width: 480px) { .audit-filters { grid-template-columns: minmax(0,1fr); } .audit-search,.audit-filters .audit-buttons { grid-column: auto; } .audit-dialog dl { grid-template-columns: minmax(0,1fr); gap: .4rem; } .audit-dialog dd { margin-bottom: .75rem; } }
+@media(min-width: 481px) and (max-width: 767px) { .audit > :not(.audit-heading):not(dialog) { width: calc(100% - 48px); } }
+@media(max-width: 480px) { .audit > :not(.audit-heading):not(dialog) { width: calc(100% - 48px); }.audit-filters { grid-template-columns: minmax(0,1fr); } .audit-search,.audit-filters .audit-buttons { grid-column: auto; } .audit-dialog dl { grid-template-columns: minmax(0,1fr); gap: .4rem; } .audit-dialog dd { margin-bottom: .75rem; } }

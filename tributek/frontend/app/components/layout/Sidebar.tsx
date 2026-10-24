@@ -21,9 +21,9 @@ export default function Sidebar() {
   }
 
   return (
-    <aside className={`w-full shrink-0 bg-primary p-5 text-white md:min-h-screen ${collapsed ? "md:w-20 md:p-3" : "md:w-64"}`}>
+    <aside className={`admin-sidebar admin-sidebar-enter ${collapsed ? "admin-sidebar-collapsed" : ""} w-full shrink-0 bg-primary p-5 text-white md:min-h-screen`}>
       <div className={`flex items-start border-b border-white/20 pb-5 ${collapsed ? "justify-center" : "justify-between gap-3"}`}>
-        <div className={collapsed ? "md:hidden" : ""}>
+        <div className="admin-sidebar-brand">
           <p className="text-2xl font-bold tracking-wide">TRIBUTEK</p>
           <p className="mt-1 text-sm text-on-primary-muted">Gestión administrativa</p>
         </div>
@@ -49,7 +49,7 @@ export default function Sidebar() {
               )
             }
           >
-            <summary className={`mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-on-primary-muted ${collapsed ? "md:hidden" : ""}`}>
+            <summary className="admin-sidebar-section-label mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-on-primary-muted">
               {group === "Gestión" ? "Gestión mensual" : "Más herramientas"}
             </summary>
             <ul className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1 ${collapsed ? "md:gap-2" : ""}`}>
@@ -70,7 +70,7 @@ export default function Sidebar() {
                         className={`flex min-h-11 items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${collapsed ? "md:justify-center md:px-2" : ""} ${isActive ? "bg-secondary text-on-secondary" : "text-on-primary-muted hover:bg-white/10 hover:text-white"}`}
                       >
                         <Icon name={item.icon} />
-                        <span className={collapsed ? "md:hidden" : ""}>{item.label}</span>
+                        <span className="admin-sidebar-link-label">{item.label}</span>
                       </Link>
                     </li>
                   );
@@ -79,8 +79,7 @@ export default function Sidebar() {
           </details>
         ))}
       </nav>
-      <div className={`mt-6 flex w-full items-center justify-between gap-3 ${collapsed ? "md:hidden" : ""}`}>
-        <span className="text-sm font-medium text-white">Tema</span>
+      <div className="admin-sidebar-theme mt-6 flex w-full items-center justify-center gap-3">
         <ThemeSelect sidebar />
       </div>
 
@@ -88,7 +87,7 @@ export default function Sidebar() {
         type="button"
         onClick={() => confirmLogout ? handleLogout() : setConfirmLogout(true)}
         aria-label={confirmLogout ? "Confirmar salida del panel admin" : "Cerrar sesión"}
-        className={`${collapsed ? "md:hidden" : ""} mt-8 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border px-3 py-3 text-center text-sm font-semibold leading-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${confirmLogout ? "border-error bg-error text-background hover:bg-error/90" : "border-white/30 bg-white/5 text-white hover:border-white/60 hover:bg-white/10"}`}
+        className="admin-sidebar-logout button-destructive mt-8 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border px-3 py-3 text-center text-sm font-semibold leading-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
         <Icon name="logout" />
         {confirmLogout ? "Confirmar salida" : "Cerrar sesión"}

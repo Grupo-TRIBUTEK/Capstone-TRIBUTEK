@@ -396,7 +396,7 @@ export default function ClientCreateModal({
             <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text-primary">Continuar editando</button>
-              <button type="button" onClick={onClose} className="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white">Salir</button>
+              <button type="button" onClick={onClose} className="button-destructive rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors">Salir</button>
             </div>
           </section>
         </div>
