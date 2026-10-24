@@ -6,6 +6,7 @@ import { JwtModule } from '@nestjs/jwt'; // hacemos npm install @nestjs/jwt desd
 import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy.js';
 import { RolesGuard } from './roles.guard.js'; // roles
+import { JwtAuthGuard } from './jwt-auth.guard.js';
 @Module({
   imports: [
     //Agregamos el módulo de Prisma para poder 
@@ -25,17 +26,7 @@ import { RolesGuard } from './roles.guard.js'; // roles
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy,RolesGuard],
-
-  /*
-  Con JwtStrategy, el flujo de autenticación con JWT es el siguiente:
-1. El usuario inicia sesión y recibe un JWT.
-2. El cliente envía el JWT en la cabecera Authorization: Bearer <token> en cada solicitud protegida.
-3. JwtStrategy extrae el JWT de la cabecera, verifica su firma con JWT_SECRET y comprueba su expiración.
-4. Si el token es válido, JwtStrategy extrae los datos del usuario y los adjunta a la solicitud.
-5. El controlador puede acceder a los datos del usuario desde la solicitud para autorizar acciones específicas.
-
-  */
-  exports: [AuthService],
+  providers: [AuthService, JwtStrategy, RolesGuard, JwtAuthGuard],
+  exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}

@@ -1,14 +1,12 @@
 import { Module } from '@nestjs/common';
-import { PassportModule } from '@nestjs/passport';
 import { AuditoriaController } from './auditoria.controller.js';
 import { AuditoriaService } from './auditoria.service.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
+import { AuthModule } from '../auth/auth.module.js';
+import { PassportModule } from '@nestjs/passport';
 
 @Module({
-  imports: [
-    PrismaModule,
-    PassportModule.register({ defaultStrategy: 'jwt' }),
-  ],
+  imports: [PrismaModule, AuthModule, PassportModule.register({ defaultStrategy: 'jwt' })],
   controllers: [AuditoriaController],
   providers: [AuditoriaService],
   exports: [AuditoriaService],

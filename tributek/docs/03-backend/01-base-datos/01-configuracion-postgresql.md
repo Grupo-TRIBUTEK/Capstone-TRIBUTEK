@@ -14,13 +14,29 @@ Prisma y usa la misma `DATABASE_URL` como conexión.
    principal](../../../../README.md).
 2. Inicia el servidor local de PostgreSQL y crea una base de datos de desarrollo
    vacía. Prisma se conecta a una base existente; no instala ni inicia el
-   servidor PostgreSQL.
+   servidor PostgreSQL. Crea la base manualmente con `psql`:
+
+```powershell
+psql -U postgres -c "CREATE DATABASE BD_TRIBUTEK;"
+```
+
+   Reemplaza `postgres` por tu usuario de PostgreSQL y `BD_TRIBUTEK` por el
+   nombre de base que uses en `DATABASE_URL`.
+
+   **Alternativa con pgAdmin** (si no tienes `psql` en el PATH): abre pgAdmin,
+   expande el servidor conectado en el árbol de navegación, haz clic derecho
+   sobre "Databases" -> "Create" -> "Database…", escribe `BD_TRIBUTEK` en el
+   campo "Database" y acepta. Si no ves el servidor, primero conéctate a él
+   (clic derecho en el servidor -> "Connect Server").
+
+![Archivo .env](../../img/instalacion/3-verificacion-BD-PosgreSQL-colaboradores.png)
+![Archivo .env](../../img/instalacion/4-verificacion-BD-PosgreSQL-colaboradores.png)
+
 3. Crea `tributek/backend/.env` (está excluido de Git) con tus valores locales:
 
 ```env
-DATABASE_URL="postgresql://<usuario>:<contraseña>@localhost:5432/<base_de_datos>"
+DATABASE_URL="postgresql://<contraseña>@localhost:5432/<nombre_base_de_datos>"
 JWT_SECRET="<secreto-local-largo-y-aleatorio>"
-PORT=3001
 ```
 
 `DATABASE_URL` es necesaria para la conexión a datos. `JWT_SECRET` firma y
@@ -79,6 +95,20 @@ conexión no es accesible.
 
 Consulta [Flujo del contrato Prisma](flujo-prisma.md) antes de modificar modelos
 o aplicar cambios a una base compartida.
+
+## Imágenes de referencia
+
+Coloca las capturas en `tributek/docs/img/` y referencialas desde aquí:
+
+| Imagen | Ruta sugerida | Qué muestra |
+|--------|---------------|-------------|
+| pgAdmin: conectar servidor | `../img/pgadmin-conectar-servidor.png` | Clic derecho en servidor -> Connect Server |
+| pgAdmin: crear base de datos | `../img/pgadmin-crear-base-datos.png` | Clic derecho en Databases -> Create -> Database… |
+| pgAdmin: nombre de la base | `../img/pgadmin-nombre-base.png` | Campo "Database" con `BD_TRIBUTEK` |
+| Prisma: dry-run | `../img/prisma-db-init-dry-run.png` | Salida de `npx prisma db init --dry-run` |
+| Prisma: aplicar | `../img/prisma-db-init.png` | Ejecución de `npx prisma db init` |
+| Prisma: verificar | `../img/prisma-db-verify.png` | Resultado de `npx prisma db verify` |
+
 
 ## Referencias
 

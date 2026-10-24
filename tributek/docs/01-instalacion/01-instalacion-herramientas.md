@@ -158,7 +158,7 @@ Prisma CLI proporciona las herramientas necesarias para administrar Prisma desde
 Se instala como dependencia de desarrollo:
 [documento prisma 8](https://docs.prisma.io/docs/orm)
 
-![Instalación de Prisma](../img/1.instalacion-prisma.png)
+![Instalación de Prisma](../img/instalacion/1.instalacion-prisma.png)
 
 ```bash
 npm install prisma@latest --save-dev

@@ -86,7 +86,7 @@ You are now connected to database "BD_TRIBUTEK"
 
 Con esto dejamos creada y accesible la base de datos del proyecto.
 
-![verificacion-BD-PosgreSQL](../img/2.verificacion-BD-PosgreSQL.png)
+![Verificación de BD PostgreSQL](../img/instalacion/2.verificacion-BD-PosgreSQL.png)
 
 ### 3.5 Configuración de las variables de entorno
 
@@ -96,7 +96,7 @@ Dentro de la carpeta `backend` creamos el archivo:
 .env
 ```
 
-![verificacion-BD-PosgreSQL](../img/3.env.png)
+![Archivo .env](../img/instalacion/3.env.png)
 
 
 Este archivo se utiliza para guardar la información de conexión a PostgreSQL sin escribirla directamente dentro del código.
