@@ -1,0 +1,141 @@
+/*
+ * Propósito: centralizar las animaciones reutilizables de TRIBUTEK.
+ *
+ * Buenas prácticas: mantener coherencia visual, reutilizar efectos, usar
+ * nombres descriptivos, duraciones breves y movimientos sutiles.
+ *
+ * Usar animaciones cuando aporten claridad a controles interactivos, entradas
+ * y salidas, menús, modales, notificaciones o estados de carga. Evitar
+ * movimientos decorativos permanentes, efectos exagerados, animar todas las
+ * tarjetas y retrasar acciones importantes con transiciones.
+ *
+ * Rendimiento: priorizar opacity y transform cuando corresponda; evitar
+ * propiedades que provoquen recálculos frecuentes del diseño.
+ *
+ * Accesibilidad: respetar prefers-reduced-motion al implementar animaciones.
+ *
+ * Organización: agrupar futuras reglas por categorías, reutilizar las
+ * existentes y no duplicar efectos. Mantener aquí las animaciones globales
+ * reutilizables y las exclusivas de cada componente en sus propios estilos.
+ * Antes de añadir una animación, comprobar si ya existe otra con la misma
+ * función.
+ *
+ * Alcance: mantener aquí las animaciones globales reutilizables y las
+ * exclusivas de cada componente en sus propios estilos. La primera animación
+ * se limita al sidebar de administración mediante .admin-sidebar-enter.
+ */
+
+@keyframes admin-sidebar-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.admin-sidebar-enter {
+  animation: admin-sidebar-enter 220ms ease-out both;
+}
+
+.admin-sidebar {
+  transition:
+    width 280ms ease-in-out,
+    flex-basis 280ms ease-in-out,
+    padding 280ms ease-in-out;
+}
+
+.admin-sidebar-brand,
+.admin-sidebar-section-label,
+.admin-sidebar-link-label,
+.admin-sidebar-theme,
+.admin-sidebar-logout {
+  overflow: hidden;
+  transition:
+    max-width 280ms ease-in-out,
+    max-height 280ms ease-in-out,
+    margin 280ms ease-in-out,
+    padding 280ms ease-in-out,
+    border-width 280ms ease-in-out,
+    opacity 220ms ease-in-out,
+    transform 280ms ease-in-out;
+}
+
+.admin-sidebar-brand {
+  max-width: 14rem;
+}
+
+.admin-sidebar-section-label {
+  max-width: 14rem;
+  max-height: 2rem;
+  white-space: nowrap;
+}
+
+.admin-sidebar-link-label {
+  display: block;
+  max-width: 12rem;
+  white-space: nowrap;
+}
+
+.admin-sidebar-theme {
+  max-width: 18rem;
+  max-height: 3rem;
+  overflow: visible;
+}
+
+.admin-sidebar-logout {
+  max-height: 3rem;
+}
+
+@media (min-width: 768px) {
+  .admin-sidebar {
+    width: 16rem;
+    flex-basis: 16rem;
+  }
+
+  .admin-sidebar-collapsed {
+    width: 5rem;
+    flex-basis: 5rem;
+    padding: 0.75rem;
+  }
+
+  .admin-sidebar-collapsed .admin-sidebar-brand,
+  .admin-sidebar-collapsed .admin-sidebar-section-label,
+  .admin-sidebar-collapsed .admin-sidebar-link-label,
+  .admin-sidebar-collapsed .admin-sidebar-theme {
+    max-width: 0;
+    max-height: 0;
+    margin: 0;
+    padding: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-6px);
+  }
+
+  .admin-sidebar-collapsed .admin-sidebar-logout {
+    min-height: 0;
+    max-height: 0;
+    margin: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-width: 0;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-6px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-sidebar-enter,
+  .admin-sidebar,
+  .admin-sidebar-brand,
+  .admin-sidebar-section-label,
+  .admin-sidebar-link-label,
+  .admin-sidebar-theme,
+  .admin-sidebar-logout {
+    animation: none;
+    transition: none;
+  }
+}

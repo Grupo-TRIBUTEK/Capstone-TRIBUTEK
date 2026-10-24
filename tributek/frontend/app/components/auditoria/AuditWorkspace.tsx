@@ -63,8 +63,8 @@ export default function AuditWorkspace() {
     setDraft(previous => ({ ...previous, [name]: value }));
   }
   return <section className="audit">
-    <header className="audit-heading">
-      <div><p className="audit-eyebrow">TRIBUTEK / CONTROL</p><h1>Trazabilidad</h1><p>Consulta quién realizó cada acción y cuándo ocurrió.</p></div>
+    <header className="tk-header audit-heading">
+      <div><p className="tk-eyebrow">TRIBUTEK / Gestión</p><h1>Trazabilidad</h1><p className="tk-subtle">Consulta quién realizó cada acción y cuándo ocurrió.</p></div>
       <button type="button" onClick={() => setRefresh(n => n + 1)} disabled={loading}>Actualizar historial</button>
     </header>
     <form className="audit-filters" onSubmit={apply}>

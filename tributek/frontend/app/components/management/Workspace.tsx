@@ -10,6 +10,7 @@ import ClientCreateModal, {
   type ClientRecord,
 } from "../features/clientes/ClientCreateModal";
 import ClientSheet, { PaymentForm, type ClientView } from "./ClientSheet";
+import Formalization from "./Formalization";
 import {
   receivedByCategory,
   balance,
@@ -32,9 +33,10 @@ import {
   Metric,
   Modal,
   Money,
+  StatusMessage,
   downloadBlob,
 } from "./ui";
-import Formalization from "./Formalization";
+import Icon from "../ui/Icon";
 
 export type View =
   | "inicio"
@@ -54,6 +56,16 @@ const names: Record<View, string> = {
   formalizaciones: "Constitución de empresas",
 };
 
+const viewDescriptions: Record<View, string> = {
+  inicio: "Revisa el estado de tu gestión y las tareas pendientes.",
+  clientes: "Administra la cartera de clientes, sus datos y su estado.",
+  obligaciones: "Gestiona las obligaciones mensuales por cliente y su seguimiento.",
+  facturacion: "Prepara y administra las facturas de servicios mensuales y adicionales.",
+  pagos: "Registra, revisa y gestiona los pagos recibidos.",
+  postergaciones: "Controla las postergaciones vigentes, sus saldos y vencimientos.",
+  formalizaciones: "Da seguimiento al proceso de constitución de empresas por cliente.",
+};
+
 function InvoiceComparison({ invoices, hidden }: { invoices: Invoice[]; hidden: boolean }) {
   const [reference, setReference] = useState("");
   const total = invoices
@@ -69,6 +81,7 @@ function InvoiceComparison({ invoices, hidden }: { invoices: Invoice[]; hidden: 
         </div>
         <Field label="Total informado por SII">
           <input
+            className="tk-sii-reference"
             type="number"
             min="0"
             value={reference}
@@ -560,6 +573,7 @@ const isServerView =
         <div>
           <p className="tk-eyebrow">TRIBUTEK / Gestión</p>
           <h1>{names[view]}</h1>
+          <p className="tk-subtle">{viewDescriptions[view]}</p>
         </div>
         <div className="tk-actions">
           <button onClick={() => setHidden(!hidden)}>{hidden ? "Mostrar montos" : "Ocultar montos"}</button>
@@ -567,35 +581,41 @@ const isServerView =
           {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
         </div>
       </header>
-      {store.error && <p role="alert" className="tk-error">{store.error}</p>}
-      {error && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
-      {notice && <p role="status" className="tk-success">{notice} <button onClick={() => setNotice("")}>Cerrar</button></p>}
+      {load === "error" && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
+      {notice && <p role="status" className="tk-success"><StatusMessage text={notice} /> <button onClick={() => setNotice("")}>Cerrar</button></p>}
       <div className="tk-toolbar">
         <Field label={view === "pagos" ? "Mes de recepción" : "Período de trabajo"}>
-          <input type="month" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); } }} />
+          <button type="button" className="tk-period-btn" onClick={() => { const el = document.querySelector<HTMLInputElement>(".tk-period-input"); el?.showPicker?.(); el?.focus(); }}>
+            {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
+          </button>
+          <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); } }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
         </Field>
         {view !== "inicio" && <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>}
         {(view === "clientes" || view === "obligaciones") && (
           <>
-            <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
             <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
             <details className="tk-details"><summary>Más filtros</summary><div className="tk-actions">
+              <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
               <Field label="Máquina"><select value={machine} onChange={(e) => setMachine(e.target.value)}><option value="">Todas</option>{Array.from(new Set(clients.map((c) => c.machine).filter(Boolean))).map((m) => <option key={m}>{m}</option>)}</select></Field>
               <Field label="Clientes"><select value={active} onChange={(e) => setActive(e.target.value)}><option value="">Activos e inactivos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></Field>
             </div></details>
           </>
         )}
       </div>
-      {load === "loading" && <p role="status" className="tk-subtle">Cargando datos de TRIBUTEK…</p>}
-      {view === "inicio" && (
+            <div className="tk-content">
+        {load === "loading" && <p role="status" className="tk-subtle">Cargando datos de TRIBUTEK…</p>}
+        {view === "inicio" && (
         <>
-          <div className="tk-metrics">
-            <Metric label="Recibido por servicios"><Money value={received.services} hidden={hidden} /></Metric>
-            <Metric label="Reembolsos recibidos"><Money value={received.reimbursements} hidden={hidden} /></Metric>
-            <Metric label="Clientes con deuda de servicios">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-            <Metric label="Postergaciones pendientes"><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
-            <Metric label="Obligaciones no enviadas">{pendingMonths.length}</Metric>
-          </div>
+          <section className="tk-metrics-group tk-home-metrics-group" aria-label="Resumen del periodo">
+            <h2 className="tk-metrics-group-label">Resumen del periodo</h2>
+            <div className="tk-metrics">
+            <Metric label="Recibido por servicios" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
+            <Metric label="Reembolsos recibidos" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
+            <Metric label="Clientes con deuda de servicios" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric label="Postergaciones pendientes" help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
+            <Metric label="Obligaciones no enviadas" help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{pendingMonths.length}</Metric>
+            </div>
+          </section>
           <section className="tk-card">
             <div className="tk-card-head"><h2>Control de vencimientos</h2><Link className="tk-button" href={`/admin/obligaciones${period ? `?period=${period}` : ""}`}>Ver obligaciones</Link></div>
             <div className="tk-panel">
@@ -629,11 +649,19 @@ const isServerView =
       )}
       {(view === "clientes" || view === "obligaciones") && (
         <>
-          <div className="tk-metrics">
-            <Metric label="Clientes visibles">{visible.length}</Metric>
-            <Metric label="Con deuda de servicios">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-            <Metric label="Deuda acumulada con TRIBUTEK"><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
-          </div>
+          <section
+            className="tk-metrics-group"
+            aria-label={view === "clientes" ? "Resumen de clientes" : "Resumen de obligaciones del periodo"}
+          >
+            <h2 className="tk-metrics-group-label">
+              {view === "clientes" ? "Resumen de clientes" : "Resumen de obligaciones del periodo"}
+            </h2>
+            <div className="tk-metrics">
+              <Metric label="Clientes visibles" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>
+              <Metric label="Con deuda de servicios" help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+              <Metric label="Deuda acumulada con TRIBUTEK" help="Suma de los saldos pendientes de los clientes visibles hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
+            </div>
+          </section>
           <section className="tk-card">
             <div className="tk-card-head"><h2>Clientes</h2></div>
             <div className="tk-table-wrap">
@@ -655,7 +683,7 @@ const isServerView =
                       <td><Money value={c.fee} hidden={hidden} /></td>
                       <td>
                         <div className="tk-actions">
-                          <button disabled={hidden} onClick={() => setSelected({ client: c, data: vista })}>Ver ficha</button>
+                          {view !== "clientes" && <button disabled={hidden} onClick={() => setSelected({ client: c, data: vista })}>Ver ficha</button>}
                           {view === "clientes" && <button onClick={() => setClientModal(serverData?.clients.find((r) => r.id === c.id) ?? null)}>Editar</button>}
                         </div>
                       </td>
@@ -788,12 +816,19 @@ const isServerView =
                 const cabecera = gestiones.find((g) => g.clienteId === c.id && !g.parentId);
                 const all = cabecera ? gestiones.filter((g) => g.parentId === cabecera.id).filter((s) => s.estado !== "No corresponde") : [];
                 const done = all.filter((s) => s.estado === "Completado").length;
+                const processColor = !cabecera
+                  ? "process-not-started"
+                  : all.length > 0 && done === all.length
+                    ? "process-complete"
+                    : all.some((s) => s.estado === "En proceso")
+                      ? "process-active"
+                      : "process-pending";
                 return (
                   <tr key={c.id}>
                     <td><strong>{c.name}</strong><small>{c.rut}</small></td>
                     <td>{done}/{all.length || "—"}<div className="tk-progress"><span style={{ width: `${all.length ? (done / all.length) * 100 : 0}%` }} /></div></td>
                     <td>{all.find((s) => s.estado !== "Completado")?.titulo || (!cabecera ? "Sin iniciar" : "Completado")}</td>
-                    <td><button onClick={() => setProcessClient(c)}>{cabecera ? "Ver proceso" : "Iniciar proceso"}</button></td>
+                    <td><button className={processColor} onClick={() => setProcessClient(c)}>{cabecera ? "Ver proceso" : "Iniciar proceso"}</button></td>
                   </tr>
                 );
               })}
@@ -871,6 +906,7 @@ const isServerView =
         </Modal>
       )}
       {processClient && <Formalization client={processClient} period={period} onClose={() => setProcessClient(null)} onSaved={() => { setGestionesReload((n) => n + 1); }} />}
+      </div>
     </div>
   );
 }

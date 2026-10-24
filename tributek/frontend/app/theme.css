@@ -5,6 +5,8 @@
 .theme-select-menu summary:focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
 .theme-select-chevron { width: 7px; height: 7px; margin: -4px 0 0 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
 .theme-select-options { position: absolute; top: calc(100% + 6px); right: 0; z-index: 40; display: grid; min-width: 144px; gap: 2px; padding: 5px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in srgb, var(--background) 97%, var(--black) 3%); color: var(--text-primary); box-shadow: 0 10px 28px var(--shadow-dialog); }
+
+.theme-control-sidebar .theme-select-options { bottom: calc(100% + 6px); top: auto; }
 .theme-select-options button { display: inline-flex; min-height: 38px; align-items: center; gap: 9px; border: 0; border-radius: 6px; padding: 8px 10px; background: transparent; color: inherit; cursor: pointer; font: inherit; text-align: left; }
 .theme-select-options button:hover, .theme-select-options button[aria-pressed="true"] { background: var(--secondary-surface); color: var(--text-primary); }
 .theme-select-options button:focus-visible { outline: 2px solid var(--secondary); outline-offset: 1px; }
@@ -12,9 +14,15 @@
 .theme-select-menu summary svg,
 .theme-select-options button svg { color: var(--secondary); }
 .theme-control-sidebar { color: var(--on-primary); display: flex; width: 100%; justify-content: space-between; }
-.theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: var(--on-primary); border-color: var(--border); }
+.admin-sidebar-theme .theme-control-sidebar { width: auto; justify-content: center; }
+.theme-control-sidebar .theme-select-menu summary { background: var(--primary); color: var(--on-primary); border-color: var(--border-muted); }
 .login-theme { position: absolute; top: 18px; right: 20px; }
 .tk-login main { position: relative; padding-top: 85px; }
+.admin-sidebar .button-destructive {
+  --error: #ffc4c8;
+  --error-surface: #49252e;
+  --error-border: #83505a;
+}
 
 @media screen {
   .dark .tk-login, .dark .tk-login main { background: var(--background); }
@@ -24,6 +32,10 @@
   .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
   .dark .tk :is(button.primary, .primary) { background: var(--primary); border-color: var(--border); color: var(--on-primary); }
   .dark .tk :is(button.primary:hover, .primary:hover) { background: var(--primary-hover); }
+  .dark .tk button.process-not-started { background: var(--surface-muted); border-color: var(--border-muted); color: var(--text-muted); }
+  .dark .tk button.process-pending { background: var(--warning-surface); border-color: var(--warning-border); color: var(--warning); }
+  .dark .tk button.process-active { background: var(--secondary-surface); border-color: var(--secondary-soft); color: var(--secondary-strong); }
+  .dark .tk button.process-complete { background: var(--success-surface); border-color: var(--success-border); color: var(--success); }
   .dark .tk-login form button.primary { background: var(--primary); border-color: var(--primary); color: var(--on-primary); }
   .dark .tk-login form button.primary:hover { background: var(--primary-hover); }
   .dark .tk button.rose, .dark .tk-tabs button[aria-pressed="true"] { background: var(--secondary-soft); border-color: var(--secondary); color: var(--secondary-strong); }
@@ -33,7 +45,7 @@
   .dark .tk input::placeholder, .dark .tk textarea::placeholder { color: var(--text-muted); opacity: 1; }
   .dark .tk th { background: var(--surface-muted); color: var(--text-primary); }
   .dark .tk td { border-color: var(--border); }
-  .dark :is(.tk-subtle, .tk-empty, .tk-detail, .tk-privacy), .dark .tk td small, .dark .tk-metric > span { color: var(--text-muted); }
+  .dark :is(.tk-subtle, .tk-empty, .tk-detail, .tk-privacy), .dark .tk td small, .dark .tk-metric-heading > span { color: var(--text-muted); }
   .dark .tk-eyebrow { color: var(--secondary); }
   .dark .tk-report { background: var(--secondary-surface); border-color: var(--secondary-soft); }
   .dark .tk-due { background: var(--warning-surface); color: var(--warning); }

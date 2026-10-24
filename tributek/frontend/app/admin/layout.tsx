@@ -2,7 +2,7 @@
 
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "../components/layout/Sidebar";
 import { getAccessToken, validateAdminAccess } from "@/app/features/auth/auth-client";
 
@@ -11,8 +11,20 @@ type AdminLayoutProps = {
 };
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
+  const pathname = usePathname();
   const router = useRouter();
   const [isAuthorized, setIsAuthorized] = useState(false);
+  const hasManagementHeader = [
+    "/admin",
+    "/admin/clientes",
+    "/admin/obligaciones",
+    "/admin/facturacion",
+    "/admin/pagos",
+    "/admin/postergaciones",
+    "/admin/formalizaciones",
+    "/admin/f29",
+    "/admin/auditoria",
+  ].includes(pathname);
 
   useEffect(() => {
     let isMounted = true;
@@ -47,7 +59,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-background text-text-primary md:flex">
       <Sidebar />
 
-      <div className="min-w-0 flex-1 p-6 md:p-8">
+      <div className={`min-w-0 flex-1 ${hasManagementHeader ? "" : "p-6 md:p-8"}`}>
         {children}
       </div>
     </div>

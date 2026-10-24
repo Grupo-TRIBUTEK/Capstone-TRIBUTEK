@@ -18,7 +18,7 @@ import {
 } from "./model";
 import { registerFolder } from "./PaymentFiles";
 import { asignarIdsAbonos } from "./syncObligaciones";
-import { Badge, Field, Modal, Money, copyReportImage, printReport } from "./ui";
+import { Badge, Field, Modal, Money, StatusMessage, copyReportImage, printReport } from "./ui";
 
 export type ClientView = Client & {
   rut: string;
@@ -355,8 +355,9 @@ export default function ClientSheet({
     }
   }
   return (
-    <Modal title={client.name} onClose={close} wide>
-      <div className="tk-dialog-body">
+    <Modal title={client.name} onClose={close} wide className="tk-client-sheet">
+      <div className="tk-dialog-body tk-client-sheet-body">
+        <div className="tk-client-sheet-scroll">
         <div className="tk-header">
           <p className="tk-subtle">
             {client.rut || "RUT sin registrar"} · {periodLabel(period)}
@@ -386,7 +387,7 @@ export default function ClientSheet({
         )}
         {notice && (
           <p role="status" className="tk-success">
-            {notice}
+            <StatusMessage text={notice} />
           </p>
         )}
         {tab === "Conceptos" && (
@@ -538,12 +539,6 @@ export default function ClientSheet({
                 </a>
               </div>
             </div>
-            <footer>
-              <button onClick={close}>Cancelar</button>
-              <button className="primary" disabled={savingMonth} onClick={persistMonth}>
-                {savingMonth ? "Guardando…" : "Guardar conceptos"}
-              </button>
-            </footer>
           </>
         )}
         {tab === "Abonar" && (
@@ -839,6 +834,15 @@ export default function ClientSheet({
             </footer>
           </form>
           </>
+        )}
+        </div>
+        {tab === "Conceptos" && (
+          <footer className="tk-client-sheet-footer">
+            <button type="button" onClick={close}>Cancelar</button>
+            <button className="primary" disabled={savingMonth} onClick={persistMonth}>
+              {savingMonth ? "Guardando…" : "Guardar conceptos"}
+            </button>
+          </footer>
         )}
       </div>
     </Modal>
