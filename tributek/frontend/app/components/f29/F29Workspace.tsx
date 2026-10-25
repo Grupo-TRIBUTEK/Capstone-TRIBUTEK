@@ -4,7 +4,7 @@ import Link from 'next/link';
 import Icon from '../ui/Icon';
 import { useData } from '../ficha/store';
 import { extra, type Ledger } from '../management/model';
-import { HelpTip, Modal, StatusMessage } from '../management/ui';
+import { Modal, StatusMessage } from '../management/ui';
 import { authenticatedFetch } from '../../features/auth/auth-client';
 import { associated, calculate, emptyDatabase, manualLabels, matchesFile, rcvPeriods, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validRut, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
 import { folderFiles, readDatabase, writeDatabase } from './storage';
@@ -263,7 +263,6 @@ export default function F29Workspace() {
             setPeriod(e.target.value);
             setAvailable({});
         } }} style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}/></label><label className="f29-grow">Buscar cliente o RUT<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Razón social o RUT"/></label></div>
-      <p className="f29-info">Inicio del período, administración de clientes y actualización o procesamiento de registros RCV.</p>
       <div className="f29-actions"><button className="f29-primary" onClick={() => attempt(startMonth)}>Iniciar mes</button><button onClick={() => setEditClient('new')}>Agregar cliente</button><button disabled={busy} onClick={() => attempt(() => locate(true, true))}>Actualizar estados</button><button disabled={!db.clients.length || busy} onClick={() => attempt(() => locate(true))}>Procesar todos</button></div>
       <section className="f29-folder"><div><strong>Carpeta RCV global</strong><p>{folder}</p></div><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => csvInput.current?.click()}>Importar CSV</button><button onClick={() => attempt(importClients)}>Traer clientes de TRIBUTEK</button></section>
       <div className="f29-table-wrap"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Estado del período</th><th>Resultado estimado</th><th>Acción</th></tr></thead><tbody>{selected.map(c => { const p = db.projections.find(p => p.clientId === c.id && p.period === period), r = p ? calculate(p) : null; return <tr key={c.id}><td><strong>{c.name}</strong></td><td>{c.rut}</td><td>{p?.reviewed ? 'Revisado' : p?.sales && p?.purchases ? 'Importado · por revisar' : p?.sales || p?.purchases ? 'RCV parcial' : 'Pendiente'}{available[c.id] && <small>{available[c.id]}</small>}</td><td>{r ? <>{r.remainder > 0 && <small>Remanente <Amount value={r.remainder}/></small>}A pagar <Amount value={r.total}/></> : '—'}</td><td><button onClick={() => open(c)}>Abrir hoja</button></td></tr>; })}</tbody></table>{!selected.length && <p className="tk-empty">Sin clientes para mostrar.</p>}</div>

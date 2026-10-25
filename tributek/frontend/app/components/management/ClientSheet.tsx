@@ -836,14 +836,14 @@ export default function ClientSheet({
           </>
         )}
         </div>
-        {tab === "Conceptos" && (
-          <footer className="tk-client-sheet-footer">
-            <button type="button" onClick={close}>Cancelar</button>
+        <footer className="tk-client-sheet-footer">
+          <button type="button" onClick={close}>{tab === "Conceptos" ? "Cancelar" : "Cerrar"}</button>
+          {tab === "Conceptos" && (
             <button className="primary" disabled={savingMonth} onClick={persistMonth}>
               {savingMonth ? "Guardando…" : "Guardar conceptos"}
             </button>
-          </footer>
-        )}
+          )}
+        </footer>
       </div>
     </Modal>
   );

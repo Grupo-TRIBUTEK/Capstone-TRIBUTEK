@@ -232,7 +232,7 @@ export default function ClientCreateModal({
       <section
         aria-labelledby="new-client-title"
         aria-modal="true"
-        className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl sm:max-h-[calc(100vh-4rem)]"
+        className="tk-client-create-dialog my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-[680px] flex-col overflow-hidden rounded-2xl bg-surface shadow-2xl sm:max-h-[calc(100vh-4rem)]"
         role="dialog"
       >
         <header className="flex shrink-0 items-start justify-between border-b border-border px-6 py-5 sm:px-8">

@@ -11,15 +11,6 @@ export function StatusMessage({ text }: { text: string }) {
   )}</>;
 }
 
-export function HelpTip({ label, text }: { label: string; text: string }) {
-  return (
-    <details className="tk-help">
-      <summary aria-label={`Información sobre ${label}`} title={`Información sobre ${label}`}>?</summary>
-      <div className="tk-help-panel">{text}</div>
-    </details>
-  );
-}
-
 export function Money({
   value,
   hidden = false,
@@ -45,16 +36,17 @@ export function Metric({
   label,
   children,
   help,
+  className = "",
 }: {
   label: string;
   children: ReactNode;
   help: string;
+  className?: string;
 }) {
   return (
-    <div className="tk-metric">
+    <div className={`tk-metric ${className}`}>
       <div className="tk-metric-heading">
-        <span>{label}</span>
-        <HelpTip label={label} text={help} />
+        <span title={help}>{label}</span>
       </div>
       <strong>{children}</strong>
     </div>
