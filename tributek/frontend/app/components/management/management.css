@@ -140,6 +140,9 @@ button.button-destructive:hover:not(:disabled) {
   flex-direction: column;
   gap: 6px;
 }
+.tk-client-sheet-scroll > .tk-header {
+  background: var(--surface);
+}
 
 .tk-header-main {
   display: none;
@@ -147,6 +150,22 @@ button.button-destructive:hover:not(:disabled) {
 .tk-metrics-group-label {
   margin: 24px 0;
 }
+.tk-home-metrics-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 24px 0;
+}
+.tk-home-metrics-heading .tk-metrics-group-label { margin: 0; }
+.tk-period-heading-label { color: var(--secondary-strong); }
+.tk-home-metrics-heading .tk-field {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.tk-home-metrics-heading .tk-field > span { white-space: nowrap; }
 .tk-eyebrow {
   font-size: 12px;
   text-transform: uppercase;
@@ -242,44 +261,8 @@ button.button-destructive:hover:not(:disabled) {
 }
 .tk-metric-heading > span {
   color: var(--text-muted);
-  font-size: 12px;
-  font-weight: 600;
-}
-.tk-help {
-  position: relative;
-  flex: 0 0 auto;
-}
-.tk-help > summary {
-  display: grid;
-  width: 20px;
-  height: 20px;
-  place-items: center;
-  border: 1px solid var(--border-muted);
-  border-radius: 50%;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 700;
-  line-height: 1;
-  list-style: none;
-}
-.tk-help > summary::-webkit-details-marker { display: none; }
-.tk-help > summary:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
-.tk-help-panel {
-  position: absolute;
-  top: calc(100% + 8px);
-  right: 0;
-  z-index: 30;
-  width: min(260px, 72vw);
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 9px;
-  background: var(--surface);
-  color: var(--text-primary);
-  box-shadow: 0 8px 24px var(--shadow-dialog);
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.5;
 }
 .tk-metric strong {
   display: block;
@@ -289,6 +272,9 @@ button.button-destructive:hover:not(:disabled) {
 }
 .tk-metric:first-child {
   border-top: 3px solid var(--rose);
+}
+.tk-metric:not(:first-child) {
+  border-top: 3px solid var(--border-muted);
 }
 .tk-card {
   background: var(--surface);
@@ -515,7 +501,26 @@ button.button-destructive:hover:not(:disabled) {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  padding: 20px 0 0;
+  margin: 0 -24px;
+  padding: 20px 24px;
+  border-top: 1px solid var(--line);
+  background: linear-gradient(
+    300deg,
+    color-mix(in srgb, var(--secondary) 11%, var(--surface)) 0%,
+    color-mix(in srgb, var(--surface) 92%, var(--primary)) 50%,
+    color-mix(in srgb, var(--primary) 9%, var(--surface)) 100%
+  );
+}
+.tk-dialog-head,
+.tk-dialog.tk-client-sheet .tk-client-sheet-footer,
+.tk-client-create-dialog > header,
+.tk-client-create-dialog > form > footer {
+  background: linear-gradient(
+    125deg,
+    color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%,
+    color-mix(in srgb, var(--surface) 91%, var(--secondary)) 52%,
+    color-mix(in srgb, var(--secondary) 9%, var(--surface)) 100%
+  );
 }
 .tk-detail {
   font-size: 12px;

@@ -223,6 +223,7 @@ export default function Workspace({ view }: { view: View }) {
   const [periodValue, setPeriod] = useState("");
   const period = periodValue || (store.ready ? today().slice(0, 7) : "2026-09");
   const [search, setSearch] = useState("");
+  const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const [concept, setConcept] = useState("");
   const [status, setStatus] = useState("");
   const [machine, setMachine] = useState("");
@@ -565,6 +566,19 @@ const isServerView =
     }
   }
 
+  function togglePeriodPicker() {
+    const input = document.querySelector<HTMLInputElement>(".tk-period-input");
+    if (!input) return;
+    if (periodPickerOpen) {
+      input.blur();
+      setPeriodPickerOpen(false);
+      return;
+    }
+    input.showPicker?.();
+    input.focus();
+    setPeriodPickerOpen(true);
+  }
+
   if (!store.ready) return <div className="tk"><Empty>Cargando gestión…</Empty></div>;
 
   return (
@@ -576,21 +590,21 @@ const isServerView =
           <p className="tk-subtle">{viewDescriptions[view]}</p>
         </div>
         <div className="tk-actions">
-          <button onClick={() => setHidden(!hidden)}>{hidden ? "Mostrar montos" : "Ocultar montos"}</button>
+          <button onClick={() => setHidden(!hidden)}><Icon name={hidden ? "eye" : "eyeOff"} className="h-4 w-4" />{hidden ? "Mostrar montos" : "Ocultar montos"}</button>
           {view === "clientes" && <button className="primary" onClick={() => setClientModal("new")}>Nuevo cliente</button>}
           {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
         </div>
       </header>
       {load === "error" && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
       {notice && <p role="status" className="tk-success"><StatusMessage text={notice} /> <button onClick={() => setNotice("")}>Cerrar</button></p>}
-      <div className="tk-toolbar">
+      {view !== "inicio" && <div className="tk-toolbar">
         <Field label={view === "pagos" ? "Mes de recepción" : "Período de trabajo"}>
-          <button type="button" className="tk-period-btn" onClick={() => { const el = document.querySelector<HTMLInputElement>(".tk-period-input"); el?.showPicker?.(); el?.focus(); }}>
+          <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
             {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
           </button>
-          <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); } }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
+          <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); setPeriodPickerOpen(false); } }} onBlur={(e) => { if (!(e.relatedTarget as HTMLElement | null)?.classList.contains("tk-period-btn")) setPeriodPickerOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") setPeriodPickerOpen(false); }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
         </Field>
-        {view !== "inicio" && <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>}
+        <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>
         {(view === "clientes" || view === "obligaciones") && (
           <>
             <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
@@ -601,13 +615,21 @@ const isServerView =
             </div></details>
           </>
         )}
-      </div>
+      </div>}
             <div className="tk-content">
         {load === "loading" && <p role="status" className="tk-subtle">Cargando datos de TRIBUTEK…</p>}
         {view === "inicio" && (
         <>
           <section className="tk-metrics-group tk-home-metrics-group" aria-label="Resumen del periodo">
-            <h2 className="tk-metrics-group-label">Resumen del periodo</h2>
+            <div className="tk-home-metrics-heading">
+              <h2 className="tk-metrics-group-label">Resumen del período · <span className="tk-period-heading-label">{periodLabel(period)}</span></h2>
+              <Field label="Período de trabajo">
+                <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
+                  {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
+                </button>
+                <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); setPeriodPickerOpen(false); } }} onBlur={(e) => { if (!(e.relatedTarget as HTMLElement | null)?.classList.contains("tk-period-btn")) setPeriodPickerOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") setPeriodPickerOpen(false); }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
+              </Field>
+            </div>
             <div className="tk-metrics">
             <Metric label="Recibido por servicios" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
             <Metric label="Reembolsos recibidos" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
@@ -651,10 +673,10 @@ const isServerView =
         <>
           <section
             className="tk-metrics-group"
-            aria-label={view === "clientes" ? "Resumen de clientes" : "Resumen de obligaciones del periodo"}
+            aria-label={view === "clientes" ? `Resumen de clientes · ${periodLabel(period)}` : `Resumen de obligaciones del período · ${periodLabel(period)}`}
           >
             <h2 className="tk-metrics-group-label">
-              {view === "clientes" ? "Resumen de clientes" : "Resumen de obligaciones del periodo"}
+              {view === "clientes" ? <>Resumen de clientes · <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período · <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
             </h2>
             <div className="tk-metrics">
               <Metric label="Clientes visibles" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>

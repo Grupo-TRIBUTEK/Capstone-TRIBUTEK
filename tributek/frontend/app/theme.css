@@ -29,6 +29,7 @@
   .dark .tk { --navy: var(--text-primary); --line: var(--border); --rose: var(--secondary); --rose-light: var(--secondary-soft); }
   .dark .tk :is(button, .tk-button, input, select, textarea),
   .dark :is(.tk-toolbar, .tk-metric, .tk-card, .tk-dialog, .tk-dialog-head) { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
+  .dark .tk-dialog-head { background: linear-gradient(125deg, color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%, color-mix(in srgb, var(--surface) 91%, var(--secondary)) 52%, color-mix(in srgb, var(--secondary) 9%, var(--surface)) 100%); }
   .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
   .dark .tk :is(button.primary, .primary) { background: var(--primary); border-color: var(--border); color: var(--on-primary); }
   .dark .tk :is(button.primary:hover, .primary:hover) { background: var(--primary-hover); }
