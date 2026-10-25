@@ -630,12 +630,16 @@ const isServerView =
                 <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); setPeriodPickerOpen(false); } }} onBlur={(e) => { if (!(e.relatedTarget as HTMLElement | null)?.classList.contains("tk-period-btn")) setPeriodPickerOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") setPeriodPickerOpen(false); }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
               </Field>
             </div>
-            <div className="tk-metrics">
+            <div className="tk-home-metrics-rows">
+              <div className="tk-home-metrics-row">
             <Metric label="Recibido por servicios" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
             <Metric label="Reembolsos recibidos" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
-            <Metric label="Clientes con deuda de servicios" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
             <Metric label="Postergaciones pendientes" help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
+              </div>
+              <div className="tk-home-metrics-row">
+            <Metric label="Clientes con deuda de servicios" className="tk-home-metric-debt" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
             <Metric label="Obligaciones no enviadas" help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{pendingMonths.length}</Metric>
+              </div>
             </div>
           </section>
           <section className="tk-card">

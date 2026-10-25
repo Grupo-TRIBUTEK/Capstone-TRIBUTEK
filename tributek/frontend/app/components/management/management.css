@@ -118,12 +118,7 @@ button.button-destructive:hover:not(:disabled) {
   gap: 16px;
   padding: 24px 32px;
   margin-bottom: 0;
-  background: linear-gradient(
-    110deg,
-    color-mix(in srgb, var(--primary) 8%, var(--surface)) 0%,
-    var(--surface) 52%,
-    color-mix(in srgb, var(--secondary) 7%, var(--surface)) 100%
-  );
+  background: var(--surface);
   border-bottom: 1px solid var(--line);
 }
 
@@ -236,14 +231,24 @@ button.button-destructive:hover:not(:disabled) {
   gap: 15px;
   margin-bottom: 23px;
 }
-.tk-home-metrics-group .tk-metrics {
+.tk-home-metrics-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-bottom: 23px;
+}
+.tk-home-metrics-row {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  gap: 15px;
 }
-.tk-home-metrics-group .tk-metric {
+.tk-home-metrics-row .tk-metric {
   flex: 0 1 calc(25% - 11.25px);
   max-width: calc(25% - 11.25px);
+}
+.tk-metric.tk-home-metric-debt {
+  border-top: 3px solid var(--border-muted);
 }
 .tk-metric {
   position: relative;
@@ -275,6 +280,9 @@ button.button-destructive:hover:not(:disabled) {
 }
 .tk-metric:not(:first-child) {
   border-top: 3px solid var(--border-muted);
+}
+.tk-home-metrics-row .tk-metric.tk-home-metric-debt {
+  border-top-color: var(--border-muted);
 }
 .tk-card {
   background: var(--surface);
@@ -512,8 +520,10 @@ button.button-destructive:hover:not(:disabled) {
   );
 }
 .tk-dialog-head,
+.tk-client-create-dialog > header {
+  background: var(--surface);
+}
 .tk-dialog.tk-client-sheet .tk-client-sheet-footer,
-.tk-client-create-dialog > header,
 .tk-client-create-dialog > form > footer {
   background: linear-gradient(
     125deg,
@@ -780,7 +790,7 @@ button.button-destructive:hover:not(:disabled) {
   .tk-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .tk-home-metrics-group .tk-metric {
+  .tk-home-metrics-row .tk-metric {
     flex-basis: calc(50% - 7.5px);
     max-width: calc(50% - 7.5px);
   }
@@ -822,10 +832,6 @@ button.button-destructive:hover:not(:disabled) {
   }
   .tk-metric {
     padding: 15px;
-  }
-  .tk-home-metrics-group .tk-metric {
-    flex-basis: 100%;
-    max-width: 100%;
   }
   .tk-metric strong {
     font-size: 23px;

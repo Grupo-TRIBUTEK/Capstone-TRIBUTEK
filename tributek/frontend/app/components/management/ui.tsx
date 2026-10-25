@@ -36,13 +36,15 @@ export function Metric({
   label,
   children,
   help,
+  className = "",
 }: {
   label: string;
   children: ReactNode;
   help: string;
+  className?: string;
 }) {
   return (
-    <div className="tk-metric">
+    <div className={`tk-metric ${className}`}>
       <div className="tk-metric-heading">
         <span title={help}>{label}</span>
       </div>

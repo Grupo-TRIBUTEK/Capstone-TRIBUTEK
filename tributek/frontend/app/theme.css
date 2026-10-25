@@ -1,6 +1,7 @@
 .theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px var(--font-body); }
 .theme-select-menu { position: relative; }
 .theme-select-menu summary { display: inline-flex; min-height: 40px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--background) 97%, var(--black) 3%); color: var(--text-primary); cursor: pointer; list-style: none; }
+:root:not(.dark) .theme-select-menu summary { border-color: var(--border-muted); }
 .theme-select-menu summary::-webkit-details-marker { display: none; }
 .theme-select-menu summary:focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
 .theme-select-chevron { width: 7px; height: 7px; margin: -4px 0 0 2px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); }
@@ -29,7 +30,7 @@
   .dark .tk { --navy: var(--text-primary); --line: var(--border); --rose: var(--secondary); --rose-light: var(--secondary-soft); }
   .dark .tk :is(button, .tk-button, input, select, textarea),
   .dark :is(.tk-toolbar, .tk-metric, .tk-card, .tk-dialog, .tk-dialog-head) { background: var(--surface); color: var(--text-primary); border-color: var(--border); }
-  .dark .tk-dialog-head { background: linear-gradient(125deg, color-mix(in srgb, var(--primary) 10%, var(--surface)) 0%, color-mix(in srgb, var(--surface) 91%, var(--secondary)) 52%, color-mix(in srgb, var(--secondary) 9%, var(--surface)) 100%); }
+  .dark .tk-dialog-head { background: var(--surface); }
   .dark .tk :is(button:hover, .tk-button:hover) { background: var(--surface-muted); }
   .dark .tk :is(button.primary, .primary) { background: var(--primary); border-color: var(--border); color: var(--on-primary); }
   .dark .tk :is(button.primary:hover, .primary:hover) { background: var(--primary-hover); }

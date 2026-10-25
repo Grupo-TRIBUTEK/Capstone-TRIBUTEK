@@ -1,5 +1,5 @@
 .audit { color: var(--text-primary); font-family: var(--font-body); }
-.audit-heading { flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
+.audit .audit-heading { flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--border); }
 .audit > :not(.audit-heading):not(dialog) { width: calc(100% - 64px); max-width: 1500px; margin-left: auto; margin-right: auto; }
 .audit h1 { font-size: 30px; font-weight: 700; letter-spacing: -.8px; margin: 0; }
 .audit h2 { font-size: 1.2rem; font-weight: 700; }
