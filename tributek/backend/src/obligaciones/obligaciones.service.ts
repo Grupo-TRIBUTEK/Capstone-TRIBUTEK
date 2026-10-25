@@ -208,8 +208,9 @@ export class ObligacionesService {
       const [anioStr, mesStr] = periodo.split('-');
       const anio = parseAnio(anioStr);
       const mes = parseMes(mesStr);
-      const periodoId = await this.periodos.asegurarIds(anio, mes);
-      periodoIdsFiltrados = periodoId ? periodoIds.filter((id) => id === periodoId) : [];
+      const periodosDelMes = await this.prisma.db.orm.public.PeriodoCliente.where({ anio, mes }).all();
+      const idsDelMes = new Set(periodosDelMes.map((p) => p.id));
+      periodoIdsFiltrados = periodoIds.filter((id) => idsDelMes.has(id));
     }
 
     if (!periodoIdsFiltrados.length) return vacio;

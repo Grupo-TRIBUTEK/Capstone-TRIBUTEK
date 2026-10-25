@@ -55,12 +55,13 @@ function crearServicio(estado: EstadoFake) {
         if (typeof prop !== 'string') return undefined;
         return {
           in: (vals: readonly unknown[]) => ({ op: 'in', col: prop, vals }),
-          eq: (v: unknown) => ({ op: 'eq', col: prop, v }),
+          eq: (v: unknown) => ({ op: 'eq', col: prop, v }), neq: (v: unknown) => ({ op: 'neq', col: prop, v }),
         };
       },
     });
     const expr = cond(columna);
     if (expr?.op === 'in') return expr.vals.includes(fila[expr.col]);
+    if (expr?.op === 'neq') return fila[expr.col] !== expr.v;
     if (expr?.op === 'eq') return fila[expr.col] === expr.v;
     return false;
   };
@@ -114,10 +115,10 @@ function crearServicio(estado: EstadoFake) {
   const orm: any = {
     Cliente: {
       where: (cond: any) => ({
-        first: async () => estado.clientes.find((c) => coincide(c, cond)) ?? null,
+        first: async () => estado.clientes.find((c) => coincide(c, cond)) ?? null, all: async () => estado.clientes.filter(c => coincide(c, cond)),
       }),
     },
-    PeriodoCliente: tabla(estado.periodos, { n: 700 }),
+    Factura: tabla([], { n: 1 }), PeriodoCliente: tabla(estado.periodos, { n: 700 }),
     MesCliente: tabla(estado.meses, { n: 1 }),
     MontoConcepto: tabla(estado.montos, { n: 100 }),
     PasoMes: tabla(estado.pasos, { n: 500 }),
@@ -130,6 +131,9 @@ function crearServicio(estado: EstadoFake) {
       fn({ orm: { public: orm } }),
   };
   const periodos = {
+    obtenerIdsPorClientes: async (ids: bigint[]) => estado.periodos.filter(p => ids.includes(p.clienteId)).map(p => p.id),
+    obtenerPorIds: async (ids: bigint[]) => new Map(estado.periodos.filter(p => ids.includes(p.id)).map(p => [p.id, p])),
+    asegurarIds: async (anio: number, mes: number) => estado.periodos.find(p => p.anio === anio && p.mes === mes)?.id ?? null,
     asegurar: async (clienteId: bigint, anio: number, mes: number) => {
       const existente = estado.periodos.find(
         (p) => p.clienteId === clienteId && p.anio === anio && p.mes === mes,
@@ -857,3 +861,16 @@ describe('ObligacionesService', () => {
 
 
 
+
+it('conserva los montos de dos clientes al consultar el mismo mes', async () => {
+  const estado = crearEstado();
+  estado.clientes.push({id: 2n});
+  const service = crearServicio(estado);
+  for (const [id, amount] of [['1', 15000], ['2', 27000]] as const) {
+    await service.guardarMes(id, {anio: 2026, mes: 10, amounts: {...amountsCero(), Honorarios: amount}});
+  }
+  await service.guardarMes('2', {anio: 2026, mes: 9, amounts: {...amountsCero(), Honorarios: 9000}});
+  const result = await service.listarTodo('2026-10');
+  expect(result.months.map(m => [m.clientId, m.amounts.Honorarios])).toEqual([['1',15000],['2',27000]]);
+  expect((await service.listarTodo('2026-11')).months).toEqual([]);
+});
