@@ -269,6 +269,42 @@ button.button-destructive:hover:not(:disabled) {
   font-size: 13px;
   font-weight: 700;
 }
+.tk-help {
+  position: relative;
+  flex: 0 0 auto;
+}
+.tk-help > summary {
+  display: grid;
+  width: 20px;
+  height: 20px;
+  place-items: center;
+  border: 1px solid var(--border-muted);
+  border-radius: 50%;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  list-style: none;
+}
+.tk-help > summary::-webkit-details-marker { display: none; }
+.tk-help > summary:focus-visible { outline: 2px solid var(--secondary); outline-offset: 2px; }
+.tk-help-panel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  width: min(260px, 72vw);
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: 0 8px 24px var(--shadow-dialog);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.5;
+}
 .tk-metric strong {
   display: block;
   font-size: 27px;
@@ -832,6 +868,10 @@ button.button-destructive:hover:not(:disabled) {
   }
   .tk-metric {
     padding: 15px;
+  }
+  .tk-home-metrics-group .tk-metric {
+    flex-basis: 100%;
+    max-width: 100%;
   }
   .tk-metric strong {
     font-size: 23px;
