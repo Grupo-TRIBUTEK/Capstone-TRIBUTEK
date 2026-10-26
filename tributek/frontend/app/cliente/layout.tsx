@@ -1,4 +1,5 @@
 import ClientNavbar from "./components/ClientNavbar";
+import IaAssistant from "../components/IaAssistant";
 
 export default function ClienteLayout({
   children,
@@ -9,6 +10,7 @@ export default function ClienteLayout({
     <div className="min-h-screen bg-background">
       <ClientNavbar />
       {children}
+      <IaAssistant />
     </div>
   );
 }

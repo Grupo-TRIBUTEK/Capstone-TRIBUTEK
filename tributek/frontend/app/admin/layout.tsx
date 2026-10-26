@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "../components/layout/Sidebar";
+import IaAssistant from "../components/IaAssistant";
 import { getAccessToken, validateAdminAccess } from "@/app/features/auth/auth-client";
 
 type AdminLayoutProps = {
@@ -62,6 +63,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       <div className={`min-w-0 flex-1 ${hasManagementHeader ? "" : "p-6 md:p-8"}`}>
         {children}
       </div>
+      <IaAssistant />
     </div>
   );
 }

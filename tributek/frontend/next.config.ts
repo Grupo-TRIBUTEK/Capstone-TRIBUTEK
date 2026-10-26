@@ -43,6 +43,10 @@ const nextConfig: NextConfig = {
         source: "/facturas/:path*",
         destination: "http://localhost:3001/facturas/:path*",
       },
+      {
+        source: "/ia/:path*",
+        destination: "http://localhost:3001/ia/:path*",
+      },
     ];
   },
   turbopack: {
