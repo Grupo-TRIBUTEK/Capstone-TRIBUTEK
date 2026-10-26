@@ -33,7 +33,7 @@ Una respuesta correcta tiene este formato:
 ```json
 {
   "respuesta": "...",
-  "modelo": "qwen3:4b"
+  "modelo": "qwen3:4b-instruct"
 }
 ```
 
@@ -46,7 +46,7 @@ El servicio lee estas variables de entorno:
 | Variable | Valor usado si no se define |
 |---|---|
 | `OLLAMA_URL` | `http://localhost:11434` |
-| `OLLAMA_MODEL` | `qwen3:4b` |
+| `OLLAMA_MODEL` | `qwen3:4b-instruct` |
 | `OLLAMA_TIMEOUT_MS` | `60000` |
 
 Define estas variables en el entorno del backend cuando necesites usar otra dirección, modelo o tiempo de espera. Ollama debe estar iniciado y tener descargado el modelo elegido.

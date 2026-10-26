@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   allowedDevOrigins: ["192.168.1.23", "127.0.0.1"],
+  experimental: {
+    proxyTimeout: 70_000,
+  },
   async rewrites() {
     return [
       { source: "/auditoria/:path*", destination: "http://localhost:3001/auditoria/:path*" },
