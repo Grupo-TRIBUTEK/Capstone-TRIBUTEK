@@ -13,6 +13,7 @@ import { ObligacionesModule } from './obligaciones/obligaciones.module.js';
 import { FacturasModule } from './facturas/facturas.module.js';
 import { F29Module } from './f29/f29.module.js';
 import { AuditoriaModule } from './auditoria/auditoria.module.js';
+import { IaModule } from './ia/ia.module.js';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { AuditoriaModule } from './auditoria/auditoria.module.js';
     FacturasModule,
     F29Module,
     AuditoriaModule,
+    IaModule,
   ],
   controllers: [AppController],
   providers: [AppService],
