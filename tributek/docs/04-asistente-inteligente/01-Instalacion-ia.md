@@ -26,7 +26,7 @@ ollama --version
 Para descargar Qwen 3 de 4 mil millones de parámetros e iniciar una sesión interactiva, ejecuta:
 
 ```powershell
-ollama run qwen3:4b
+ollama run qwen3:4b-instruct
 ```
 
 Escribe una pregunta en la sesión para comprobar que el modelo responde. Puedes revisar los modelos descargados con:

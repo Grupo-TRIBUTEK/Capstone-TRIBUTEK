@@ -15,6 +15,7 @@ export default function IaAssistant() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const formRef = useRef<HTMLFormElement>(null);
   const nextId = useRef(0);
 
   useEffect(() => {
@@ -71,9 +72,23 @@ export default function IaAssistant() {
             {isLoading && <p className="text-sm text-text-muted" role="status">El asistente está respondiendo…</p>}
             {error && <p className="rounded-lg border border-error-border bg-error-surface p-2 text-sm text-error" role="alert">{error}</p>}
           </div>
-          <form onSubmit={sendConsulta} className="flex items-end gap-2 border-t border-border p-3">
+          <form ref={formRef} onSubmit={sendConsulta} className="flex items-end gap-2 border-t border-border p-3">
             <label className="sr-only" htmlFor="ia-consulta">Escribe tu consulta</label>
-            <textarea id="ia-consulta" value={consulta} onChange={(event) => setConsulta(event.target.value)} rows={2} maxLength={2000} placeholder="Escribe tu consulta…" className="min-h-11 min-w-0 flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-secondary focus:ring-2 focus:ring-secondary" />
+            <textarea
+              id="ia-consulta"
+              value={consulta}
+              onChange={(event) => setConsulta(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault();
+                  formRef.current?.requestSubmit();
+                }
+              }}
+              rows={2}
+              maxLength={2000}
+              placeholder="Escribe tu consulta…"
+              className="min-h-11 min-w-0 flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-secondary focus:ring-2 focus:ring-secondary"
+            />
             <button type="submit" disabled={isLoading || !consulta.trim()} className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50">Enviar</button>
           </form>
         </section>
