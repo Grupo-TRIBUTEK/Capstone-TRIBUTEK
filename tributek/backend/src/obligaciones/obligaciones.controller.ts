@@ -1,4 +1,17 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
+/**
+ * Rutas HTTP de montos mensuales, abonos y postergaciones. Los decoradores indican método, URL y permisos; el controlador entrega la operación al servicio.
+ */
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Post,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -12,6 +25,7 @@ import { ObligacionesService } from './obligaciones.service.js';
 export class ObligacionesController {
   constructor(private readonly obligacionesService: ObligacionesService) {}
 
+  /** Consultar obligaciones del período para todos los clientes. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get()
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -19,6 +33,7 @@ export class ObligacionesController {
     return this.obligacionesService.listarTodo(periodo);
   }
 
+  /** Consultar los registros con los filtros recibidos. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get('meses/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -26,6 +41,7 @@ export class ObligacionesController {
     return this.obligacionesService.listarMeses(clienteId);
   }
 
+  /** Guardar los datos recibidos. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Put('mes/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -33,6 +49,7 @@ export class ObligacionesController {
     return this.obligacionesService.guardarMes(clienteId, data);
   }
 
+  /** Registrar un abono. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post('abonos/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -40,6 +57,7 @@ export class ObligacionesController {
     return this.obligacionesService.registrarAbono(clienteId, data);
   }
 
+  /** Eliminar el registro identificado. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Delete('abonos/:abonoId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -47,6 +65,7 @@ export class ObligacionesController {
     return this.obligacionesService.eliminarAbono(abonoId);
   }
 
+  /** Listar las postergaciones del cliente. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get('postergaciones/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -54,6 +73,7 @@ export class ObligacionesController {
     return this.obligacionesService.listarPostergaciones(clienteId);
   }
 
+  /** Registrar una postergación. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post('postergaciones/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -64,6 +84,7 @@ export class ObligacionesController {
     return this.obligacionesService.crearPostergacion(clienteId, data);
   }
 
+  /** Modificar una postergación. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Put('postergaciones/:postergacionId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -74,6 +95,7 @@ export class ObligacionesController {
     return this.obligacionesService.actualizarPostergacion(postergacionId, data);
   }
 
+  /** Eliminar una postergación. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Delete('postergaciones/:postergacionId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)

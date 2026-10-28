@@ -1,25 +1,32 @@
+/**
+ * Interfaz ui. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 import { useEffect, useRef, type ReactNode } from "react";
 import { reportTheme } from "../ui/reportTheme";
 import { money } from "../ficha/model";
 
-const statusActionPattern = /\b(guardad[oa]s?|guardar|agregad[oa]s?|agregaron|agregar|actualizad[oa]s?|actualizar|procesad[oa]s?|procesar|compartir|comparte|copiad[oa]s?|copiar|eliminad[oa]s?|eliminar|registrad[oa]s?|registrar|descargad[oa]s?|descargar|importad[oa]s?|importar)\b/gi;
+const statusActionPattern =
+  /\b(guardad[oa]s?|guardar|agregad[oa]s?|agregaron|agregar|actualizad[oa]s?|actualizar|procesad[oa]s?|procesar|compartir|comparte|copiad[oa]s?|copiar|eliminad[oa]s?|eliminar|registrad[oa]s?|registrar|descargad[oa]s?|descargar|importad[oa]s?|importar)\b/gi;
 
+/** Resalta palabras de acción dentro de mensajes de estado. */
 export function StatusMessage({ text }: { text: string }) {
-  return <>{text.split(statusActionPattern).map((part, index) =>
-    index % 2 === 1 ? <strong key={index}>{part}</strong> : part,
-  )}</>;
+  return (
+    <>
+      {text
+        .split(statusActionPattern)
+        .map((part, index) =>
+          index % 2 === 1 ? <strong key={index}>{part}</strong> : part,
+        )}
+    </>
+  );
 }
 
-export function Money({
-  value,
-  hidden = false,
-}: {
-  value: number;
-  hidden?: boolean;
-}) {
+/** Muestra pesos o una máscara si está activo ocultar montos. */
+export function Money({ value, hidden = false }: { value: number; hidden?: boolean }) {
   return <span className="tk-money">{hidden ? "••••" : money(value)}</span>;
 }
+/** Escoge el estilo del indicador a partir de su estado. */
 export function Badge({ children }: { children: ReactNode }) {
   const s = String(children);
   const color =
@@ -32,6 +39,7 @@ export function Badge({ children }: { children: ReactNode }) {
           : "neutral";
   return <span className={`tk-badge ${color}`}>{children}</span>;
 }
+/** Presenta cifra y etiqueta con título de ayuda. */
 export function Metric({
   label,
   children,
@@ -52,9 +60,11 @@ export function Metric({
     </div>
   );
 }
+/** Presenta un mensaje cuando no hay registros. */
 export function Empty({ children }: { children: ReactNode }) {
   return <p className="tk-empty">{children}</p>;
 }
+/** Abre un diálogo nativo al montar y lo cierra al desmontar. */
 export function Modal({
   title,
   onClose,
@@ -94,13 +104,8 @@ export function Modal({
     </dialog>
   );
 }
-export function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: ReactNode;
-}) {
+/** Agrupa la etiqueta y su control de formulario. */
+export function Field({ label, children }: { label: string; children: ReactNode }) {
   return (
     <label className="tk-field">
       <span>{label}</span>
@@ -108,14 +113,13 @@ export function Field({
     </label>
   );
 }
+/** Escapa caracteres para que los textos del informe no se interpreten como HTML. */
 export const escapeHtml = (s: string) =>
   s.replace(
     /[&<>"']/g,
-    (c) =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
-        c
-      ]!,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
+/** Dibuja el informe monetario para copiarlo como imagen usando el tema compartido. */
 export async function copyReportImage(
   title: string,
   subtitle: string,
@@ -158,8 +162,7 @@ export async function copyReportImage(
   ctx.fillText(money(total), 1060, canvas.height - 20);
   const blob = await new Promise<Blob>((resolve, reject) =>
     canvas.toBlob(
-      (b) =>
-        b ? resolve(b) : reject(new Error("No se pudo generar el archivo.")),
+      (b) => (b ? resolve(b) : reject(new Error("No se pudo generar el archivo."))),
       "image/png",
     ),
   );
@@ -170,6 +173,7 @@ export async function copyReportImage(
   downloadBlob(blob, "detalle-tributek.png");
   return "Imagen descargada.";
 }
+/** Descarga el archivo generado y libera su URL temporal. */
 export function downloadBlob(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
@@ -178,6 +182,7 @@ export function downloadBlob(blob: Blob, name: string) {
   a.click();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
+/** Abre una ventana de impresión y escapa los textos antes de insertarlos en HTML. */
 export function printReport(
   title: string,
   subtitle: string,
@@ -186,11 +191,9 @@ export function printReport(
 ) {
   const theme = reportTheme();
   const w = window.open("", "_blank");
-  if (!w)
-    throw new Error("Permite la ventana de impresión para guardar el PDF.");
+  if (!w) throw new Error("Permite la ventana de impresión para guardar el PDF.");
   w.document.write(
     `<html lang="es"><head><title>${escapeHtml(title)}</title><style>html{color-scheme:light}body{background:${escapeHtml(theme.paper)};font:16px ${escapeHtml(theme.font)};color:${escapeHtml(theme.ink)};padding:30px}table{width:100%;border-collapse:collapse}td,th{padding:14px;border-bottom:1px solid ${escapeHtml(theme.line)};text-align:left}td:last-child{text-align:right}button{padding:12px}@media print{button{display:none}}</style></head><body><h1>${escapeHtml(title)}</h1><p>${escapeHtml(subtitle)}</p><table>${rows.map((r) => `<tr><td>${escapeHtml(r.label)}</td><td>${money(r.amount)}</td></tr>`).join("")}</table><h2>Total: ${money(total)}</h2><button onclick="window.print()">Imprimir / Guardar como PDF</button></body></html>`,
   );
   w.document.close();
 }
-

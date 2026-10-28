@@ -1,11 +1,12 @@
+/**
+ * Interfaz Input. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 import type { ComponentPropsWithoutRef } from "react";
 
 type InputProps = ComponentPropsWithoutRef<"input">;
 
-export default function Input({
-  className = "",
-  ...props
-}: InputProps) {
+/** Aplica estilos compartidos al input conservando sus propiedades. */
+export default function Input({ className = "", ...props }: InputProps) {
   return (
     <input
       {...props}

@@ -1,3 +1,6 @@
+/**
+ * Catálogo de rutas y etiquetas del menú administrativo; Sidebar lo utiliza para construir la navegación.
+ */
 import type { IconName } from "../ui/Icon";
 export const adminNavigation: {
   href: string;

@@ -1,3 +1,6 @@
+/**
+ * Interfaz LoginForm. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import { FormEvent, useState } from "react";
@@ -7,6 +10,7 @@ import { clearAuth, login } from "@/app/features/auth/auth-client";
 import BrandLogo from "@/app/components/layout/BrandLogo";
 import Icon from "@/app/components/ui/Icon";
 
+/** Mantiene las credenciales y el estado de envío del inicio de sesión. */
 export default function LoginForm() {
   const router = useRouter();
   const [nombreUsuario, setNombreUsuario] = useState("");
@@ -14,6 +18,7 @@ export default function LoginForm() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  /** Solicita autenticar y dirige al usuario según el rol de la respuesta; presenta errores sin perder el formulario. */
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -23,7 +28,11 @@ export default function LoginForm() {
       const response = await login(nombreUsuario, password);
 
       const rolNombre = response.usuario.rolNombre?.toUpperCase();
-      if (rolNombre === "ADMIN" || rolNombre === "ADMINISTRADOR" || response.usuario.rolId === "1") {
+      if (
+        rolNombre === "ADMIN" ||
+        rolNombre === "ADMINISTRADOR" ||
+        response.usuario.rolId === "1"
+      ) {
         router.replace("/admin");
       } else if (rolNombre === "CLIENTE") {
         router.replace("/cliente");
@@ -33,9 +42,7 @@ export default function LoginForm() {
       }
     } catch (loginError) {
       setError(
-        loginError instanceof Error
-          ? loginError.message
-          : "No se pudo iniciar sesión.",
+        loginError instanceof Error ? loginError.message : "No se pudo iniciar sesión.",
       );
     } finally {
       setIsSubmitting(false);

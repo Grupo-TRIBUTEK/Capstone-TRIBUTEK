@@ -1,3 +1,6 @@
+/**
+ * Interfaz ReviewCard. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 type ReviewCardProps = {
   name: string;
   role: string;
@@ -5,6 +8,7 @@ type ReviewCardProps = {
   rating?: number;
 };
 
+/** Muestra una reseña y limita la puntuación visual al intervalo de cero a cinco. */
 export default function ReviewCard({ name, role, review, rating = 5 }: ReviewCardProps) {
   const score = Math.max(0, Math.min(5, rating));
 
@@ -15,8 +19,14 @@ export default function ReviewCard({ name, role, review, rating = 5 }: ReviewCar
           <h3 className="font-semibold text-text-primary">{name}</h3>
           <span className="text-sm text-text-muted">{role}</span>
         </div>
-        <span className="shrink-0 text-warning" aria-label={`Calificación: ${score} de 5`}>
-          <span aria-hidden="true">{"★".repeat(score)}{"☆".repeat(5 - score)}</span>
+        <span
+          className="shrink-0 text-warning"
+          aria-label={`Calificación: ${score} de 5`}
+        >
+          <span aria-hidden="true">
+            {"★".repeat(score)}
+            {"☆".repeat(5 - score)}
+          </span>
         </span>
       </header>
       <p className="mt-4 text-text-muted">“{review}”</p>

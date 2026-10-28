@@ -1,3 +1,6 @@
+/**
+ * Interfaz ClientCreateModal. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,6 +39,7 @@ type ClientCreateModalProps = {
   client?: ClientRecord;
 };
 
+/** Edita la ficha del cliente y su acceso al portal, manteniendo borrador, errores y confirmación de descarte. */
 export default function ClientCreateModal({
   onClose,
   onSaved,
@@ -62,6 +66,7 @@ export default function ClientCreateModal({
   ) || crearAccesoPortal || revocarAccesoPortal || Boolean(nombreUsuario);
 
   useEffect(() => {
+    /** Solicita cerrar el formulario al presionar Escape, conservando la comprobación de cambios. */
     function handleEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
         requestClose();
@@ -92,6 +97,7 @@ export default function ClientCreateModal({
     return () => { cancelled = true; };
   }, [client]);
 
+  /** Pide confirmar el descarte cuando hay datos ingresados que todavía no se han enviado. */
   function requestClose() {
     if (activationUrl) {
       onClose();
@@ -105,21 +111,25 @@ export default function ClientCreateModal({
     onClose();
   }
 
+  /** Cambia un campo de la ficha y limpia el error anterior. */
   function updateField(field: keyof ClientForm, value: string) {
     setForm((current) => ({ ...current, [field]: value }));
     setError("");
   }
 
+  /** Actualiza el identificador de acceso en el borrador. */
   function updateNombreUsuario(value: string) {
     setNombreUsuario(value);
     setError("");
   }
 
+  /** Actualiza el correo de la cuenta en el borrador. */
   function updateEmailUsuario(value: string) {
     setEmailUsuario(value);
     setError("");
   }
 
+  /** Copia el enlace temporal; informa cómo copiarlo manualmente si falla. */
   async function copyInvitation(url: string) {
     try {
       await navigator.clipboard.writeText(url);
@@ -129,6 +139,7 @@ export default function ClientCreateModal({
     }
   }
 
+  /** Solicita al backend un enlace de invitación o restablecimiento para la cuenta del cliente. */
   async function generatePortalLink(kind: "invite" | "reset") {
     const clientId = client?.id ?? portalClientId;
     if (!clientId) return;
@@ -156,6 +167,7 @@ export default function ClientCreateModal({
     }
   }
 
+  /** Construye los datos de ficha y acceso al portal y solicita crear o actualizar el cliente. */
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -407,6 +419,7 @@ export default function ClientCreateModal({
 
 const inputClassName = "h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary outline-none focus:border-secondary focus:ring-2 focus:ring-secondary";
 
+/** Agrupa etiqueta, control y marca de campo requerido del formulario. */
 function Field({ label, required, className = "", children }: { label: string; required?: boolean; className?: string; children: React.ReactNode }) {
   return (
     <label className={`block text-sm font-medium text-text-primary ${className}`}>

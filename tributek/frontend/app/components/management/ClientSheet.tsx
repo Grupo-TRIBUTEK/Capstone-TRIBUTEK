@@ -1,3 +1,6 @@
+/**
+ * Interfaz ClientSheet. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 import { useState, type FormEvent } from "react";
 import { conceptLabel, concepts, receivables, money, today, type Client } from "../ficha/model";
@@ -34,6 +37,7 @@ export type ClientView = Client & {
   estadoCliente: string;
 };
 export type Save = (next: Ledger, revision: string) => void | Promise<boolean>;
+/** Prepara un nuevo pago o la corrección de un movimiento con sus cuentas y postergación asociada. */
 export function PaymentForm({
   data,
   clientId,
@@ -59,6 +63,7 @@ export function PaymentForm({
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
   const [method, setMethod] = useState(first?.method || "Transferencia");
+  /** Lee y distribuye el pago y solicita su guardado, bloqueando envíos repetidos. */
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (saving) return;
@@ -224,6 +229,7 @@ export function PaymentForm({
     </form>
   );
 }
+/** Coordina los borradores de perfil, obligaciones, pagos y postergaciones del cliente. */
 export default function ClientSheet({
   data,
   client,
@@ -291,10 +297,12 @@ export default function ClientSheet({
   const text = accumulated
     ? `Buen día 😊\n\nLe escribimos para recordarle que, según nuestros registros, aún se encuentra pendiente el pago de los siguientes conceptos:\n\n📌 *COBROS PENDIENTES ACUMULADOS*\n${client.name}\n\n${detail}\n\n💰 *SALDO PENDIENTE: ${money(reportTotal)}*${postponedNote}\n\nAgradecemos mucho su gestión. Si el pago ya fue realizado, por favor envíenos el comprobante para actualizar nuestros registros.\n\n¡Muchas gracias! 🙌`
     : `Buen día 😊\n\nLe enviamos el detalle de sus obligaciones mensuales para el período de ${periodLabel(period)}:\n\n📋 *OBLIGACIÓN MENSUAL · ${periodLabel(period).toLocaleUpperCase("es-CL")}*\n${client.name}\n\n${detail}\n\n💰 *TOTAL A PAGAR: ${money(reportTotal)}*${postponedNote}\n\nPor favor, revise los montos indicados. Si tiene alguna duda, puede contactarnos.\n\nSaludos cordiales ✨`;
+  /** Pide confirmar antes de cerrar con cambios pendientes. */
   function close() {
     if (!dirty || window.confirm("Hay cambios sin guardar. ¿Descartarlos?"))
       onClose();
   }
+  /** Comprueba cambios pendientes y restablece borradores al cambiar de pestaña. */
   function changeTab(t: string) {
     if (dirty && !window.confirm("Hay cambios sin guardar. ¿Descartarlos?"))
       return;
@@ -312,6 +320,7 @@ export default function ClientSheet({
     setTab(t);
   }
   const [savingMonth, setSavingMonth] = useState(false);
+  /** Valida el mes y espera el guardado; conserva el borrador si no se confirma. */
   async function persistMonth() {
     if (savingMonth) return;
     setSavingMonth(true);
@@ -325,6 +334,7 @@ export default function ClientSheet({
       setError((e as Error).message);
     } finally { setSavingMonth(false); }
   }
+  /** Copia el mensaje e informa una alternativa cuando falla el portapapeles. */
   async function copyText() {
     try {
       await navigator.clipboard.writeText(text);
@@ -333,6 +343,7 @@ export default function ClientSheet({
       setError("No se pudo copiar. Selecciona el texto y cópialo manualmente.");
     }
   }
+  /** Lee la postergación del formulario, genera su ID y solicita guardar el registro actualizado. */
   function defer(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);

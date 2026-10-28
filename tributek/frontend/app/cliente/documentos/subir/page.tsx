@@ -1,8 +1,11 @@
+/** Presenta el texto introductorio de la sección de carga; esta página por sí sola no envía archivos. */
 export default function SubirDocumentosPage() {
   return (
     <main className="mx-auto max-w-4xl px-6 py-10">
       <h1 className="text-2xl font-bold text-text-primary">Subir documentos</h1>
-      <p className="mt-3 text-body text-text-muted">Aquí podrás adjuntar documentos y respaldos asociados a cada cliente.</p>
+      <p className="mt-3 text-body text-text-muted">
+        Aquí podrás adjuntar documentos y respaldos asociados a cada cliente.
+      </p>
     </main>
   );
 }

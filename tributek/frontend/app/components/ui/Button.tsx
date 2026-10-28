@@ -1,7 +1,11 @@
+/**
+ * Interfaz Button. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 import type { ComponentPropsWithoutRef } from "react";
 
 type ButtonProps = ComponentPropsWithoutRef<"button">;
 
+/** Aplica el estilo compartido al botón conservando sus propiedades y eventos. */
 export default function Button({
   children,
   className = "",

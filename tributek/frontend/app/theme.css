@@ -1,3 +1,6 @@
+/**
+ * Define los colores y fuentes compartidos. Las variables permiten mantener una identidad visual coherente y temas claro y oscuro.
+ */
 .theme-control { display: inline-flex; align-items: center; gap: 8px; color: var(--text-primary); font: 600 12px var(--font-body); }
 .theme-select-menu { position: relative; }
 .theme-select-menu summary { display: inline-flex; min-height: 40px; align-items: center; gap: 8px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; background: color-mix(in srgb, var(--background) 97%, var(--black) 3%); color: var(--text-primary); cursor: pointer; list-style: none; }

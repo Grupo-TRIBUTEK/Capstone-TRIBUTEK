@@ -1,3 +1,6 @@
+/**
+ * Interfaz BrandLogo. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 import Image from "next/image";
 
 type BrandLogoProps = {
@@ -8,6 +11,7 @@ type BrandLogoProps = {
   priority?: boolean;
 };
 
+/** Elige la imagen del logo según el tema claro u oscuro. */
 export default function BrandLogo({
   alt = "TRIBUTEK",
   width,

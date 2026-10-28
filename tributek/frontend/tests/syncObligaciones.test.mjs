@@ -1,3 +1,4 @@
+/** Pruebas de syncObligaciones. Cada test/it nombra el comportamiento esperado; los datos y dependencias de ensayo permiten comprobarlo de forma repetible. */
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";

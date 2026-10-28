@@ -1,17 +1,13 @@
+/**
+ * Lógica de carpetas y archivos de respaldo de pagos. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import {
   BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import {
-  mkdir,
-  readFile,
-  readdir,
-  writeFile,
-  rename,
-  unlink,
-} from 'node:fs/promises';
+import { mkdir, readFile, readdir, writeFile, rename, unlink } from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -44,14 +40,14 @@ type Folder = {
   amount: number;
   files: Evidence[];
 };
+/** Reconoce el rol administrativo por su ID o nombre compatible con la sesión. */
 export const isAdmin = (u: User) =>
   Number(u.rolId) === 1 ||
   ['ADMIN', 'ADMINISTRADOR'].includes(String(u.rolNombre).toUpperCase());
+/** Valida tamaño real y firma binaria de PDF, PNG o JPEG. La extensión del nombre no demuestra el tipo. */
 export function fileType(f: Upload) {
   if (!f.size || f.size > 8 * 1024 * 1024 || f.buffer.length !== f.size)
-    throw new BadRequestException(
-      'Cada archivo debe pesar entre 1 byte y 8 MB.',
-    );
+    throw new BadRequestException('Cada archivo debe pesar entre 1 byte y 8 MB.');
   const b = f.buffer;
   if (b.subarray(0, 5).toString() === '%PDF-') return 'application/pdf';
   if (b.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])))
@@ -67,26 +63,26 @@ export class PaymentEvidenceService {
   );
   private queues = new Map<string, Promise<unknown>>();
   constructor(private readonly prisma: PrismaService) {}
+  /** Admite solo letras, números, guion y guion bajo en IDs utilizados para rutas de archivos. */
   private id(value: string) {
     if (!/^[a-zA-Z0-9_-]{1,100}$/.test(value))
       throw new BadRequestException('Identificador inválido.');
     return value;
   }
+  /** Construye la carpeta del cliente y movimiento usando identificadores validados. */
   private path(client: string, id: string) {
     return join(this.root, this.id(client), this.id(id));
   }
+  /** Comprueba que el cliente exista; exige vínculo UsuarioCliente salvo para administradores. */
   private async access(client: string, user: User) {
-    if (!/^\d+$/.test(client))
-      throw new BadRequestException('Cliente inválido.');
+    if (!/^\d+$/.test(client)) throw new BadRequestException('Cliente inválido.');
     if (!isAdmin(user)) {
       const relation = await this.prisma.db.orm.public.UsuarioCliente.where({
         usuarioId: BigInt(user.id),
         clienteId: BigInt(client),
       }).first();
       if (!relation)
-        throw new ForbiddenException(
-          'No tienes acceso a los pagos de este cliente.',
-        );
+        throw new ForbiddenException('No tienes acceso a los pagos de este cliente.');
     }
     if (
       !(await this.prisma.db.orm.public.Cliente.where({
@@ -95,6 +91,7 @@ export class PaymentEvidenceService {
     )
       throw new NotFoundException('Cliente no encontrado.');
   }
+  /** Lee record.json; la ausencia de la carpeta se informa como 404. */
   private async read(client: string, id: string): Promise<Folder> {
     try {
       return JSON.parse(
@@ -106,6 +103,7 @@ export class PaymentEvidenceService {
       throw e;
     }
   }
+  /** Escribe un JSON temporal y luego lo renombra para no dejar metadatos escritos parcialmente. */
   private async write(folder: Folder) {
     const dir = this.path(folder.clientId, folder.id);
     await mkdir(dir, { recursive: true });
@@ -113,6 +111,7 @@ export class PaymentEvidenceService {
     await writeFile(temp, JSON.stringify(folder), { flag: 'wx' });
     await rename(temp, join(dir, 'record.json'));
   }
+  /** Encadena escrituras de una misma carpeta dentro de este proceso. No coordina servidores distintos. */
   private async locked<T>(key: string, task: () => Promise<T>): Promise<T> {
     const previous = this.queues.get(key) || Promise.resolve();
     const next = previous.catch(() => undefined).then(task);
@@ -123,6 +122,7 @@ export class PaymentEvidenceService {
       if (this.queues.get(key) === next) this.queues.delete(key);
     }
   }
+  /** Verifica acceso y lista carpetas no archivadas ordenadas por fecha. */
   async list(client: string, user: User) {
     await this.access(client, user);
     let names: string[];
@@ -137,10 +137,12 @@ export class PaymentEvidenceService {
       .filter((f) => !f.archived)
       .sort((a, b) => b.date.localeCompare(a.date));
   }
+  /** Comprueba acceso antes de leer los metadatos de una carpeta. */
   async get(client: string, id: string, user: User) {
     await this.access(client, user);
     return this.read(client, id);
   }
+  /** Permite al administrador crear o actualizar el movimiento conservando los comprobantes existentes. */
   async register(
     client: string,
     id: string,
@@ -176,6 +178,7 @@ export class PaymentEvidenceService {
       return folder;
     });
   }
+  /** Valida permisos, tamaños y tipos; guarda archivos y metadatos. Si falla, intenta limpiar los archivos nuevos. */
   async upload(
     client: string,
     id: string,
@@ -200,9 +203,7 @@ export class PaymentEvidenceService {
       throw new BadRequestException('Revisa el método y las cuentas.');
     const amount = body.amount ? Number(body.amount) : null;
     if (amount !== null && (!Number.isSafeInteger(amount) || amount <= 0))
-      throw new BadRequestException(
-        'El monto respaldado debe ser un entero positivo.',
-      );
+      throw new BadRequestException('El monto respaldado debe ser un entero positivo.');
     return this.locked(this.path(client, id), async () => {
       const folder = await this.read(client, id);
       if (folder.archived)
@@ -212,14 +213,10 @@ export class PaymentEvidenceService {
       if (folder.files.length + files.length > 40)
         throw new BadRequestException('Máximo 40 archivos por pago.');
       if (amount !== null && amount > folder.amount)
-        throw new BadRequestException(
-          'El monto respaldado supera el pago registrado.',
-        );
+        throw new BadRequestException('El monto respaldado supera el pago registrado.');
       const added = files.map((f, i): Evidence => ({
         id: randomUUID(),
-        name: f.originalname
-          .replace(/[\\/\r\n\u0000-\u001f]/g, '_')
-          .slice(0, 180),
+        name: f.originalname.replace(/[\\/\r\n\u0000-\u001f]/g, '_').slice(0, 180),
         mime: types[i],
         size: f.size,
         userId: user.id,
@@ -231,11 +228,9 @@ export class PaymentEvidenceService {
       }));
       try {
         for (let i = 0; i < files.length; i++)
-          await writeFile(
-            join(this.path(client, id), added[i].id),
-            files[i].buffer,
-            { flag: 'wx' },
-          );
+          await writeFile(join(this.path(client, id), added[i].id), files[i].buffer, {
+            flag: 'wx',
+          });
         folder.files.push(...added);
         await this.write(folder);
         return folder;
@@ -249,6 +244,7 @@ export class PaymentEvidenceService {
       }
     });
   }
+  /** Ubica el comprobante autorizado y devuelve su stream y metadatos para descargarlo. */
   async download(client: string, id: string, fileId: string, user: User) {
     const folder = await this.get(client, id, user);
     const file = folder.files.find((f) => f.id === fileId);
@@ -258,6 +254,7 @@ export class PaymentEvidenceService {
       stream: createReadStream(join(this.path(client, id), this.id(fileId))),
     };
   }
+  /** Marca la carpeta como archivada sin borrar archivos; requiere administración. */
   async archive(client: string, id: string, user: User) {
     if (!isAdmin(user)) throw new ForbiddenException();
     await this.access(client, user);
@@ -274,6 +271,7 @@ export class PaymentEvidenceService {
       return { archived: true };
     });
   }
+  /** Permite al autor o administrador eliminar un comprobante y actualizar sus metadatos. */
   async remove(client: string, id: string, fileId: string, user: User) {
     await this.access(client, user);
     return this.locked(this.path(client, id), async () => {
@@ -281,14 +279,10 @@ export class PaymentEvidenceService {
       const file = folder.files.find((f) => f.id === fileId);
       if (!file) throw new NotFoundException();
       if (!isAdmin(user) && file.userId !== user.id)
-        throw new ForbiddenException(
-          'Solo puedes quitar archivos que hayas subido.',
-        );
+        throw new ForbiddenException('Solo puedes quitar archivos que hayas subido.');
       folder.files = folder.files.filter((f) => f.id !== fileId);
       await this.write(folder);
-      await unlink(join(this.path(client, id), this.id(fileId))).catch(
-        () => undefined,
-      );
+      await unlink(join(this.path(client, id), this.id(fileId))).catch(() => undefined);
       return folder;
     });
   }

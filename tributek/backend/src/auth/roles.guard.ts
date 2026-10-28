@@ -1,3 +1,6 @@
+/**
+ * Control de autorización por rol; se utiliza junto con la autenticación de la sesión.
+ */
 import {
   CanActivate,
   ExecutionContext,
@@ -11,6 +14,7 @@ import { ROLES_KEY } from './decorators/roles.decorator.js';
 export class RolesGuard implements CanActivate {
   constructor(private readonly reflector: Reflector) {}
 
+  /** Compara los roles declarados en la ruta con la sesión. Si no hay roles declarados, este guard no añade una restricción de rol. */
   canActivate(context: ExecutionContext): boolean {
     const roles = this.reflector.get<Array<number | string>>(
       ROLES_KEY,
@@ -27,18 +31,20 @@ export class RolesGuard implements CanActivate {
     // Usuario obtenido después de validar el JWT.
     const usuario = request.user;
 
-    const permitido = usuario && roles.some((rol) => {
-      if (typeof rol === 'number') return Number(usuario.rolId) === rol;
-      const nombreRol = String(usuario.rolNombre ?? '').toUpperCase();
-      const rolRequerido = rol.toUpperCase();
-      return nombreRol === rolRequerido ||
-        (rolRequerido === 'ADMIN' && nombreRol === 'ADMINISTRADOR');
-    });
+    const permitido =
+      usuario &&
+      roles.some((rol) => {
+        if (typeof rol === 'number') return Number(usuario.rolId) === rol;
+        const nombreRol = String(usuario.rolNombre ?? '').toUpperCase();
+        const rolRequerido = rol.toUpperCase();
+        return (
+          nombreRol === rolRequerido ||
+          (rolRequerido === 'ADMIN' && nombreRol === 'ADMINISTRADOR')
+        );
+      });
 
     if (!permitido) {
-      throw new ForbiddenException(
-        'No tienes permisos para acceder a este recurso',
-      );
+      throw new ForbiddenException('No tienes permisos para acceder a este recurso');
     }
 
     return true;

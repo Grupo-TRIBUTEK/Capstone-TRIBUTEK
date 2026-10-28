@@ -1,3 +1,4 @@
+/** Pruebas de app. Cada test/it nombra el comportamiento esperado; los datos y dependencias de ensayo permiten comprobarlo de forma repetible. */
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';

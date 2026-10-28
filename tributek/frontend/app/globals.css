@@ -1,3 +1,6 @@
+/**
+ * Carga los estilos globales y reglas compartidas por las páginas. Los colores se apoyan en los tokens del tema.
+ */
 @import "tailwindcss";
 
 /* Paleta compartida. Los componentes consumen roles, no colores locales. */

@@ -1,3 +1,6 @@
+/**
+ * Lógica de sesión, credenciales y permisos de acceso. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 //4: lógica del login.
 import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto.js';
@@ -14,21 +17,26 @@ import { JwtService } from '@nestjs/jwt'; // Nueva importacion de JWT para tocke
  * consultar el usuario en la base de datos mediante Prisma y validar que la cuenta
  * exista y se encuentre activa.
  *
- * En las siguientes etapas también será responsable de:
+ * También se encarga de:
  * - Verificar la contraseña mediante Argon2.
  * - Generar el token de autenticación mediante JWT.
  */
 
-
-
 @Injectable()
 export class AuthService {
-constructor(
-  private readonly prisma: PrismaService,
-  private readonly jwtService: JwtService, // Agregamos JWTService para poder generar tokens de autenticación.
-) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService, // Agregamos JWTService para poder generar tokens de autenticación.
+  ) {}
 
-  async activarCuenta(token: string, nombreUsuario: string | undefined, email: string | undefined, password: string, confirmarPassword: string) {
+  /** Verifica el token temporal y su propósito, valida los datos y guarda la contraseña mediante hash al activar o restablecer la cuenta. */
+  async activarCuenta(
+    token: string,
+    nombreUsuario: string | undefined,
+    email: string | undefined,
+    password: string,
+    confirmarPassword: string,
+  ) {
     let payload: { sub?: string; purpose?: string };
     try {
       payload = await this.jwtService.verifyAsync(token);
@@ -53,42 +61,55 @@ constructor(
       ? identificador.toLowerCase()
       : identificador;
     if (esInvitacion && (!usuarioNombre || usuarioNombre.length > 80)) {
-      throw new BadRequestException('Ingresa un nombre de usuario v?lido de hasta 80 caracteres.');
+      throw new BadRequestException(
+        'Ingresa un nombre de usuario v?lido de hasta 80 caracteres.',
+      );
     }
 
     const correo = email?.trim().toLowerCase();
-    if (esInvitacion && (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))) {
-      throw new BadRequestException('Ingresa un correo electrónico válido de hasta 150 caracteres.');
+    if (
+      esInvitacion &&
+      (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo))
+    ) {
+      throw new BadRequestException(
+        'Ingresa un correo electrónico válido de hasta 150 caracteres.',
+      );
     }
 
-    const usuario = await this.prisma.db.orm.public.Usuario
-      .where({ id: BigInt(payload.sub) })
-      .first();
-    if (!usuario || (esInvitacion && usuario.activo) || (esRestablecimiento && !usuario.activo)) {
+    const usuario = await this.prisma.db.orm.public.Usuario.where({
+      id: BigInt(payload.sub),
+    }).first();
+    if (
+      !usuario ||
+      (esInvitacion && usuario.activo) ||
+      (esRestablecimiento && !usuario.activo)
+    ) {
       throw new UnauthorizedException('La cuenta no existe o el enlace ya no es v?lido.');
     }
 
-    const clientesAsociados = await this.prisma.db.orm.public.UsuarioCliente
-      .where({ usuarioId: usuario.id })
-      .all();
+    const clientesAsociados = await this.prisma.db.orm.public.UsuarioCliente.where({
+      usuarioId: usuario.id,
+    }).all();
     if (!clientesAsociados.length) {
       throw new UnauthorizedException('El acceso al portal fue revocado.');
     }
 
     if (usuarioNombre) {
-      const usuarioExistente = await this.prisma.db.orm.public.Usuario
-        .where({ nombreUsuario: usuarioNombre as Varchar<80> })
-        .first();
+      const usuarioExistente = await this.prisma.db.orm.public.Usuario.where({
+        nombreUsuario: usuarioNombre as Varchar<80>,
+      }).first();
       if (usuarioExistente && usuarioExistente.id !== usuario.id) {
         throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
       }
     }
     if (correo) {
-      const usuarioConCorreo = await this.prisma.db.orm.public.Usuario
-        .where({ email: correo as Varchar<150> })
-        .first();
+      const usuarioConCorreo = await this.prisma.db.orm.public.Usuario.where({
+        email: correo as Varchar<150>,
+      }).first();
       if (usuarioConCorreo && usuarioConCorreo.id !== usuario.id) {
-        throw new BadRequestException('Ese correo electrónico ya está asociado a otra cuenta.');
+        throw new BadRequestException(
+          'Ese correo electrónico ya está asociado a otra cuenta.',
+        );
       }
     }
 
@@ -118,76 +139,69 @@ constructor(
    * 5. Devuelve los datos básicos del usuario.
    */
   async login(loginDto: LoginDto) {
-  // Se obtiene el nombre de usuario enviado desde el formulario de login.
-  const identificador = loginDto.nombreUsuario?.trim();
-  const nombreUsuario = identificador?.includes('@')
-    ? identificador.toLowerCase()
-    : identificador;
-  let usuario = nombreUsuario
-    ? await this.prisma.db.orm.public.Usuario
-        .where({ nombreUsuario: nombreUsuario as Varchar<80> })
-        .first()
-    : null;
-  if (!usuario && nombreUsuario?.includes('@')) {
-    usuario = await this.prisma.db.orm.public.Usuario
-      .where({ email: nombreUsuario as Varchar<150> })
-      .first();
+    // Se obtiene el nombre de usuario enviado desde el formulario de login.
+    const identificador = loginDto.nombreUsuario?.trim();
+    const nombreUsuario = identificador?.includes('@')
+      ? identificador.toLowerCase()
+      : identificador;
+    let usuario = nombreUsuario
+      ? await this.prisma.db.orm.public.Usuario.where({
+          nombreUsuario: nombreUsuario as Varchar<80>,
+        }).first()
+      : null;
+    if (!usuario && nombreUsuario?.includes('@')) {
+      usuario = await this.prisma.db.orm.public.Usuario.where({
+        email: nombreUsuario as Varchar<150>,
+      }).first();
+    }
+
+    // Si no existe el usuario, se rechaza la autenticación.
+    if (!usuario) {
+      throw new UnauthorizedException('Usuario o contraseña incorrectos');
+    }
+
+    // Se verifica que la cuenta esté activa.
+    if (!usuario.activo) {
+      throw new UnauthorizedException('Usuario inactivo');
+    }
+
+    // Se compara la contraseña ingresada con el hash almacenado.
+    const passwordValida = await argon2.verify(usuario.passwordHash, loginDto.password);
+
+    // Si la contraseña no coincide, se rechaza la autenticación.
+    if (!passwordValida) {
+      throw new UnauthorizedException('Usuario o contraseña incorrectos');
+    }
+
+    const rol = await this.prisma.db.orm.public.Rol.where({ id: usuario.rolId }).first();
+    const rolNombre = String(rol?.nombre ?? '').toUpperCase();
+
+    // Por ahora se devuelve información básica del usuario.
+    // Posteriormente aquí se generará el token JWT.
+    const payload = {
+      // El sub representa el identificador del usuario dentro del JWT
+      sub: usuario.id.toString(),
+      nombreUsuario: usuario.nombreUsuario,
+      rolId: usuario.rolId.toString(),
+      rolNombre,
+    };
+
+    const accessToken = await this.jwtService.signAsync(payload);
+
+    return {
+      // Error corregido: En id se devuelven como strign y no como BigInit por temas de error con JSON
+
+      mensaje: 'Inicio de sesión exitoso',
+      access_token: accessToken,
+      usuario: {
+        id: usuario.id.toString(),
+        nombreUsuario: usuario.nombreUsuario,
+        rolId: usuario.rolId.toString(),
+        rolNombre,
+      },
+    };
   }
-
-  // Si no existe el usuario, se rechaza la autenticación.
-  if (!usuario) {
-    throw new UnauthorizedException('Usuario o contraseña incorrectos');
-  }
-
-  // Se verifica que la cuenta esté activa.
-  if (!usuario.activo) {
-    throw new UnauthorizedException('Usuario inactivo');
-  }
-
-  // Se compara la contraseña ingresada con el hash almacenado.
-  const passwordValida = await argon2.verify(
-    usuario.passwordHash,
-    loginDto.password,
-  );
-
-  // Si la contraseña no coincide, se rechaza la autenticación.
-  if (!passwordValida) {
-    throw new UnauthorizedException('Usuario o contraseña incorrectos');
-  }
-
-  const rol = await this.prisma.db.orm.public.Rol
-    .where({ id: usuario.rolId })
-    .first();
-  const rolNombre = String(rol?.nombre ?? '').toUpperCase();
-
-  // Por ahora se devuelve información básica del usuario.
-  // Posteriormente aquí se generará el token JWT.
-const payload = {
-  // El sub representa el identificador del usuario dentro del JWT
-  sub: usuario.id.toString(),
-  nombreUsuario: usuario.nombreUsuario,
-  rolId: usuario.rolId.toString(),
-  rolNombre,
-};
-
-const accessToken = await this.jwtService.signAsync(payload);
-
-return {
-    // Error corregido: En id se devuelven como strign y no como BigInit por temas de error con JSON
-
-  mensaje: 'Inicio de sesión exitoso',
-  access_token: accessToken,
-  usuario: {
-    id: usuario.id.toString(),
-    nombreUsuario: usuario.nombreUsuario,
-    rolId: usuario.rolId.toString(),
-    rolNombre,
-  },
-};
-}
 }
 
 // auth.service.ts contiene la lógica de negocio de la autenticación.
 // El controlador (auth.controller.ts) recibe la petición:
-
-

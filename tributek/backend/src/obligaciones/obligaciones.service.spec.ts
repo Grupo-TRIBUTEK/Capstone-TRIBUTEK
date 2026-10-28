@@ -1,3 +1,4 @@
+/** Pruebas de obligaciones. Cada test/it nombra el comportamiento esperado; los datos y dependencias de ensayo permiten comprobarlo de forma repetible. */
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../prisma/prisma.service.js', () => ({ PrismaService: class {} }));

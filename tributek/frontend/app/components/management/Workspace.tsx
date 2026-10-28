@@ -1,3 +1,6 @@
+/**
+ * Interfaz Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -66,6 +69,7 @@ const viewDescriptions: Record<View, string> = {
   formalizaciones: "Da seguimiento al proceso de constitución de empresas por cliente.",
 };
 
+/** Compara facturas con número y fecha contra una referencia ingresada. */
 function InvoiceComparison({ invoices, hidden }: { invoices: Invoice[]; hidden: boolean }) {
   const [reference, setReference] = useState("");
   const total = invoices
@@ -214,6 +218,7 @@ function serverToLedger(s: ObligacionesResponse, base: Ledger): Ledger {
   };
 }
 
+/** Coordina las vistas de gestión mensual, sus filtros y los datos locales o remotos que requiere cada vista. */
 export default function Workspace({ view }: { view: View }) {
   const store = useData();
   const localData = store.data as Ledger;
@@ -380,6 +385,7 @@ const isServerView =
 
   const openDeferrals = metaVista.deferrals.filter((d) => d.period <= period && deferralBalance(vista, d) > 0);
 
+  /** Persiste según la fuente de la vista. En las vistas remotas espera la sincronización antes de confirmar. */
   function save(next: Ledger, revision = vista.revision) {
     const previo = vista;
     setError("");
@@ -430,10 +436,12 @@ const isServerView =
     })();
   }
 
+  /** Ejecuta una acción síncrona y convierte excepciones en avisos. */
   function run(action: () => void) {
     try { action(); } catch (e) { setError(e instanceof Error ? e.message : "No se pudo guardar."); }
   }
 
+  /** Confirma y elimina el movimiento completo con las líneas que comparten transferId. */
   async function removePayments(key: string) {
     if (!window.confirm("¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?")) return;
     try {
@@ -499,6 +507,7 @@ const isServerView =
     return (await r.json()) as Invoice;
   }
 
+  /** Solicita la eliminación al backend e informa sus errores. */
   async function eliminarFactura(id: string) {
     const r = await authenticatedFetch(`/facturas/${encodeURIComponent(id)}`, {
       method: "DELETE",
@@ -566,6 +575,7 @@ const isServerView =
     }
   }
 
+  /** Abre o cierra el selector nativo de período cuando el navegador lo permite. */
   function togglePeriodPicker() {
     const input = document.querySelector<HTMLInputElement>(".tk-period-input");
     if (!input) return;

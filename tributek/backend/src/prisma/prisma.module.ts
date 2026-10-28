@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de conexión entre el backend y PostgreSQL: declara las dependencias que Nest debe conectar.
+ */
 import { Global, Module } from '@nestjs/common';
 import { PrismaService } from './prisma.service.js';
 

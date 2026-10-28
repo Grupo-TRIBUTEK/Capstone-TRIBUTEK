@@ -1,3 +1,4 @@
+/** Configura las pruebas unitarias y la resolución de alias. Los archivos .spec.ts definen los escenarios. */
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 

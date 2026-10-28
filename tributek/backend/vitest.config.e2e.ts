@@ -1,3 +1,4 @@
+/** Selecciona pruebas .e2e-spec.ts para comprobar la aplicación mediante solicitudes HTTP. */
 import { defineConfig } from 'vitest/config';
 import tsconfigPaths from 'vite-tsconfig-paths';
 

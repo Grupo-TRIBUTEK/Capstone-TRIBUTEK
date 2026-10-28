@@ -1,3 +1,6 @@
+/**
+ * Interfaz ClientNavbar. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import { useState } from "react";
@@ -13,16 +16,19 @@ const links = [
   { href: "/cliente#documentos", label: "Documentos" },
 ];
 
+/** Presenta navegación del portal y controla su menú móvil. */
 export default function ClientNavbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
 
+  /** Limpia la sesión local y redirige al inicio de sesión. */
   function logout() {
     clearAuth();
     router.replace("/login");
   }
 
+  /** Cierra el menú móvil después de elegir una opción. */
   function closeMenu() {
     setMenuOpen(false);
   }
@@ -37,7 +43,12 @@ export default function ClientNavbar() {
         className="relative mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-y-3 px-4 py-2 sm:px-6"
         aria-label="Navegación del portal de clientes"
       >
-        <Link href="/cliente" className="order-1 inline-flex w-fit items-center" aria-label="Inicio del portal de clientes" onClick={closeMenu}>
+        <Link
+          href="/cliente"
+          className="order-1 inline-flex w-fit items-center"
+          aria-label="Inicio del portal de clientes"
+          onClick={closeMenu}
+        >
           <BrandLogo width={90} height={40} priority className="h-auto w-24 sm:w-28" />
         </Link>
 

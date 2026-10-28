@@ -1,3 +1,6 @@
+/**
+ * Estructura compartida de estas rutas. Recibe children, el contenido de la página que Next.js está mostrando.
+ */
 "use client";
 
 import type { ReactNode } from "react";
@@ -11,6 +14,7 @@ type AdminLayoutProps = {
   children: ReactNode;
 };
 
+/** Compone la navegación administrativa y comprueba acceso antes de presentar el contenido. */
 export default function AdminLayout({ children }: AdminLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
@@ -30,6 +34,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     let isMounted = true;
 
+    /** Comprueba token y permiso administrativo; redirige al login si la sesión no autoriza esta vista. */
     async function validateAccess() {
       if (!getAccessToken() || !(await validateAdminAccess())) {
         router.replace("/login");

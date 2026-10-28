@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de directorio de clientes y cuentas del portal: declara las dependencias que Nest debe conectar.
+ */
 import { Module } from '@nestjs/common';
 import { ClientesController } from './clientes.controller.js';
 import { ClientesService } from './clientes.service.js';
@@ -6,7 +9,11 @@ import { AuthModule } from '../auth/auth.module.js';
 import { PassportModule } from '@nestjs/passport';
 
 @Module({
-  imports: [PrismaModule, AuthModule, PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+  ],
   controllers: [ClientesController],
   providers: [ClientesService],
 })

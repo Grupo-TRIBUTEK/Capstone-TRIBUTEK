@@ -1,3 +1,7 @@
+/**
+ * Lógica de períodos contables por cliente, año y mes. Aquí se coordinan validaciones y operaciones del módulo.
+ */
+import { parseId, parseAnio, parseMes } from '../common/parse.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import 'temporal-polyfill/global';
@@ -11,8 +15,6 @@ import { GuardarPeriodoDto } from './dto/guardar-periodo.dto.js';
 const ESTADO_ABIERTO = 'Abierto' as Varchar<30>;
 
 const FECHA_REGEX = /^\d{4}-\d{2}-\d{2}$/;
-const ANIO_MIN = 2000;
-const ANIO_MAX = 2099; // espejo de `validPeriod` en f29/model.ts (20xx)
 
 @Injectable()
 export class PeriodosService {
@@ -23,13 +25,13 @@ export class PeriodosService {
   async listar(filters: { clienteId?: string; anio?: string; mes?: string }) {
     let query = this.prisma.db.orm.public.PeriodoCliente;
     if (filters.clienteId) {
-      query = query.where({ clienteId: this.parseId(filters.clienteId, 'clienteId') });
+      query = query.where({ clienteId: parseId(filters.clienteId, 'clienteId') });
     }
     if (filters.anio) {
-      query = query.where({ anio: this.parseAnio(filters.anio) });
+      query = query.where({ anio: parseAnio(filters.anio) });
     }
     if (filters.mes) {
-      query = query.where({ mes: this.parseMes(filters.mes) });
+      query = query.where({ mes: parseMes(filters.mes) });
     }
     return query
       .orderBy((p) => p.anio.asc())
@@ -41,9 +43,9 @@ export class PeriodosService {
   //   existe; si existe, actualiza estado/vencimiento/cerrado sin tocar el id
   //   (otros módulos ya referencian `periodos_cliente.id` con FK).
   async guardar(data: GuardarPeriodoDto) {
-    const clienteId = this.parseId(data.clienteId, 'clienteId');
-    const anio = this.parseAnio(data.anio);
-    const mes = this.parseMes(data.mes);
+    const clienteId = parseId(data.clienteId, 'clienteId');
+    const anio = parseAnio(data.anio);
+    const mes = parseMes(data.mes);
     const estado = this.parseEstado(data.estadoContable);
     const fechaVencimiento = this.parseFecha(data.fechaVencimiento);
     const cerrado = data.cerrado ?? false;
@@ -51,13 +53,17 @@ export class PeriodosService {
       throw new BadRequestException('El campo "cerrado" debe ser booleano.');
     }
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     await this.prisma.db.transaction(async (tx) => {
-      const actual = await tx.orm.public.PeriodoCliente
-        .where({ clienteId, anio, mes }).first();
+      const actual = await tx.orm.public.PeriodoCliente.where({
+        clienteId,
+        anio,
+        mes,
+      }).first();
       if (actual) {
         await tx.orm.public.PeriodoCliente.where({ id: actual.id }).update({
           estadoContable: estado,
@@ -77,16 +83,22 @@ export class PeriodosService {
       });
     });
 
-    return this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
+    return this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
   }
 
   // QUÉ HACE: garantiza que exista la fila (cliente, año, mes) y devuelve su id.
   // QUIÉN LO USA: F29Service — `proyecciones_f29.periodo_id` es FK NOT NULL,
   //   así que guardar una proyección exige crear el período antes si no existe.
   async asegurar(clienteId: bigint, anio: number, mes: number): Promise<bigint> {
-    const existente = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
+    const existente = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
     if (existente) return existente.id;
     const creado = await this.prisma.db.orm.public.PeriodoCliente.create({
       clienteId,
@@ -103,17 +115,19 @@ export class PeriodosService {
   // Devuelve todos los IDs de períodos para una lista de clientes
   async obtenerIdsPorClientes(clienteIds: bigint[]): Promise<bigint[]> {
     if (!clienteIds.length) return [];
-    const periodos = await this.prisma.db.orm.public.PeriodoCliente
-      .where((p) => p.clienteId.in(clienteIds))
-      .all();
+    const periodos = await this.prisma.db.orm.public.PeriodoCliente.where((p) =>
+      p.clienteId.in(clienteIds),
+    ).all();
     return periodos.map((p) => p.id);
   }
 
-  // Asegura que exista un período (año, mes) para TODOS los clientes
-  // y devuelve el ID del primero encontrado/creado (para filtrar).
+  // Devuelve el primer período encontrado para ese año y mes, o null.
+  // No crea períodos ni devuelve todos los clientes; no usar para un listado mensual.
   async asegurarIds(anio: number, mes: number): Promise<bigint | null> {
-    const existente = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ anio, mes }).first();
+    const existente = await this.prisma.db.orm.public.PeriodoCliente.where({
+      anio,
+      mes,
+    }).first();
     if (existente) return existente.id;
     return null; // No creamos automáticamente para todos, solo devolvemos null
   }
@@ -121,35 +135,13 @@ export class PeriodosService {
   // Devuelve períodos por sus IDs
   async obtenerPorIds(periodoIds: bigint[]): Promise<Map<bigint, any>> {
     if (!periodoIds.length) return new Map();
-    const periodos = await this.prisma.db.orm.public.PeriodoCliente
-      .where((p) => p.id.in(periodoIds))
-      .all();
+    const periodos = await this.prisma.db.orm.public.PeriodoCliente.where((p) =>
+      p.id.in(periodoIds),
+    ).all();
     return new Map(periodos.map((p) => [p.id, p]));
   }
 
-  private parseId(raw: unknown, campo: string): bigint {
-    if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
-      throw new BadRequestException(`${campo} inválido: debe ser un número.`);
-    }
-    return BigInt(raw);
-  }
-
-  private parseAnio(raw: unknown): number {
-    const anio = typeof raw === 'string' ? Number(raw) : raw;
-    if (!Number.isInteger(anio) || (anio as number) < ANIO_MIN || (anio as number) > ANIO_MAX) {
-      throw new BadRequestException(`Año inválido: debe estar entre ${ANIO_MIN} y ${ANIO_MAX}.`);
-    }
-    return anio as number;
-  }
-
-  private parseMes(raw: unknown): number {
-    const mes = typeof raw === 'string' ? Number(raw) : raw;
-    if (!Number.isInteger(mes) || (mes as number) < 1 || (mes as number) > 12) {
-      throw new BadRequestException('Mes inválido: debe ser 1..12.');
-    }
-    return mes as number;
-  }
-
+  /** Usa Abierto cuando no se indicó estado y limita el texto a 30 caracteres. */
   private parseEstado(raw: unknown): Varchar<30> {
     if (raw === undefined || raw === null || raw === '') return ESTADO_ABIERTO;
     if (typeof raw !== 'string' || raw.length > 30) {
@@ -158,10 +150,13 @@ export class PeriodosService {
     return raw as Varchar<30>;
   }
 
+  /** Convierte el vencimiento opcional a una fecha sin hora; null indica que aún no hay vencimiento. */
   private parseFecha(raw: unknown): Temporal.PlainDate | null {
     if (raw === undefined || raw === null || raw === '') return null;
     if (typeof raw !== 'string' || !FECHA_REGEX.test(raw)) {
-      throw new BadRequestException('fechaVencimiento inválida: usa el formato YYYY-MM-DD o vacío.');
+      throw new BadRequestException(
+        'fechaVencimiento inválida: usa el formato YYYY-MM-DD o vacío.',
+      );
     }
     try {
       return Temporal.PlainDate.from(raw);

@@ -1,3 +1,6 @@
+/**
+ * Contrato de entrada para documentos y archivos asociados. DTO significa objeto de transferencia de datos; sus tipos describen campos. Las comprobaciones en ejecución dependen de decoradores, pipes y validaciones del servicio.
+ */
 // Datos que se esperan para cargar un documento.
 // QUÉ HACE: define la forma del body en POST /documentos.
 // ERROR INICIAL: se usaba `any`, el compilador no revisaba nada.

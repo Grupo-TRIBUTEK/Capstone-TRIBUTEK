@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de sesión, credenciales y permisos de acceso: declara las dependencias que Nest debe conectar.
+ */
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
 import { AuthService } from './auth.service.js';
@@ -9,10 +12,10 @@ import { RolesGuard } from './roles.guard.js'; // roles
 import { JwtAuthGuard } from './jwt-auth.guard.js';
 @Module({
   imports: [
-    //Agregamos el módulo de Prisma para poder 
+    //Agregamos el módulo de Prisma para poder
     // inyectar el servicio de Prisma en AuthService.
     PrismaModule,
-    // Agregamos el módulo de JWT para poder generar 
+    // Agregamos el módulo de JWT para poder generar
     // tokens de autenticación. :)
     JwtModule.register({
       // lobal: true permite utilizar JwtService desde otros

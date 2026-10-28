@@ -1,3 +1,6 @@
+/**
+ * Interfaz Navbar. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import { useState } from "react";
@@ -11,12 +14,13 @@ const links = [
   { href: "/#servicios", label: "Servicios" },
   { href: "/#preguntas", label: "Preguntas frecuentes" },
   { href: "/contacto", label: "Contacto" },
-
 ];
 
+/** Presenta la navegación pública y controla el menú móvil. */
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
 
+  /** Cierra el menú móvil después de elegir una opción. */
   function closeMenu() {
     setMenuOpen(false);
   }
@@ -38,12 +42,7 @@ export default function Navbar() {
           aria-label="TRIBUTEK, inicio"
           onClick={closeMenu}
         >
-          <BrandLogo
-            width={90}
-            height={40}
-            priority
-            className="h-auto w-24 sm:w-28"
-          />
+          <BrandLogo width={90} height={40} priority className="h-auto w-24 sm:w-28" />
         </Link>
 
         <div className="order-2 flex items-center gap-2 md:order-3">
@@ -82,10 +81,7 @@ export default function Navbar() {
               {label}
             </Link>
           ))}
-
         </div>
-
-
       </nav>
     </header>
   );

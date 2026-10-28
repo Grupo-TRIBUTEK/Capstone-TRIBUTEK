@@ -1,3 +1,6 @@
+/**
+ * Interfaz HeroShowcase. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import Image from "next/image";
@@ -11,22 +14,26 @@ const slides = [
     id: "dashboard",
     title: "Profesionales trabajando en equipo",
     label: "Equipo contable",
-    image: "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=85",
+    image:
+      "https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=1200&q=85",
   },
   {
     id: "documentos",
     title: "Revisión de documentos financieros",
     label: "Gestión financiera",
-    image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=85",
+    image:
+      "https://images.unsplash.com/photo-1554224155-6726b3ff858f?auto=format&fit=crop&w=1200&q=85",
   },
   {
     id: "obligaciones",
     title: "Reunión de trabajo",
     label: "Asesoría cercana",
-    image: "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=85",
+    image:
+      "https://images.unsplash.com/photo-1556761175-b413da4baf72?auto=format&fit=crop&w=1200&q=85",
   },
 ];
 
+/** Controla el carrusel de presentación y sus pausas de reproducción automática. */
 export default function HeroShowcase() {
   const [selectedIndex, setSelectedIndex] = useState(0);
   const resumeTimeoutRef = useRef<number | null>(null);
@@ -44,6 +51,7 @@ export default function HeroShowcase() {
     ],
   );
 
+  /** Pausa la reproducción automática durante la interacción con el carrusel. */
   const stopAutoplay = useCallback(() => {
     const autoplay = emblaApi?.plugins().autoplay;
     if (!autoplay) return;
@@ -51,6 +59,7 @@ export default function HeroShowcase() {
     autoplay.stop();
   }, [emblaApi]);
 
+  /** Reanuda el carrusel tras 1,2 segundos; cancela cualquier reanudación anterior. */
   const scheduleResumeAutoplay = useCallback(() => {
     const autoplay = emblaApi?.plugins().autoplay;
     if (!autoplay) return;
@@ -67,6 +76,7 @@ export default function HeroShowcase() {
   useEffect(() => {
     if (!emblaApi) return;
 
+    /** Actualiza el indicador del carrusel con la diapositiva seleccionada. */
     const onSelect = () => {
       setSelectedIndex(emblaApi.selectedScrollSnap());
     };
@@ -74,6 +84,7 @@ export default function HeroShowcase() {
     onSelect();
 
     const container = emblaApi.containerNode();
+    /** Programa la reanudación del carrusel al retirar el puntero. */
     const resumeOnMouseLeave = () => scheduleResumeAutoplay();
 
     emblaApi.on("select", onSelect);
@@ -93,6 +104,7 @@ export default function HeroShowcase() {
     };
   }, [emblaApi, stopAutoplay, scheduleResumeAutoplay]);
 
+  /** Navega a la diapositiva seleccionada, pausa y programa la reanudación automática. */
   const handleDotClick = (index: number) => {
     emblaApi?.scrollTo(index);
     stopAutoplay();
@@ -101,7 +113,10 @@ export default function HeroShowcase() {
 
   return (
     <div className="relative isolate w-full">
-      <div aria-hidden="true" className="hero-showcase-plaque absolute inset-x-3 top-3 bottom-7 z-0 translate-x-3 translate-y-3 rounded-2xl" />
+      <div
+        aria-hidden="true"
+        className="hero-showcase-plaque absolute inset-x-3 top-3 bottom-7 z-0 translate-x-3 translate-y-3 rounded-2xl"
+      />
       <div ref={emblaRef} className="hero-showcase-shadow relative z-10 overflow-hidden">
         <div className="flex">
           {slides.map((slide) => (
@@ -116,8 +131,12 @@ export default function HeroShowcase() {
                     className="object-cover"
                   />
                   <div className="hero-showcase-caption absolute inset-x-0 bottom-0 flex items-center justify-between gap-3 px-4 py-3">
-                    <span className="text-sm font-semibold text-white">{slide.label}</span>
-                    <span className="text-[10px] font-medium uppercase tracking-wider text-white/75">Imagen ilustrativa</span>
+                    <span className="text-sm font-semibold text-white">
+                      {slide.label}
+                    </span>
+                    <span className="text-[10px] font-medium uppercase tracking-wider text-white/75">
+                      Imagen ilustrativa
+                    </span>
                   </div>
                 </div>
               </div>
@@ -127,8 +146,6 @@ export default function HeroShowcase() {
       </div>
 
       <div className="mt-4 flex items-center justify-center gap-3">
-       
-
         <div className="flex items-center gap-2">
           {slides.map((slide, index) => (
             <button
@@ -143,7 +160,6 @@ export default function HeroShowcase() {
             />
           ))}
         </div>
-      
       </div>
     </div>
   );

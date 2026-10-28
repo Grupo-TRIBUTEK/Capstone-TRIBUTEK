@@ -1,3 +1,6 @@
+/**
+ * Interfaz F29Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import Link from 'next/link';
@@ -15,7 +18,9 @@ type Candidate = {
     client: Client;
     files: File[];
 };
+/** Obtiene el período actual con la fecha local del equipo. */
 const currentMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+/** Coordina clientes, período, borradores e importación RCV, con respaldo local y sincronización remota en los puntos indicados. */
 export default function F29Workspace() {
     const ledger = useData();
     const [db, setDb] = useState<Database>(emptyDatabase), [ready, setReady] = useState(false), [blocked, setBlocked] = useState('');
@@ -37,10 +42,14 @@ export default function F29Workspace() {
         setBlocked(String(e));
     } setReady(true); }); }, []);
     useEffect(() => { if (!dirty)
-        return; const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
+        return; /** Activa la advertencia nativa antes de abandonar la página con cambios pendientes. */
+const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
+    /** Ejecuta una acción y presenta errores; ignora la cancelación voluntaria del selector. */
     function attempt(fn: () => void | Promise<void>) { setError(''); setNotice(''); Promise.resolve().then(fn).catch(e => { if (e instanceof DOMException && e.name === 'AbortError')
         return; setError(e instanceof Error ? e.message : String(e)); }); }
+    /** Guarda una revisión local y actualiza el estado de la vista. */
     function commit(next: Database) { const saved = writeDatabase(next, db.revision); setDb(saved); return saved; }
+    /** Guarda la proyección local y solicita sincronización al backend, informando su resultado. */
     function save(p = draft) { if (!p)
         return; commit({ ...db, projections: [...db.projections.filter(x => x.clientId !== p.clientId || x.period !== p.period), p] }); setDraft(p); setDirty(false); setNotice('Proyección guardada localmente…'); syncProjection(p).then(msg => setNotice(msg ? `Guardada localmente. ${msg}` : 'Proyección guardada en TRIBUTEK.')).catch(e => setNotice(`Guardada localmente. No se pudo sincronizar con el servidor: ${e instanceof Error ? e.message : String(e)}`)); }
     // QUÉ HACE: envía la proyección al backend (PUT /f29/proyeccion/:clienteId).
@@ -82,10 +91,14 @@ export default function F29Workspace() {
         }
         return null;
     }
+    /** Pide confirmar el descarte de cambios pendientes. */
     function leave() { return !dirty || confirm('Hay cambios sin guardar. ¿Quieres descartarlos?'); }
+    /** Abre la proyección del cliente o un borrador nuevo para el período actual. */
     function open(c: Client) { if (!leave())
         return; setActive(c); setDraft(db.projections.find(p => p.clientId === c.id && p.period === period) ?? newProjection(c.id, period)); setDirty(false); setError(''); setNotice(''); }
+    /** Actualiza el borrador, marca cambios pendientes y retira la revisión anterior. */
     function change(p: Projection) { setDraft({ ...p, reviewed: false }); setDirty(true); }
+    /** Asocia CSV a clientes y período y prepara la elección de otro mes detectado cuando corresponde. */
     function foundFiles(pool: File[], all: boolean, refresh = false, targetPeriod = period) {
         const list = (all ? db.clients : active ? [active] : []).map(client => ({ client, files: pool.filter(f => matchesFile(f.name, client, targetPeriod)) }));
         setAvailable(Object.fromEntries(list.map(c => [c.client.id, c.files.length ? `${c.files.length} RCV encontrados` : 'Sin RCV'])));
@@ -99,7 +112,8 @@ export default function F29Workspace() {
         setIdentity(false);
         setCandidates(list);
     }
-    function useDetectedPeriod(next: string) {
+    /** Cambia al período detectado y vuelve a buscar sus archivos. */
+    function selectDetectedPeriod(next: string) {
         if (!periodChoice || !leave()) return;
         const { pool, all } = periodChoice;
         setPeriod(next);
@@ -110,6 +124,7 @@ export default function F29Workspace() {
         setNotice(`Período detectado: ${periodLabel(next)}. Revisa los archivos antes de importarlos.`);
         foundFiles(pool, all, false, next);
     }
+    /** Abre o reutiliza la carpeta RCV; utiliza el input alternativo si falta la API. */
     async function chooseFolder(choose = true, search?: { all: boolean; refresh: boolean }) {
         const found = await folderFiles(choose);
         if (!found) {
@@ -122,6 +137,7 @@ export default function F29Workspace() {
         setFolder(found.name);
         return found.files;
     }
+    /** Recibe los CSV del input y retoma la búsqueda pendiente. */
     function receivedFiles(e: ChangeEvent<HTMLInputElement>) {
         const selected = Array.from(e.target.files ?? []);
         e.target.value = '';
@@ -134,11 +150,13 @@ export default function F29Workspace() {
         if (search) foundFiles(selected, search.all, search.refresh);
         else if (active) foundFiles(selected, false);
     }
+    /** Obtiene los archivos disponibles y busca coincidencias para uno o todos los clientes. */
     async function locate(all: boolean, refresh = false) {
         const pool = sourceMode.current === 'folder' || !files.length
             ? await chooseFolder(false, { all, refresh }) : files;
         if (pool) foundFiles(pool, all, refresh);
     }
+    /** Importa los archivos confirmados y guarda el resultado local. Acumula errores por cliente sin ocultar los resultados de los demás. */
     async function process() {
         if (!candidates || !acuse || !identity)
             return;
@@ -184,6 +202,7 @@ export default function F29Workspace() {
             setBusy(false);
         }
     }
+    /** Reúne candidatos del directorio para incorporarlos al módulo F29. */
     async function importClients() {
         const candidates: {
             name: string;
@@ -218,6 +237,7 @@ export default function F29Workspace() {
         commit({ ...db, clients });
         setNotice(`Se agregaron ${clients.length - db.clients.length} clientes a F29. ${invalid ? `${invalid} entradas sin RUT válido se omitieron.` : ''}${remoteError}`);
     }
+    /** Valida razón social y RUT antes de guardar el cliente de proyecciones. */
     function saveClient(c: Client) {
         const client = { ...c, name: c.name.trim(), rut: normalizeRut(c.rut) };
         if (!client.name || !validRut(client.rut))
@@ -229,13 +249,17 @@ export default function F29Workspace() {
             setActive(client);
         setEditClient(null);
     }
+    /** Confirma y elimina el cliente y proyecciones del módulo F29, sin eliminar su ficha del directorio general. */
     function removeClient() { if (!active || !leave() || !confirm(`¿Eliminar a ${active.name} del módulo F29 y sus proyecciones? Esto no elimina al cliente del directorio general.`))
         return; commit({ ...db, clients: db.clients.filter(c => c.id !== active.id), projections: db.projections.filter(p => p.clientId !== active.id) }); setActive(null); setDraft(null); setDirty(false); }
+    /** Solicita un período para trabajar conservando los meses anteriores. */
     function startMonth() { if (!leave())
         return; const raw = prompt('Período a iniciar (YYYYMM). Los meses anteriores se conservan.', period.replace('-', '')); if (!raw)
         return; const next = raw.includes('-') ? raw : `${raw.slice(0, 4)}-${raw.slice(4)}`; if (!validPeriod(next))
         throw new Error('Ingresa un período válido, por ejemplo 202610.'); setPeriod(next); setActive(null); setDraft(null); setDirty(false); setAvailable({}); setNotice('Período seleccionado.'); }
+    /** Copia el texto al portapapeles y muestra confirmación. */
     async function copy(text: string) { await navigator.clipboard.writeText(text); setNotice('Texto copiado. Ya puedes pegarlo en WhatsApp.'); }
+    /** Lee y valida un respaldo JSON y solicita confirmación antes de reemplazar los datos del módulo. */
     async function restore(e: ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; e.target.value = ''; if (!file)
         return; if (file.size > 30000000)
         throw new Error('El respaldo supera 30 MB.'); const next = validateDatabase(JSON.parse(await file.text())); if (!confirm('¿Reemplazar todos los datos F29 de este navegador por el respaldo?'))
@@ -280,7 +304,7 @@ export default function F29Workspace() {
     {editClient && <Modal title={editClient === 'new' ? 'Agregar cliente a F29' : 'Editar nombre en F29'} onClose={() => setEditClient(null)}><ClientForm client={editClient} save={saveClient}/></Modal>}
     {periodChoice && <Modal title="Período detectado en los RCV" onClose={() => setPeriodChoice(null)}>
       <p>Estás trabajando en {periodLabel(period)}, pero los archivos de este cliente corresponden a otro período. Selecciona el mes que deseas importar.</p>
-      {periodChoice.periods.map(value => <button key={value} onClick={() => useDetectedPeriod(value)}>Usar {periodLabel(value)}</button>)}
+      {periodChoice.periods.map(value => <button key={value} onClick={() => selectDetectedPeriod(value)}>Usar {periodLabel(value)}</button>)}
       <button onClick={() => setPeriodChoice(null)}>Cancelar</button>
     </Modal>}
     {candidates && <Modal title="Revisar archivos encontrados" onClose={() => { if (!busy)
@@ -288,6 +312,7 @@ export default function F29Workspace() {
     {preview && active && draft && <Modal title="Informe para el cliente" wide onClose={() => setPreview(false)}><ReportPreview client={active} p={draft}/><button onClick={() => attempt(async () => { setNotice(await exportImage(active, draft, false)); })}>Descargar PNG</button><button onClick={() => attempt(async () => { setNotice(await exportImage(active, draft, true)); })}>Copiar informe</button></Modal>}
   </main>;
 }
+/** Presenta el control numérico con límites para tasas o montos. */
 function NumberField({ label, value, change, rate = false }: {
     label: string;
     value: number;
@@ -297,6 +322,7 @@ function NumberField({ label, value, change, rate = false }: {
     return <input aria-label={label} type="number" inputMode="decimal" min="0" max={rate ? 100 : 1e12} step={rate ? '0.01' : '1'} value={value || ''} placeholder="0" onChange={e => { const n = Number(e.target.value); if (Number.isFinite(n) && n >= 0 && n <= (rate ? 100 : 1e12) && (rate || Number.isInteger(n)))
         change(n); }}/>;
 }
+/** Presenta resultados calculados y campos editables; comunica cambios al componente principal. */
 function Sheet({ p, onChange }: {
     p: Projection;
     onChange: (p: Projection) => void;
@@ -310,6 +336,7 @@ function Sheet({ p, onChange }: {
         string,
         number[]
     ][] = [['Facturas recibidas', [33]], ['Factura de compra electrónica', [46]], ['Nota de crédito recibida', [61]], ['Nota de débito recibida', [56]], ['Facturas exentas', [34]]];
+    /** Construye el detalle de compras o ventas, incluyendo los ajustes de comprobantes electrónicos. */
     function table(kind: Kind, groups: [
         string,
         number[]
@@ -317,14 +344,18 @@ function Sheet({ p, onChange }: {
         const totals = kind === 'sales' ? { ...r.sales, net: r.sales.net + p.manual.voucherNet, iva: r.debit, total: r.sales.total + p.manual.voucherNet + r.voucherIva } : r.purchases;
         return <section className="f29-sheet"><h2>{kind === 'sales' ? 'Ventas' : 'Compras'}</h2><div className="f29-table-wrap"><table><thead><tr><th>Detalle</th><th>Exento</th><th>Neto</th><th>{kind === 'sales' ? 'IVA débito' : 'IVA recuperable'}</th><th>Total</th></tr></thead><tbody>{kind === 'sales' && <tr><th>Comprobante electrónico</th><td><Amount value={0}/></td><td><NumberField label={manualLabels.voucherNet} value={p.manual.voucherNet} change={v => onChange({ ...p, manual: { ...p.manual, voucherNet: v } })}/></td><td><Amount value={r.voucherIva}/></td><td><Amount value={p.manual.voucherNet + r.voucherIva}/></td></tr>}{groups.map(([label, codes]) => { const row = sumRows(p[kind]?.rows.filter(row => codes.includes(row.code)) ?? []); return <tr key={label}><th>{label}</th>{(['exempt', 'net', 'iva', 'total'] as const).map(k => <td key={k}><Amount value={row[k]}/></td>)}</tr>; })}</tbody><tfoot><tr><th>Totales</th>{(['exempt', 'net', 'iva', 'total'] as const).map(k => <td key={k}><Amount value={totals[k]}/></td>)}</tr></tfoot></table></div></section>;
     }
+    /** Construye una fila de resultado calculado con su etiqueta y monto. */
     const resultRow = (name: string, value: number) => <tr key={name}><th>{name}</th><td><Amount value={value}/></td></tr>;
+    /** Construye una fila de ingreso manual y actualiza solo el campo seleccionado. */
     const inputRow = (key: ManualKey) => <tr key={key}><th>{manualLabels[key]}</th><td><NumberField label={manualLabels[key]} value={p.manual[key]} change={v => onChange({ ...p, manual: { ...p.manual, [key]: v } })}/></td></tr>;
     return <><div className="f29-results" aria-live="polite" aria-atomic="true"><div className="f29-result-main"><div className="f29-result-heading"><span>Determinación automática · IVA</span><HelpTip label="Determinación automática · IVA" text="Calcula el saldo entre el IVA débito de ventas y el IVA crédito de compras, importaciones y remanente previo. Es una estimación interna de TRIBUTEK; no reemplaza la declaración ni la determinación oficial del SII." /></div><h2>{!p.sales && !p.purchases && !Object.values(p.manual).some(Boolean) ? 'Sin datos ingresados' : r.remainder > 0 ? 'Remanente estimado' : r.ivaPayable > 0 ? 'IVA estimado a pagar' : 'Sin IVA por pagar ni remanente'}</h2><strong><Amount value={r.remainder || r.ivaPayable}/></strong></div><div><div className="f29-result-heading"><span>Otras obligaciones</span><HelpTip label="Otras obligaciones" text="Suma retenciones, impuesto único, cuotas de préstamos, PPM, cotizaciones y honorarios considerados en esta proyección. Es un cálculo interno; no hay una definición oficial asignada a este indicador." /></div><strong><Amount value={r.other}/></strong></div><div><div className="f29-result-heading"><span>Total estimado a pagar</span><HelpTip label="Total estimado a pagar" text="Suma el IVA y las demás obligaciones calculadas o ingresadas en esta proyección. Es una estimación de TRIBUTEK; confirma el monto con los antecedentes y la declaración oficial." /></div><strong><Amount value={r.total}/></strong></div></div>{table('sales', saleGroups)}{table('purchases', purchaseGroups)}<section className="f29-sheet"><h2>Determinación estimada F29</h2><div className="f29-determination"><table><tbody>{saleGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.sales?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{resultRow('IVA comprobante electrónico', r.voucherIva)}{resultRow('IVA débito · ventas', r.debit)}{purchaseGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.purchases?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{inputRow('importation')}{inputRow('previousCredit')}{resultRow('IVA crédito · compras y remanente', r.credit)}{resultRow(r.remainder ? 'Remanente estimado' : 'IVA estimado a pagar', r.remainder || r.ivaPayable)}</tbody></table><table><tbody>{(['retained', 'singleTax', 'loanSalary', 'loanFees', 'withholding'] as ManualKey[]).map(inputRow)}<tr><th>Tasa PPM (%)</th><td><NumberField label="Tasa PPM (%)" value={p.ppmRate} rate change={v => onChange({ ...p, ppmRate: v })}/></td></tr><tr><th>PPM calculado sobre neto de ventas</th><td><Amount value={r.ppm}/><label className="f29-check"><input type="checkbox" checked={p.ppmOverride !== null} onChange={e => onChange({ ...p, ppmOverride: e.target.checked ? r.ppm : null })}/> Ajustar monto PPM</label>{p.ppmOverride !== null && <NumberField label="Monto PPM manual" value={p.ppmOverride} change={v => onChange({ ...p, ppmOverride: v })}/>}</td></tr>{resultRow('Impuesto estimado a pagar', r.taxes)}{inputRow('contributions')}{inputRow('fees')}</tbody></table></div></section></>;
 }
+/** Muestra el archivo fuente y sus movimientos para revisar la importación. */
 function SourceDetail({ kind, source }: {
     kind: Kind;
     source?: Source;
 }) { return <section><h3>{kind === 'sales' ? 'Ventas' : 'Compras'}</h3>{!source ? <p>Sin registros importados.</p> : <><p>{source.name} · {source.rows.length} documentos · importado {new Date(source.importedAt).toLocaleString('es-CL')}</p>{source.warnings.map(w => <p key={w} className="f29-error">{w}</p>)}<div className="f29-table-wrap"><table><thead><tr><th>RUT</th><th>Razón social</th><th>Docs.</th><th>Neto</th><th>IVA</th><th>Total</th></tr></thead><tbody>{associated(source.rows).map(row => <tr key={row.rut}><td>{row.rut}</td><td>{row.name}</td><td>{row.docs}</td><td><Amount value={row.net}/></td><td><Amount value={row.iva}/></td><td><Amount value={row.total}/></td></tr>)}</tbody></table></div><details><summary>Ver documentos originales importados</summary><div className="f29-table-wrap"><table><thead><tr><th>Tipo</th><th>Folio</th><th>Fecha</th><th>Razón social</th><th>Exento</th><th>Neto</th><th>IVA</th><th>Total</th></tr></thead><tbody>{source.rows.map((row: Row) => <tr key={`${row.code}|${row.rut}|${row.folio}`}><td>{row.code}</td><td>{row.folio}</td><td>{row.date}</td><td>{row.name}</td><td><Amount value={row.exempt}/></td><td><Amount value={row.net}/></td><td><Amount value={row.iva}/></td><td><Amount value={row.total}/></td></tr>)}</tbody></table></div></details></>}</section>; }
+/** Edita razón social y RUT del cliente del módulo. */
 function ClientForm({ client, save }: {
     client: Client | 'new';
     save: (c: Client) => void;
@@ -334,6 +365,7 @@ function ClientForm({ client, save }: {
 catch (e) {
     setError(String(e));
 } }}><label>Contribuyente<input required maxLength={200} value={name} onChange={e => setName(e.target.value)}/></label><label>RUT<input required disabled={client !== 'new'} value={rut} onChange={e => setRut(e.target.value)} placeholder="78239603-K"/></label>{error && <p role="alert">{error}</p>}<button type="submit" className="f29-primary">Guardar cliente</button></form>; }
+/** Genera e inserta el canvas del informe en la vista previa. */
 function ReportPreview({ client, p }: {
     client: Client;
     p: Projection;
@@ -348,5 +380,5 @@ catch (e) {
     queueMicrotask(() => setError(String(e)));
 } }, [client, p]); return <>{error && <p role="alert">{error}</p>}<div ref={ref} className="f29-report-preview"/></>; }
 
+/** Presenta el monto y destaca los negativos. */
 function Amount({value}: {value: number}) { return <span className={value < 0 ? "f29-negative" : undefined}>{money(value)}</span>; }
-

@@ -1,3 +1,6 @@
+/**
+ * Página de la ruta /cliente/presentaciones. Next.js utiliza page.tsx para publicar esta vista.
+ */
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,6 +11,7 @@ import {
   getAccessToken,
 } from "@/app/features/auth/auth-client";
 
+/** Comprueba la sesión y presenta la sección de presentaciones disponible en el portal. */
 export default function PresentacionesPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -16,6 +20,7 @@ export default function PresentacionesPage() {
   useEffect(() => {
     let cancelled = false;
 
+    /** Verifica acceso al cliente mediante mis-clientes y redirige cuando no hay una sesión válida. */
     async function validarSesion() {
       if (!getAccessToken()) {
         router.replace("/login");
@@ -62,7 +67,8 @@ export default function PresentacionesPage() {
           Presentaciones
         </h1>
         <p className="mt-3 max-w-2xl leading-relaxed text-text-muted">
-          Revisa el material informativo que TRIBUTEK prepara para sus clientes, organizado por área de asesoramiento.
+          Revisa el material informativo que TRIBUTEK prepara para sus clientes,
+          organizado por área de asesoramiento.
         </p>
 
         {/* Estado de carga y errores */}
@@ -84,8 +90,13 @@ export default function PresentacionesPage() {
         {!loading && !error && (
           <section className="mt-8" aria-labelledby="asesoramiento-title">
             <div className="mb-5">
-              <p className="text-label font-semibold uppercase tracking-[0.16em] text-secondary-strong">Categoría</p>
-              <h2 id="asesoramiento-title" className="mt-1 font-display text-2xl font-bold text-text-primary">
+              <p className="text-label font-semibold uppercase tracking-[0.16em] text-secondary-strong">
+                Categoría
+              </p>
+              <h2
+                id="asesoramiento-title"
+                className="mt-1 font-display text-2xl font-bold text-text-primary"
+              >
                 Asesoramiento TRIBUTEK
               </h2>
             </div>
@@ -94,18 +105,27 @@ export default function PresentacionesPage() {
                 { category: "Asesoría tributaria", title: "Planificación tributaria" },
                 { category: "Gestión contable", title: "Contabilidad para tu negocio" },
               ].map((presentation, index) => (
-                <article key={presentation.title} className="presentation-card overflow-hidden rounded-xl border border-border bg-surface">
+                <article
+                  key={presentation.title}
+                  className="presentation-card overflow-hidden rounded-xl border border-border bg-surface"
+                >
                   <div className="flex min-h-44 flex-col justify-between bg-primary p-6 text-white">
                     <span className="inline-flex w-fit rounded-full border border-white/30 bg-white/10 px-3 py-1 text-label font-semibold uppercase tracking-wide">
                       {presentation.category}
                     </span>
                     <div>
-                      <p className="text-body-sm text-white/75">Presentación {String(index + 1).padStart(2, "0")}</p>
-                      <h3 className="mt-1 font-display text-2xl font-bold">{presentation.title}</h3>
+                      <p className="text-body-sm text-white/75">
+                        Presentación {String(index + 1).padStart(2, "0")}
+                      </p>
+                      <h3 className="mt-1 font-display text-2xl font-bold">
+                        {presentation.title}
+                      </h3>
                     </div>
                   </div>
                   <div className="flex flex-col gap-4 p-6 sm:flex-row sm:items-center sm:justify-between">
-                    <p className="text-body-sm text-text-muted">El contenido y el archivo se publicarán próximamente.</p>
+                    <p className="text-body-sm text-text-muted">
+                      El contenido y el archivo se publicarán próximamente.
+                    </p>
                     <span className="inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg bg-surface-muted px-4 py-2 text-body-sm font-semibold text-text-muted">
                       En preparación
                     </span>

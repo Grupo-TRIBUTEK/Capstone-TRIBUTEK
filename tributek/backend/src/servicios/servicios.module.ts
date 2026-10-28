@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de catálogo de servicios y asignaciones a clientes: declara las dependencias que Nest debe conectar.
+ */
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module.js';
@@ -6,7 +9,11 @@ import { ServiciosController } from './servicios.controller.js';
 import { ServiciosService } from './servicios.service.js';
 
 @Module({
-  imports: [PrismaModule, AuthModule, PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+  ],
   controllers: [ServiciosController],
   providers: [ServiciosService],
 })

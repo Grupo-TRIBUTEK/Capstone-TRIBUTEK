@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de documentos y archivos asociados: declara las dependencias que Nest debe conectar.
+ */
 import { Module } from '@nestjs/common';
 import { AuthModule } from '../auth/auth.module.js';
 import { PassportModule } from '@nestjs/passport';

@@ -1,8 +1,7 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+/**
+ * Lógica de catálogo de servicios y asignaciones a clientes. Aquí se coordinan validaciones y operaciones del módulo.
+ */
+import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import 'temporal-polyfill/global';
 import 'temporal-polyfill/types/global';
 import { PrismaService } from '../prisma/prisma.service.js';
@@ -13,6 +12,7 @@ import { CreateServicioDto } from './dto/create-servicio.dto.js';
 export class ServiciosService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Lista el catálogo de servicios y aplica la búsqueda cuando corresponde. */
   async obtenerServicios(buscar?: string) {
     const textoBusqueda = buscar?.trim();
     const servicios = await this.prisma.db.orm.public.Servicio.orderBy((servicio) =>
@@ -28,6 +28,7 @@ export class ServiciosService {
     );
   }
 
+  /** Exige un nombre y crea el servicio en el catálogo. */
   async crearServicio(datos: CreateServicioDto) {
     const nombre = datos.nombre.trim();
     if (!nombre) throw new ConflictException('El nombre del servicio es obligatorio.');
@@ -39,11 +40,14 @@ export class ServiciosService {
     } as any);
   }
 
+  /** Valida el nombre y actualiza un servicio existente. */
   async actualizarServicio(id: string, datos: CreateServicioDto) {
     const nombre = datos.nombre.trim();
     if (!nombre) throw new ConflictException('El nombre del servicio es obligatorio.');
 
-    const servicio = await this.prisma.db.orm.public.Servicio.where({ id: BigInt(id) }).first();
+    const servicio = await this.prisma.db.orm.public.Servicio.where({
+      id: BigInt(id),
+    }).first();
     if (!servicio) throw new NotFoundException('Servicio no encontrado.');
 
     return this.prisma.db.orm.public.Servicio.where({ id: BigInt(id) }).update({
@@ -53,6 +57,7 @@ export class ServiciosService {
     } as any);
   }
 
+  /** Relaciona asignaciones con sus clientes y servicios para el listado. */
   async obtenerAsignaciones() {
     const [asignaciones, servicios, clientes] = await Promise.all([
       this.prisma.db.orm.public.ClienteServicio.orderBy((asignacion) =>
@@ -62,8 +67,12 @@ export class ServiciosService {
       this.prisma.db.orm.public.Cliente.all(),
     ]);
 
-    const serviciosPorId = new Map(servicios.map((servicio) => [String(servicio.id), servicio]));
-    const clientesPorId = new Map(clientes.map((cliente) => [String(cliente.id), cliente]));
+    const serviciosPorId = new Map(
+      servicios.map((servicio) => [String(servicio.id), servicio]),
+    );
+    const clientesPorId = new Map(
+      clientes.map((cliente) => [String(cliente.id), cliente]),
+    );
 
     return asignaciones.map((asignacion) => ({
       ...asignacion,
@@ -72,14 +81,13 @@ export class ServiciosService {
     }));
   }
 
+  /** Comprueba cliente y servicio y revisa relaciones existentes antes de asignar. */
   async crearAsignacion(datos: CreateAsignacionServicioDto) {
     await this.validarReferencias(datos.clienteId, datos.servicioId);
-    const existente = await this.prisma.db.orm.public.ClienteServicio
-      .where({
-        clienteId: BigInt(datos.clienteId),
-        servicioId: BigInt(datos.servicioId),
-      })
-      .first();
+    const existente = await this.prisma.db.orm.public.ClienteServicio.where({
+      clienteId: BigInt(datos.clienteId),
+      servicioId: BigInt(datos.servicioId),
+    }).first();
 
     if (existente) {
       throw new ConflictException('El servicio ya está asociado a este cliente.');
@@ -89,11 +97,14 @@ export class ServiciosService {
       clienteId: BigInt(datos.clienteId),
       servicioId: BigInt(datos.servicioId),
       fechaInicio: datos.fechaInicio ? Temporal.PlainDate.from(datos.fechaInicio) : null,
-      fechaTermino: datos.fechaTermino ? Temporal.PlainDate.from(datos.fechaTermino) : null,
+      fechaTermino: datos.fechaTermino
+        ? Temporal.PlainDate.from(datos.fechaTermino)
+        : null,
       estado: datos.estado,
     } as any);
   }
 
+  /** Valida referencias y modifica una asignación existente. */
   async actualizarAsignacion(id: string, datos: CreateAsignacionServicioDto) {
     await this.validarReferencias(datos.clienteId, datos.servicioId);
     const asignacion = await this.prisma.db.orm.public.ClienteServicio.where({
@@ -105,11 +116,14 @@ export class ServiciosService {
       clienteId: BigInt(datos.clienteId),
       servicioId: BigInt(datos.servicioId),
       fechaInicio: datos.fechaInicio ? Temporal.PlainDate.from(datos.fechaInicio) : null,
-      fechaTermino: datos.fechaTermino ? Temporal.PlainDate.from(datos.fechaTermino) : null,
+      fechaTermino: datos.fechaTermino
+        ? Temporal.PlainDate.from(datos.fechaTermino)
+        : null,
       estado: datos.estado,
     } as any);
   }
 
+  /** Finaliza una asignación conservando su registro. */
   async finalizarAsignacion(id: string) {
     const asignacion = await this.prisma.db.orm.public.ClienteServicio.where({
       id: BigInt(id),
@@ -122,6 +136,7 @@ export class ServiciosService {
     } as any);
   }
 
+  /** Consulta cliente y servicio en paralelo y exige que ambos existan. */
   private async validarReferencias(clienteId: string, servicioId: string) {
     const [cliente, servicio] = await Promise.all([
       this.prisma.db.orm.public.Cliente.where({ id: BigInt(clienteId) }).first(),

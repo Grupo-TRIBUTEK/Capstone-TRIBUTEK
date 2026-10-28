@@ -1,3 +1,6 @@
+/**
+ * Almacén reactivo del navegador: localStorage conserva la copia y React escucha sus cambios. No sustituye la persistencia remota.
+ */
 "use client";
 import { useSyncExternalStore } from "react";
 import { mergeClients } from "./mergeClients";
@@ -7,9 +10,11 @@ const KEY = "tributek:ficha-ensayo:v1";
 const initial = { data: emptyData, ready: false, error: "" };
 let snapshot = initial;
 const listeners = new Set<() => void>();
+/** Notifica a los componentes suscritos que cambió el registro compartido. */
 function emit() {
   listeners.forEach((fn) => fn());
 }
+/** Lee y valida el almacenamiento local; conserva un mensaje de error si no puede abrirlo. */
 function reload() {
   try {
     snapshot = {
@@ -27,9 +32,11 @@ function reload() {
   }
   emit();
 }
+/** Actualiza la copia en memoria cuando otra pestaña modifica el almacenamiento. */
 function storage(event: StorageEvent) {
   if (event.key === KEY || event.key === null) reload();
 }
+/** Registra un observador y escucha otras pestañas mientras haya suscriptores; devuelve su limpieza. */
 function subscribe(fn: () => void) {
   listeners.add(fn);
   if (listeners.size === 1) {
@@ -41,6 +48,7 @@ function subscribe(fn: () => void) {
     if (!listeners.size) window.removeEventListener("storage", storage);
   };
 }
+/** Comprueba revisión y disponibilidad antes de escribir localmente. No guarda por sí sola en el servidor. */
 export function persist(data: Data, revision: string): Data {
   if (!snapshot.ready || snapshot.error)
     throw new Error("El almacenamiento no está disponible.");
@@ -58,21 +66,31 @@ export function persist(data: Data, revision: string): Data {
   emit();
   return saved;
 }
+/** Devuelve la copia actual en memoria que React debe presentar. */
 const getSnapshot = () => snapshot;
+/** Entrega el estado inicial estable para la representación del servidor. */
 const getServerSnapshot = () => initial;
+/** Conecta React con el registro compartido mediante useSyncExternalStore. */
 export function useData() {
   return useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 }
 
-export function syncRemoteClients(records: import('./mergeClients').RemoteClient[]): Data {
-  if (!snapshot.ready || snapshot.error) throw new Error('La ficha local no está disponible.');
+/** Ajusta el directorio local a los clientes recibidos del servidor. */
+export function syncRemoteClients(
+  records: import("./mergeClients").RemoteClient[],
+): Data {
+  if (!snapshot.ready || snapshot.error)
+    throw new Error("La ficha local no está disponible.");
   const remoteIds = new Set(records.map((record) => record.id));
   const clients = snapshot.data.clients.filter((client) => remoteIds.has(client.id));
   const months = snapshot.data.months.filter((month) => remoteIds.has(month.clientId));
-  const payments = snapshot.data.payments.filter((payment) => remoteIds.has(payment.clientId));
-  const pruned = clients.length !== snapshot.data.clients.length
-    || months.length !== snapshot.data.months.length
-    || payments.length !== snapshot.data.payments.length;
+  const payments = snapshot.data.payments.filter((payment) =>
+    remoteIds.has(payment.clientId),
+  );
+  const pruned =
+    clients.length !== snapshot.data.clients.length ||
+    months.length !== snapshot.data.months.length ||
+    payments.length !== snapshot.data.payments.length;
   const source = pruned ? { ...snapshot.data, clients, months, payments } : snapshot.data;
   const next = mergeClients(source, records);
   if (next !== snapshot.data) persist(next, snapshot.data.revision);
@@ -81,4 +99,3 @@ export function syncRemoteClients(records: import('./mergeClients').RemoteClient
   //   fusión puede haber persistido y cambiado la revisión.
   return snapshot.data;
 }
-

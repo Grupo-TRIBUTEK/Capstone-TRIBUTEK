@@ -1,3 +1,6 @@
+/**
+ * Lógica de consultas del asistente a Ollama. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import {
   BadGatewayException,
   GatewayTimeoutException,
@@ -15,8 +18,12 @@ El contexto solo identifica la sección actual. No inventes rutas ni funciones.`
 
 @Injectable()
 export class IaService {
+  /** Envía la pregunta y contexto de navegación a Ollama. Traduce fallos a errores HTTP y libera el temporizador. No consulta registros ni ejecuta acciones del usuario. */
   async consultar({ consulta, contexto }: ConsultaIaDto) {
-    const baseUrl = (process.env['OLLAMA_URL'] ?? 'http://localhost:11434').replace(/\/$/, '');
+    const baseUrl = (process.env['OLLAMA_URL'] ?? 'http://localhost:11434').replace(
+      /\/$/,
+      '',
+    );
     const model = process.env['OLLAMA_MODEL'] ?? 'qwen3:4b-instruct';
     const timeoutMs = Number(process.env['OLLAMA_TIMEOUT_MS'] ?? 60_000);
     const prompt = contexto
@@ -36,7 +43,9 @@ export class IaService {
       if (!response.ok) {
         const detail = (await response.json().catch(() => null)) as OllamaResponse | null;
         if (response.status === 404 && detail?.error?.includes('not found')) {
-          throw new BadGatewayException(`Falta el modelo ${model}. Ejecuta: ollama pull ${model}`);
+          throw new BadGatewayException(
+            `Falta el modelo ${model}. Ejecuta: ollama pull ${model}`,
+          );
         }
         throw new BadGatewayException('El servicio de IA devolvió un error.');
       }
@@ -55,9 +64,13 @@ export class IaService {
     } catch (error) {
       if (error instanceof BadGatewayException) throw error;
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new GatewayTimeoutException('El servicio de IA excedió el tiempo de espera.');
+        throw new GatewayTimeoutException(
+          'El servicio de IA excedió el tiempo de espera.',
+        );
       }
-      throw new ServiceUnavailableException('No fue posible conectar con el servicio de IA.');
+      throw new ServiceUnavailableException(
+        'No fue posible conectar con el servicio de IA.',
+      );
     } finally {
       clearTimeout(timeout);
     }

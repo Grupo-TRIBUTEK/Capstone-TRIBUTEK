@@ -1,3 +1,6 @@
+/**
+ * Interfaz Sidebar. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
 
 import Link from "next/link";
@@ -9,20 +12,26 @@ import Icon from "../ui/Icon";
 import { adminNavigation } from "./adminNavigation";
 import ThemeSelect from "./Theme";
 
+/** Presenta las rutas administrativas y controles de sesión y tema. */
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [collapsed, setCollapsed] = useState(false);
   const [confirmLogout, setConfirmLogout] = useState(false);
 
+  /** Elimina la sesión local y redirige al login. */
   function handleLogout() {
     clearAuth();
     router.replace("/login");
   }
 
   return (
-    <aside className={`admin-sidebar admin-sidebar-enter ${collapsed ? "admin-sidebar-collapsed" : ""} w-full shrink-0 bg-primary p-5 text-white md:min-h-screen`}>
-      <div className={`flex items-start border-b border-white/20 pb-5 ${collapsed ? "justify-center" : "justify-between gap-3"}`}>
+    <aside
+      className={`admin-sidebar admin-sidebar-enter ${collapsed ? "admin-sidebar-collapsed" : ""} w-full shrink-0 bg-primary p-5 text-white md:min-h-screen`}
+    >
+      <div
+        className={`flex items-start border-b border-white/20 pb-5 ${collapsed ? "justify-center" : "justify-between gap-3"}`}
+      >
         <div className="admin-sidebar-brand">
           <p className="text-2xl font-bold tracking-wide">TRIBUTEK</p>
           <p className="mt-1 text-sm text-on-primary-muted">Gestión administrativa</p>
@@ -44,22 +53,21 @@ export default function Sidebar() {
             key={group}
             open={
               group === "Gestión" ||
-              adminNavigation.some(
-                (i) => i.group === group && i.href === pathname,
-              )
+              adminNavigation.some((i) => i.group === group && i.href === pathname)
             }
           >
             <summary className="admin-sidebar-section-label mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-on-primary-muted">
               {group === "Gestión" ? "Gestión mensual" : "Más herramientas"}
             </summary>
-            <ul className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1 ${collapsed ? "md:gap-2" : ""}`}>
+            <ul
+              className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1 ${collapsed ? "md:gap-2" : ""}`}
+            >
               {adminNavigation
                 .filter((item) => item.group === group)
                 .map((item) => {
                   const isActive =
                     pathname === item.href ||
-                    (item.href !== "/admin" &&
-                      pathname.startsWith(`${item.href}/`));
+                    (item.href !== "/admin" && pathname.startsWith(`${item.href}/`));
                   return (
                     <li key={item.href}>
                       <Link
@@ -85,7 +93,7 @@ export default function Sidebar() {
 
       <button
         type="button"
-        onClick={() => confirmLogout ? handleLogout() : setConfirmLogout(true)}
+        onClick={() => (confirmLogout ? handleLogout() : setConfirmLogout(true))}
         aria-label={confirmLogout ? "Confirmar salida del panel admin" : "Cerrar sesión"}
         className="admin-sidebar-logout button-destructive mt-8 flex min-h-12 w-full items-center justify-center gap-3 rounded-lg border px-3 py-3 text-center text-sm font-semibold leading-tight transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
       >
