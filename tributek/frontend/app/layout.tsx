@@ -6,6 +6,7 @@ import "./globals.css";
 import "./components/management/management.css";
 import "./theme.css";
 import "./animations.css";
+import { DialogProvider } from "./components/ui/DialogProvider"
 import { ThemeManager } from "./components/layout/Theme";
 
 export const metadata: Metadata = {
@@ -30,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       </head>
       <body className="min-h-full flex flex-col" suppressHydrationWarning>
         <ThemeManager />
-        {children}
+        <DialogProvider>{children}</DialogProvider>
       </body>
     </html>
   );

@@ -2,9 +2,11 @@
  * Interfaz F29Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import Link from 'next/link';
 import Icon from '../ui/Icon';
+import HelpTip from '../ui/HelpTip'
 import { useData } from '../ficha/store';
 import { extra, type Ledger } from '../management/model';
 import { Modal, StatusMessage } from '../management/ui';
@@ -22,6 +24,7 @@ type Candidate = {
 const currentMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
 /** Coordina clientes, período, borradores e importación RCV, con respaldo local y sincronización remota en los puntos indicados. */
 export default function F29Workspace() {
+  const dialogs = useDialogs()
     const ledger = useData();
     const [db, setDb] = useState<Database>(emptyDatabase), [ready, setReady] = useState(false), [blocked, setBlocked] = useState('');
     const [period, setPeriod] = useState(''), [search, setSearch] = useState(''), [active, setActive] = useState<Client | null>(null), [draft, setDraft] = useState<Projection | null>(null), [dirty, setDirty] = useState(false);
@@ -92,9 +95,9 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         return null;
     }
     /** Pide confirmar el descarte de cambios pendientes. */
-    function leave() { return !dirty || confirm('Hay cambios sin guardar. ¿Quieres descartarlos?'); }
+    async function leave() { return !dirty || (await dialogs.confirm('Hay cambios sin guardar. ¿Quieres descartarlos?')); }
     /** Abre la proyección del cliente o un borrador nuevo para el período actual. */
-    function open(c: Client) { if (!leave())
+    async function open(c: Client) { if (!(await leave()))
         return; setActive(c); setDraft(db.projections.find(p => p.clientId === c.id && p.period === period) ?? newProjection(c.id, period)); setDirty(false); setError(''); setNotice(''); }
     /** Actualiza el borrador, marca cambios pendientes y retira la revisión anterior. */
     function change(p: Projection) { setDraft({ ...p, reviewed: false }); setDirty(true); }
@@ -113,8 +116,8 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         setCandidates(list);
     }
     /** Cambia al período detectado y vuelve a buscar sus archivos. */
-    function selectDetectedPeriod(next: string) {
-        if (!periodChoice || !leave()) return;
+    async function selectDetectedPeriod(next: string) {
+        if (!periodChoice || !(await leave())) return;
         const { pool, all } = periodChoice;
         setPeriod(next);
         if (active) setDraft(db.projections.find(p => p.clientId === active.id && p.period === next) ?? newProjection(active.id, next));
@@ -250,11 +253,11 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         setEditClient(null);
     }
     /** Confirma y elimina el cliente y proyecciones del módulo F29, sin eliminar su ficha del directorio general. */
-    function removeClient() { if (!active || !leave() || !confirm(`¿Eliminar a ${active.name} del módulo F29 y sus proyecciones? Esto no elimina al cliente del directorio general.`))
+    async function removeClient() { if (!active || !(await leave()) || !(await dialogs.confirm(`¿Eliminar a ${active.name} del módulo F29 y sus proyecciones? Esto no elimina al cliente del directorio general.`)))
         return; commit({ ...db, clients: db.clients.filter(c => c.id !== active.id), projections: db.projections.filter(p => p.clientId !== active.id) }); setActive(null); setDraft(null); setDirty(false); }
     /** Solicita un período para trabajar conservando los meses anteriores. */
-    function startMonth() { if (!leave())
-        return; const raw = prompt('Período a iniciar (YYYYMM). Los meses anteriores se conservan.', period.replace('-', '')); if (!raw)
+    async function startMonth() { if (!(await leave()))
+        return; const raw = (await dialogs.prompt('Selecciona el mes en el que quieres trabajar. Los períodos anteriores se conservarán.', period, { title: 'Iniciar mes de trabajo', confirmLabel: 'Iniciar mes', inputLabel: 'Período de trabajo', inputType: 'month', validate: value => validPeriod(value) ? undefined : 'Selecciona un mes válido entre los años 2000 y 2099.' })); if (!raw)
         return; const next = raw.includes('-') ? raw : `${raw.slice(0, 4)}-${raw.slice(4)}`; if (!validPeriod(next))
         throw new Error('Ingresa un período válido, por ejemplo 202610.'); setPeriod(next); setActive(null); setDraft(null); setDirty(false); setAvailable({}); setNotice('Período seleccionado.'); }
     /** Copia el texto al portapapeles y muestra confirmación. */
@@ -262,7 +265,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     /** Lee y valida un respaldo JSON y solicita confirmación antes de reemplazar los datos del módulo. */
     async function restore(e: ChangeEvent<HTMLInputElement>) { const file = e.target.files?.[0]; e.target.value = ''; if (!file)
         return; if (file.size > 30000000)
-        throw new Error('El respaldo supera 30 MB.'); const next = validateDatabase(JSON.parse(await file.text())); if (!confirm('¿Reemplazar todos los datos F29 de este navegador por el respaldo?'))
+        throw new Error('El respaldo supera 30 MB.'); const next = validateDatabase(JSON.parse(await file.text())); if (!(await dialogs.confirm('¿Reemplazar todos los datos F29 de este navegador por el respaldo?')))
         return; commit(next); setActive(null); setDraft(null); setDirty(false); setNotice('Respaldo restaurado.'); }
     const selected = db.clients.filter(c => `${c.name} ${c.rut}`.toLowerCase().includes(search.toLowerCase()));
     if (!ready)
@@ -270,7 +273,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     if (blocked)
         return <div className="tk"><h1>Proyección F29</h1><p role="alert">No se pudieron leer los datos guardados. No se sobrescribirán. {blocked}</p></div>;
     return <main className="tk f29">
-    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1><p className="tk-subtle">{active ? `RUT ${active.rut} · ${periodLabel(period)}` : periodLabel(period)}</p></div>{active && <button onClick={() => { if (leave()) {
+    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1><p className="tk-subtle">{active ? `RUT ${active.rut} · ${periodLabel(period)}` : periodLabel(period)}</p></div>{active && <button onClick={async () => { if ((await leave())) {
         setActive(null);
         setDraft(null);
         setDirty(false);
@@ -348,7 +351,7 @@ function Sheet({ p, onChange }: {
     const resultRow = (name: string, value: number) => <tr key={name}><th>{name}</th><td><Amount value={value}/></td></tr>;
     /** Construye una fila de ingreso manual y actualiza solo el campo seleccionado. */
     const inputRow = (key: ManualKey) => <tr key={key}><th>{manualLabels[key]}</th><td><NumberField label={manualLabels[key]} value={p.manual[key]} change={v => onChange({ ...p, manual: { ...p.manual, [key]: v } })}/></td></tr>;
-    return <><div className="f29-results" aria-live="polite" aria-atomic="true"><div className="f29-result-main"><div className="f29-result-heading"><span>Determinación automática · IVA</span><HelpTip label="Determinación automática · IVA" text="Calcula el saldo entre el IVA débito de ventas y el IVA crédito de compras, importaciones y remanente previo. Es una estimación interna de TRIBUTEK; no reemplaza la declaración ni la determinación oficial del SII." /></div><h2>{!p.sales && !p.purchases && !Object.values(p.manual).some(Boolean) ? 'Sin datos ingresados' : r.remainder > 0 ? 'Remanente estimado' : r.ivaPayable > 0 ? 'IVA estimado a pagar' : 'Sin IVA por pagar ni remanente'}</h2><strong><Amount value={r.remainder || r.ivaPayable}/></strong></div><div><div className="f29-result-heading"><span>Otras obligaciones</span><HelpTip label="Otras obligaciones" text="Suma retenciones, impuesto único, cuotas de préstamos, PPM, cotizaciones y honorarios considerados en esta proyección. Es un cálculo interno; no hay una definición oficial asignada a este indicador." /></div><strong><Amount value={r.other}/></strong></div><div><div className="f29-result-heading"><span>Total estimado a pagar</span><HelpTip label="Total estimado a pagar" text="Suma el IVA y las demás obligaciones calculadas o ingresadas en esta proyección. Es una estimación de TRIBUTEK; confirma el monto con los antecedentes y la declaración oficial." /></div><strong><Amount value={r.total}/></strong></div></div>{table('sales', saleGroups)}{table('purchases', purchaseGroups)}<section className="f29-sheet"><h2>Determinación estimada F29</h2><div className="f29-determination"><table><tbody>{saleGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.sales?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{resultRow('IVA comprobante electrónico', r.voucherIva)}{resultRow('IVA débito · ventas', r.debit)}{purchaseGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.purchases?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{inputRow('importation')}{inputRow('previousCredit')}{resultRow('IVA crédito · compras y remanente', r.credit)}{resultRow(r.remainder ? 'Remanente estimado' : 'IVA estimado a pagar', r.remainder || r.ivaPayable)}</tbody></table><table><tbody>{(['retained', 'singleTax', 'loanSalary', 'loanFees', 'withholding'] as ManualKey[]).map(inputRow)}<tr><th>Tasa PPM (%)</th><td><NumberField label="Tasa PPM (%)" value={p.ppmRate} rate change={v => onChange({ ...p, ppmRate: v })}/></td></tr><tr><th>PPM calculado sobre neto de ventas</th><td><Amount value={r.ppm}/><label className="f29-check"><input type="checkbox" checked={p.ppmOverride !== null} onChange={e => onChange({ ...p, ppmOverride: e.target.checked ? r.ppm : null })}/> Ajustar monto PPM</label>{p.ppmOverride !== null && <NumberField label="Monto PPM manual" value={p.ppmOverride} change={v => onChange({ ...p, ppmOverride: v })}/>}</td></tr>{resultRow('Impuesto estimado a pagar', r.taxes)}{inputRow('contributions')}{inputRow('fees')}</tbody></table></div></section></>;
+    return <><div className="f29-results" aria-live="polite" aria-atomic="true"><div className="f29-result-main"><div className="f29-result-heading"><span>Determinación automática · IVA</span><HelpTip label="Determinación automática · IVA" text="Calcula el saldo entre el IVA débito de ventas y el IVA crédito de compras, importaciones y remanente previo. Es una estimación interna de TRIBUTEK. No reemplaza la declaración ni la determinación oficial del SII." /></div><h2>{!p.sales && !p.purchases && !Object.values(p.manual).some(Boolean) ? 'Sin datos ingresados' : r.remainder > 0 ? 'Remanente estimado' : r.ivaPayable > 0 ? 'IVA estimado a pagar' : 'Sin IVA por pagar ni remanente'}</h2><strong><Amount value={r.remainder || r.ivaPayable}/></strong></div><div><div className="f29-result-heading"><span>Otras obligaciones</span><HelpTip label="Otras obligaciones" text="Suma retenciones, impuesto único, cuotas de préstamos, PPM, cotizaciones y honorarios considerados en esta proyección. Es un cálculo interno. No hay una definición oficial asignada a este indicador." /></div><strong><Amount value={r.other}/></strong></div><div><div className="f29-result-heading"><span>Total estimado a pagar</span><HelpTip label="Total estimado a pagar" text="Suma el IVA y las demás obligaciones calculadas o ingresadas en esta proyección. Es una estimación de TRIBUTEK. Confirma el monto con los antecedentes y la declaración oficial." /></div><strong><Amount value={r.total}/></strong></div></div>{table('sales', saleGroups)}{table('purchases', purchaseGroups)}<section className="f29-sheet"><h2>Determinación estimada F29</h2><div className="f29-determination"><table><tbody>{saleGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.sales?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{resultRow('IVA comprobante electrónico', r.voucherIva)}{resultRow('IVA débito · ventas', r.debit)}{purchaseGroups.map(([name, codes]) => resultRow(`IVA · ${name}`, sumRows(p.purchases?.rows.filter(row => codes.includes(row.code)) ?? []).iva))}{inputRow('importation')}{inputRow('previousCredit')}{resultRow('IVA crédito · compras y remanente', r.credit)}{resultRow(r.remainder ? 'Remanente estimado' : 'IVA estimado a pagar', r.remainder || r.ivaPayable)}</tbody></table><table><tbody>{(['retained', 'singleTax', 'loanSalary', 'loanFees', 'withholding'] as ManualKey[]).map(inputRow)}<tr><th>Tasa PPM (%)</th><td><NumberField label="Tasa PPM (%)" value={p.ppmRate} rate change={v => onChange({ ...p, ppmRate: v })}/></td></tr><tr><th>PPM calculado sobre neto de ventas</th><td><Amount value={r.ppm}/><label className="f29-check"><input type="checkbox" checked={p.ppmOverride !== null} onChange={e => onChange({ ...p, ppmOverride: e.target.checked ? r.ppm : null })}/> Ajustar monto PPM</label>{p.ppmOverride !== null && <NumberField label="Monto PPM manual" value={p.ppmOverride} change={v => onChange({ ...p, ppmOverride: v })}/>}</td></tr>{resultRow('Impuesto estimado a pagar', r.taxes)}{inputRow('contributions')}{inputRow('fees')}</tbody></table></div></section></>;
 }
 /** Muestra el archivo fuente y sus movimientos para revisar la importación. */
 function SourceDetail({ kind, source }: {

@@ -2,6 +2,7 @@
  * Interfaz Formalization. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState, type FormEvent } from "react";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import { processSteps, stepStates, type Process, type ProcessStep } from "./model";
@@ -21,6 +22,7 @@ export default function Formalization({
   onSaved?: () => void;
   onClose: () => void;
 }) {
+  const dialogs = useDialogs()
   // El checklist vive en el backend (fuente de verdad desde Fase 2); el estado
   // local arranca en "Pendiente" y lo sobreescribe el GET de abajo si ya existe proceso.
   const [draft, setDraft] = useState<Process>(() => ({
@@ -85,8 +87,8 @@ export default function Formalization({
     return () => controller.abort();
   }, [client.id, period]);
   /** Confirma antes de descartar cambios del checklist. */
-  function close() {
-    if (!dirty || confirm("¿Descartar los cambios del checklist sin guardar?")) onClose();
+  async function close() {
+    if (!dirty || (await dialogs.confirm("¿Descartar los cambios del checklist sin guardar?"))) onClose();
   }
   /** Envía archivo y metadatos como FormData asociados al cliente, período y formalización. */
   async function upload(event: FormEvent<HTMLFormElement>) {

@@ -2,6 +2,7 @@
  * Interfaz Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useData, persist } from "../ficha/store";
@@ -220,6 +221,7 @@ function serverToLedger(s: ObligacionesResponse, base: Ledger): Ledger {
 
 /** Coordina las vistas de gestión mensual, sus filtros y los datos locales o remotos que requiere cada vista. */
 export default function Workspace({ view }: { view: View }) {
+  const dialogs = useDialogs()
   const store = useData();
   const localData = store.data as Ledger;
   const [serverData, setServerData] = useState<ObligacionesResponse | null>(null);
@@ -443,7 +445,7 @@ const isServerView =
 
   /** Confirma y elimina el movimiento completo con las líneas que comparten transferId. */
   async function removePayments(key: string) {
-    if (!window.confirm("¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?")) return;
+    if (!(await dialogs.confirm("¿Eliminar el movimiento completo (todos sus conceptos) y recalcular sus saldos?"))) return;
     try {
       const payment = vista.payments.find((p) => (p.transferId || p.id) === key);
       if (!payment) return;
@@ -537,9 +539,9 @@ const isServerView =
       setNotice("Todos los clientes activos ya tienen su servicio mensual de este período.");
       return;
     }
-    if (!window.confirm(
+    if (!(await dialogs.confirm(
       `¿Preparar servicios mensuales de ${periodLabel(period)} para ${pendientes.length} cliente(s)?`,
-    )) return;
+    ))) return;
     setError("");
     try {
       for (const c of pendientes) {
@@ -766,7 +768,7 @@ const isServerView =
                             <button
                               className="danger"
                               onClick={async () => {
-                                if (!window.confirm("¿Eliminar esta factura?")) return;
+                                if (!(await dialogs.confirm("¿Eliminar esta factura?"))) return;
                                 setError("");
                                 try {
                                   await eliminarFactura(i.id);
@@ -839,7 +841,7 @@ const isServerView =
               const near = new Date(`${now}T12:00:00`);
               const due = new Date(`${d.due}T12:00:00`);
               return (
-                <tr key={d.id}><td><strong>{clients.find((c) => c.id === d.clientId)?.name}</strong><small>{clients.find((c) => c.id === d.clientId)?.rut}</small></td><td>{conceptLabel(d.concept)}</td><td>{d.period}</td><td><Money value={d.amount} hidden={hidden} /></td><td>{d.due} {left > 0 && due < near && <span className="tk-alert"> (próximo)</span>}</td><td><Money value={left} hidden={hidden} /></td><td><div className="tk-actions"><button disabled={hidden} onClick={() => setEditDeferred(d)}>Editar</button><button className="danger" onClick={() => { if (window.confirm("¿Eliminar la postergación y devolver el saldo a su período original?")) run(() => save(removeDeferral(vista, d.id))); }}>Eliminar</button></div></td></tr>
+                <tr key={d.id}><td><strong>{clients.find((c) => c.id === d.clientId)?.name}</strong><small>{clients.find((c) => c.id === d.clientId)?.rut}</small></td><td>{conceptLabel(d.concept)}</td><td>{d.period}</td><td><Money value={d.amount} hidden={hidden} /></td><td>{d.due} {left > 0 && due < near && <span className="tk-alert"> (próximo)</span>}</td><td><Money value={left} hidden={hidden} /></td><td><div className="tk-actions"><button disabled={hidden} onClick={() => setEditDeferred(d)}>Editar</button><button className="danger" onClick={async () => { if ((await dialogs.confirm("¿Eliminar la postergación y devolver el saldo a su período original?"))) run(() => save(removeDeferral(vista, d.id))); }}>Eliminar</button></div></td></tr>
               );
             })}
           </tbody></table></div>{!metaVista.deferrals.length && <Empty>No hay postergaciones registradas.</Empty>}</section>
@@ -871,7 +873,7 @@ const isServerView =
           </tbody></table></div>{!visible.length && <Empty>No hay clientes para mostrar.</Empty>}</section>
         </>
       )}
-      <details className="tk-privacy"><summary>Almacenamiento y respaldo</summary><p>Clientes y documentos: servidor. Gestión mensual, pagos, facturación y procesos: este navegador.</p><button onClick={() => downloadBlob(new Blob([JSON.stringify(vista, null, 2)], { type: "application/json" }), `tributek-respaldo-${today()}.json`)}>Descargar respaldo local</button><Field label="Restaurar respaldo JSON"><input type="file" accept=".json,application/json" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; const revision = vista.revision; try { if (file.size > 10000000) throw new Error("El respaldo supera 10 MB."); const restored = validateLedger(JSON.parse(await file.text())); if (window.confirm("Se reemplazará la gestión local por este respaldo. Descarga primero tu copia actual. ¿Continuar?")) save(restored, revision); } catch (error) { setError((error as Error).message); } e.target.value = ""; }} /></Field></details>
+      <details className="tk-privacy"><summary>Almacenamiento y respaldo</summary><p>Clientes y documentos: servidor. Gestión mensual, pagos, facturación y procesos: este navegador.</p><button onClick={() => downloadBlob(new Blob([JSON.stringify(vista, null, 2)], { type: "application/json" }), `tributek-respaldo-${today()}.json`)}>Descargar respaldo local</button><Field label="Restaurar respaldo JSON"><input type="file" accept=".json,application/json" onChange={async (e) => { const file = e.target.files?.[0]; if (!file) return; const revision = vista.revision; try { if (file.size > 10000000) throw new Error("El respaldo supera 10 MB."); const restored = validateLedger(JSON.parse(await file.text())); if ((await dialogs.confirm("Se reemplazará la gestión local por este respaldo. Descarga primero tu copia actual. ¿Continuar?"))) save(restored, revision); } catch (error) { setError((error as Error).message); } e.target.value = ""; }} /></Field></details>
       {selected && <ClientSheet client={selected.client} data={selected.data} period={period} accumulated={view === "clientes"} save={save} onClose={() => setSelected(null)} hidden={hidden} />}
       {clientModal && <ClientCreateModal client={clientModal === "new" ? undefined : clientModal} onClose={() => setClientModal(null)} onSaved={() => { setReload((n) => n + 1); setNotice("Cliente guardado en el servidor. Comparte la invitación desde el formulario si se habilitó el portal."); }} />}
       {paymentClient && <Modal title={editingPayment ? "Corregir pago" : "Registrar pago"} onClose={() => setPaymentClient("")}><div className="tk-dialog-body">{!editingPayment && <Field label="Cliente"><select value={paymentClient} onChange={(e) => setPaymentClient(e.target.value)}>{clients.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}</select></Field>}<PaymentForm key={paymentClient + (editingPayment || "")} data={vista} clientId={paymentClient} period={period} save={save} onClose={() => setPaymentClient("")} editingKey={editingPayment} /></div></Modal>}

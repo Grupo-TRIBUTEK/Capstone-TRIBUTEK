@@ -2,6 +2,7 @@
  * Interfaz PaymentFiles. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon";
 import { authenticatedFetch } from "../../features/auth/auth-client";
@@ -113,6 +114,7 @@ export function PaymentFiles({
   origin?: string;
   destination?: string;
 }) {
+  const dialogs = useDialogs()
   const [folder, setFolder] = useState(initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -265,9 +267,9 @@ export function PaymentFiles({
                   className="danger"
                   onClick={async () => {
                     if (
-                      !confirm(
+                      !(await dialogs.confirm(
                         "¿Quitar este comprobante? El monto del pago no cambiará.",
-                      )
+                      ))
                     )
                       return;
                     setBusy(true);
