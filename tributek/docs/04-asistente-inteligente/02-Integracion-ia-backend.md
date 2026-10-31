@@ -51,6 +51,41 @@ El servicio lee estas variables de entorno:
 
 Define estas variables en el entorno del backend cuando necesites usar otra dirección, modelo o tiempo de espera. Ollama debe estar iniciado y tener descargado el modelo elegido.
 
+## Activar el servicio de IA
+
+Por ahora, la activación de Ollama y la carga inicial del modelo se hacen manualmente en el equipo que ejecuta TRIBUTEK. Si el asistente indica que no puede conectar con el servicio, sigue estos pasos en Windows:
+
+1. Abre PowerShell y revisa si Ollama está disponible y si el modelo ya está instalado:
+
+   ```powershell
+   ollama --version
+   ollama list
+   ```
+
+2. Si `qwen3:4b-instruct` no aparece en la lista, descárgalo:
+
+   ```powershell
+   ollama pull qwen3:4b-instruct
+   ```
+
+3. Inicia Ollama. Si la aplicación de Ollama no está ejecutándose en segundo plano, abre una terminal y déjala abierta mientras uses la IA:
+
+   ```powershell
+   ollama serve
+   ```
+
+   Si Ollama ya está iniciado como aplicación o servicio, no ejecutes este comando; continúa con el siguiente paso.
+
+4. En otra ventana de PowerShell, carga y comprueba el modelo:
+
+   ```powershell
+   ollama run qwen3:4b-instruct
+   ```
+
+   Escribe una consulta breve y confirma que responda. Para cerrar esta sesión interactiva escribe `/bye`. Ollama seguirá disponible mientras su servicio esté activo; después vuelve a probar el asistente en TRIBUTEK.
+
+Esta activación manual es una medida temporal para el entorno actual. Se espera automatizar el inicio del servicio y la disponibilidad del modelo para que no sea necesario realizar estos pasos manualmente.
+
 ## Ejecutar y comprobar
 
 Desde la carpeta `backend`, inicia NestJS en modo desarrollo:

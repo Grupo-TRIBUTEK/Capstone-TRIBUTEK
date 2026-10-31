@@ -19,7 +19,7 @@ import { ConsultaIaDto } from './dto/consulta-ia.dto.js';
 export class IaController {
   constructor(private readonly iaService: IaService) {}
 
-  /** Enviar la consulta al asistente. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
+  // Recibe consultas de usuarios autenticados; la validación del cuerpo ocurre antes de llamar al servicio.
   @Post('consultas')
   consultar(@Body() consulta: ConsultaIaDto) {
     return this.iaService.consultar(consulta);

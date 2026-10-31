@@ -47,4 +47,4 @@ Al evaluar el modelo, revisa la claridad de las respuestas en español, el tiemp
 
 ## Siguiente paso
 
-Con Ollama disponible, configura y ejecuta la integración del backend descrita en [Integración de IA en el backend](02-Integracion-ia-backend.md). La interfaz del chat se describe en [Asistente IA en el frontend](03-integracion-frontend.md).
+Con Ollama disponible, configura y ejecuta la integración del backend descrita en [Integración de IA en el backend](02-Integracion-ia-backend.md). Si Ollama deja de estar disponible, consulta allí [cómo activar manualmente el servicio y cargar el modelo](02-Integracion-ia-backend.md#activar-el-servicio-de-ia). Esta activación es temporal; se espera automatizarla más adelante. La interfaz del chat se describe en [Asistente IA en el frontend](03-integracion-frontend.md).

@@ -43,11 +43,19 @@ export default function IaAssistant() {
     setIsLoading(true);
 
     try {
-      const respuesta = await consultarAsistente(question, pathname);
-      setMessages((current) => [
-        ...current,
-        { id: nextId.current++, role: "assistant", text: respuesta },
-      ]);
+      // La consulta autenticada pasa por el backend; la ruta actual solo orienta la respuesta del modelo.
+      const response = await authenticatedFetch("/ia/consultas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ consulta: question, contexto: pathname }),
+      });
+      const data = (await response.json().catch(() => null)) as ConsultaResponse | null;
+      if (!response.ok) {
+        const message = Array.isArray(data?.message) ? data.message.join(" ") : data?.message;
+        throw new Error(message || "No se pudo obtener una respuesta. Inténtalo de nuevo.");
+      }
+      if (!data?.respuesta?.trim()) throw new Error("El asistente devolvió una respuesta vacía.");
+      setMessages((current) => [...current, { id: nextId.current++, role: "assistant", text: data.respuesta!.trim() }]);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -108,14 +116,8 @@ export default function IaAssistant() {
               </p>
             )}
           </div>
-          <form
-            ref={formRef}
-            onSubmit={sendConsulta}
-            className="flex items-end gap-2 border-t border-border p-3"
-          >
-            <label className="sr-only" htmlFor="ia-consulta">
-              Escribe tu consulta
-            </label>
+          <form ref={formRef} onSubmit={sendConsulta} className="flex items-end gap-2 border-t border-border p-3">
+            <label className="sr-only" htmlFor="ia-consulta">Escribe tu consulta</label>
             <textarea
               id="ia-consulta"
               value={consulta}

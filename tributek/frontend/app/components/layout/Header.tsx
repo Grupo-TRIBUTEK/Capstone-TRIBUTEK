@@ -9,7 +9,7 @@ type HeaderProps = {
 /** Presenta título y descripción de una sección. */
 export default function Header({ title, description }: HeaderProps) {
   return (
-    <header className="border-b border-border pb-6">
+    <header className="border-b border-secondary pb-6">
       <p className="text-xs font-semibold uppercase tracking-widest text-text-muted">
         TRIBUTEK
       </p>
