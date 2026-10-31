@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de carpetas y archivos de respaldo de pagos: declara las dependencias que Nest debe conectar.
+ */
 import {
   Body,
   Controller,
@@ -18,18 +21,17 @@ import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module.js';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
-import {
-  PaymentEvidenceService,
-  type Upload,
-} from './payment-evidence.service.js';
+import { PaymentEvidenceService, type Upload } from './payment-evidence.service.js';
 type Request = { user: { id: string; rolId: string; rolNombre?: string } };
 @Controller('payment-evidence/:client')
 @UseGuards(JwtAuthGuard)
 class PaymentEvidenceController {
   constructor(private readonly service: PaymentEvidenceService) {}
+  /** Listar carpetas de comprobantes. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get() list(@Param('client') c: string, @Req() r: Request) {
     return this.service.list(c, r.user);
   }
+  /** Archivar la carpeta. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Delete(':id') archive(
     @Param('client') c: string,
     @Param('id') id: string,
@@ -37,6 +39,7 @@ class PaymentEvidenceController {
   ) {
     return this.service.archive(c, id, r.user);
   }
+  /** Consultar una carpeta de comprobantes. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get(':id') get(
     @Param('client') c: string,
     @Param('id') id: string,
@@ -44,6 +47,7 @@ class PaymentEvidenceController {
   ) {
     return this.service.get(c, id, r.user);
   }
+  /** Registrar la carpeta de un movimiento. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Put(':id') register(
     @Param('client') c: string,
     @Param('id') id: string,
@@ -52,6 +56,7 @@ class PaymentEvidenceController {
   ) {
     return this.service.register(c, id, r.user, b);
   }
+  /** Adjuntar comprobantes. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post(':id/files')
   @UseInterceptors(
     FilesInterceptor('files', 10, {
@@ -67,6 +72,7 @@ class PaymentEvidenceController {
   ) {
     return this.service.upload(c, id, r.user, f, b);
   }
+  /** Descargar un comprobante como stream. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get(':id/files/:file') async download(
     @Param('client') c: string,
     @Param('id') id: string,
@@ -79,6 +85,7 @@ class PaymentEvidenceController {
       disposition: `attachment; filename*=UTF-8''${encodeURIComponent(file.name)}`,
     });
   }
+  /** Eliminar un comprobante. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Delete(':id/files/:file') remove(
     @Param('client') c: string,
     @Param('id') id: string,
@@ -89,7 +96,11 @@ class PaymentEvidenceController {
   }
 }
 @Module({
-  imports: [PrismaModule, AuthModule, PassportModule.register({ defaultStrategy: 'jwt' })],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    PassportModule.register({ defaultStrategy: 'jwt' }),
+  ],
   controllers: [PaymentEvidenceController],
   providers: [PaymentEvidenceService],
 })

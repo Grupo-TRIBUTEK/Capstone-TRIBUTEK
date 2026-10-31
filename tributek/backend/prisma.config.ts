@@ -1,3 +1,4 @@
+/** Indica a Prisma el contrato y la conexión del entorno. Las migraciones son un paso separado; este archivo no debe contener credenciales. */
 import "dotenv/config";
 import { definePrismaConfig } from "prisma/config";
 import { defineConfig as ormConfig } from "@prisma/orm-postgres/config";

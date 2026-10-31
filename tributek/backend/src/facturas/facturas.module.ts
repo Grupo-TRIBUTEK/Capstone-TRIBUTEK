@@ -1,3 +1,6 @@
+/**
+ * Configura el módulo de registros de facturación: declara las dependencias que Nest debe conectar.
+ */
 import { Module } from '@nestjs/common';
 import { PassportModule } from '@nestjs/passport';
 import { AuthModule } from '../auth/auth.module.js';

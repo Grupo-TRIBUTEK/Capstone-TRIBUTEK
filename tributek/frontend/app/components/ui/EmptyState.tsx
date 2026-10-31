@@ -1,3 +1,6 @@
+/**
+ * Interfaz EmptyState. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 import Icon, { type IconName } from "./Icon";
 
 type EmptyStateProps = {
@@ -6,7 +9,12 @@ type EmptyStateProps = {
   icon?: IconName;
 };
 
-export default function EmptyState({ title, description, icon = "file" }: EmptyStateProps) {
+/** Presenta un estado vacío con título, descripción e icono. */
+export default function EmptyState({
+  title,
+  description,
+  icon = "file",
+}: EmptyStateProps) {
   return (
     <div className="rounded-xl border border-dashed border-border-muted bg-background-subtle px-5 py-10 text-center">
       <span className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary-soft text-secondary-strong">

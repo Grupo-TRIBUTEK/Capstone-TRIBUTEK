@@ -1,3 +1,6 @@
+/**
+ * Sincroniza cambios de gestión con el backend y reconstruye el registro que usa la interfaz.
+ */
 // Sincronización de la vista Obligaciones con el backend (opción B).
 // QUÉ HACE: empuja los cambios del ledger local a /obligaciones después de
 //   persistir (PUT de meses, POST de abonos nuevos, DELETE de quitados,
@@ -47,8 +50,10 @@ export async function resolverClienteId(cliente: {
   const remote = await res.json();
   const norm = normalizeRut(cliente.rut);
   const match = Array.isArray(remote)
-    ? remote.find((c: { id?: unknown; rut?: unknown }) =>
-      typeof c.rut === "string" && normalizeRut(c.rut) === norm)
+    ? remote.find(
+        (c: { id?: unknown; rut?: unknown }) =>
+          typeof c.rut === "string" && normalizeRut(c.rut) === norm,
+      )
     : null;
   if (!match || (typeof match.id !== "string" && typeof match.id !== "number")) {
     return null;
@@ -56,13 +61,16 @@ export async function resolverClienteId(cliente: {
   return String(match.id);
 }
 
+/** Extrae el mensaje de una respuesta fallida o utiliza el texto alternativo si no hay JSON legible. */
 async function mensajeDeError(res: Response, respaldo: string): Promise<string> {
   try {
-    const data = await res.json() as { message?: string | string[] } | null;
+    const data = (await res.json()) as { message?: string | string[] } | null;
     if (data?.message) {
       return Array.isArray(data.message) ? data.message.join(", ") : data.message;
     }
-  } catch { /* sin cuerpo legible */ }
+  } catch {
+    /* sin cuerpo legible */
+  }
   return `error ${res.status} (${respaldo})`;
 }
 
@@ -75,8 +83,10 @@ export async function sincronizarMes(
 ): Promise<string | null> {
   const clienteId = await resolverClienteId(cliente);
   if (!clienteId) {
-    return `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK`
-      + (cliente.rut ? ` (RUT ${cliente.rut}).` : ".");
+    return (
+      `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK` +
+      (cliente.rut ? ` (RUT ${cliente.rut}).` : ".")
+    );
   }
   const res = await authenticatedFetch(`/obligaciones/mes/${clienteId}`, {
     method: "PUT",
@@ -114,8 +124,9 @@ export async function crearAbono(
       deferredId: payment.deferredId ?? null,
     }),
   });
-  if (!res.ok) throw new Error(await mensajeDeError(res, "no se pudo registrar el abono"));
-  const creado = await res.json() as { id?: unknown } | null;
+  if (!res.ok)
+    throw new Error(await mensajeDeError(res, "no se pudo registrar el abono"));
+  const creado = (await res.json()) as { id?: unknown } | null;
   return creado?.id != null ? String(creado.id) : null;
 }
 
@@ -137,8 +148,10 @@ export async function asignarIdsAbonos(
   if (!cliente) return "Cliente no encontrado en la lista local.";
   const clienteId = await resolverClienteId(cliente);
   if (!clienteId) {
-    return `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK`
-      + (cliente.rut ? ` (RUT ${cliente.rut}).` : ".");
+    return (
+      `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK` +
+      (cliente.rut ? ` (RUT ${cliente.rut}).` : ".")
+    );
   }
   // Solo reconcilio con el servidor los pagos respaldados (id numérico). Un
   //   pago con id local (UUID) nunca llegó al backend, así que no hay nada que
@@ -185,7 +198,11 @@ export async function borrarAbonos(payments: AppliedPayment[]): Promise<null> {
 //   facturas, o null si ningún cliente hidrató nada.
 export async function hidratarObligaciones(
   data: Ledger,
-): Promise<{ ledger: Ledger; hidratados: string[]; facturasHidratados: string[] } | null> {
+): Promise<{
+  ledger: Ledger;
+  hidratados: string[];
+  facturasHidratados: string[];
+} | null> {
   const mesesServidor: Month[] = [];
   const abonosServidor: AppliedPayment[] = [];
   const postergacionesServidor: Deferral[] = [];
@@ -194,7 +211,11 @@ export async function hidratarObligaciones(
   const facturasHidratados = new Set<string>();
   for (const cliente of data.clients) {
     if (!/^\d+$/.test(cliente.id)) continue;
-    let respuesta: { months?: MesRemoto[]; payments?: AbonoRemoto[]; deferrals?: PostergacionRemota[] } | null = null;
+    let respuesta: {
+      months?: MesRemoto[];
+      payments?: AbonoRemoto[];
+      deferrals?: PostergacionRemota[];
+    } | null = null;
     try {
       const res = await authenticatedFetch(`/obligaciones/meses/${cliente.id}`);
       if (res.ok) respuesta = await res.json();
@@ -293,26 +314,21 @@ export async function sincronizarPostergaciones(
     const clienteId = await resolverClienteId(cliente);
     if (!clienteId) {
       avisos.push(
-        `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK`
-        + (cliente.rut ? ` (RUT ${cliente.rut}).` : "."),
+        `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK` +
+          (cliente.rut ? ` (RUT ${cliente.rut}).` : "."),
       );
       continue;
     }
     if (!/^\d+$/.test(d.id)) {
-      const res = await authenticatedFetch(
-        `/obligaciones/postergaciones/${clienteId}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payloadPostergacion(d)),
-        },
-      );
+      const res = await authenticatedFetch(`/obligaciones/postergaciones/${clienteId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payloadPostergacion(d)),
+      });
       if (!res.ok) {
-        throw new Error(
-          await mensajeDeError(res, "no se pudo guardar la postergación"),
-        );
+        throw new Error(await mensajeDeError(res, "no se pudo guardar la postergación"));
       }
-      const creada = await res.json() as { id?: unknown } | null;
+      const creada = (await res.json()) as { id?: unknown } | null;
       if (creada?.id != null) {
         const id = String(creada.id);
         for (const p of pagos) {
@@ -330,9 +346,7 @@ export async function sincronizarPostergaciones(
       body: JSON.stringify(payloadPostergacion(d)),
     });
     if (!res.ok) {
-      throw new Error(
-        await mensajeDeError(res, "no se pudo guardar la postergación"),
-      );
+      throw new Error(await mensajeDeError(res, "no se pudo guardar la postergación"));
     }
   }
   for (const d of previas.filter((x) => !locales.some((n) => n.id === x.id))) {
@@ -341,9 +355,7 @@ export async function sincronizarPostergaciones(
       method: "DELETE",
     });
     if (!res.ok && res.status !== 404) {
-      throw new Error(
-        await mensajeDeError(res, "no se pudo eliminar la postergación"),
-      );
+      throw new Error(await mensajeDeError(res, "no se pudo eliminar la postergación"));
     }
   }
   return avisos.length ? avisos.join(" ") : null;
@@ -373,8 +385,8 @@ export async function sincronizarFacturas(
     const clienteId = await resolverClienteId(cliente);
     if (!clienteId) {
       avisos.push(
-        `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK`
-        + (cliente.rut ? ` (RUT ${cliente.rut}).` : "."),
+        `El cliente ${cliente.name ?? "seleccionado"} no existe en TRIBUTEK` +
+          (cliente.rut ? ` (RUT ${cliente.rut}).` : "."),
       );
       continue;
     }
@@ -385,11 +397,9 @@ export async function sincronizarFacturas(
         body: JSON.stringify(payloadFactura(inv)),
       });
       if (!res.ok) {
-        throw new Error(
-          await mensajeDeError(res, "no se pudo guardar la factura"),
-        );
+        throw new Error(await mensajeDeError(res, "no se pudo guardar la factura"));
       }
-      const creada = await res.json() as { id?: unknown } | null;
+      const creada = (await res.json()) as { id?: unknown } | null;
       if (creada?.id != null) inv.id = String(creada.id);
       continue;
     }
@@ -403,9 +413,7 @@ export async function sincronizarFacturas(
       body: JSON.stringify({ clientId: clienteId, ...payloadFactura(inv) }),
     });
     if (!res.ok) {
-      throw new Error(
-        await mensajeDeError(res, "no se pudo guardar la factura"),
-      );
+      throw new Error(await mensajeDeError(res, "no se pudo guardar la factura"));
     }
   }
   for (const inv of previas.filter((x) => !locales.some((n) => n.id === x.id))) {
@@ -414,9 +422,7 @@ export async function sincronizarFacturas(
       method: "DELETE",
     });
     if (!res.ok && res.status !== 404) {
-      throw new Error(
-        await mensajeDeError(res, "no se pudo eliminar la factura"),
-      );
+      throw new Error(await mensajeDeError(res, "no se pudo eliminar la factura"));
     }
   }
   return avisos.length ? avisos.join(" ") : null;

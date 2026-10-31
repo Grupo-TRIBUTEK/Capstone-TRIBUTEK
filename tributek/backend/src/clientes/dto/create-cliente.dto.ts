@@ -1,3 +1,6 @@
+/**
+ * Contrato de entrada para directorio de clientes y cuentas del portal. DTO significa objeto de transferencia de datos; sus tipos describen campos. Las comprobaciones en ejecución dependen de decoradores, pipes y validaciones del servicio.
+ */
 // Datos que se esperan recibir para registrar un cliente.
 // La validación se realizará posteriormente mediante el DTO.
 

@@ -1,3 +1,6 @@
+/**
+ * Adaptadores entre el formato del backend y la ficha. Separan diferencias de nombres e identificadores de la lógica visual.
+ */
 // Helpers puros de sincronización de Obligaciones con el backend.
 // QUÉ HACE: transformaciones del ledger local contra la respuesta de
 //   `GET /obligaciones/meses/:clienteId` — sin fetch, para poder testearlos.
@@ -123,8 +126,12 @@ export function payloadFactura(inv: Invoice) {
 //   los `id` de los pasos, que cambian en cada reemplazo). Lo usa el Workspace
 //   para decidir si un mes requiere PUT.
 export function mesIgual(a: Month | MesRemoto, b: Month | MesRemoto): boolean {
+  /** Produce una representación ordenada de conceptos y montos para comparar dos meses. */
   const claves = (m: { amounts: Record<string, number> }) =>
-    Object.keys(m.amounts).sort().map((c) => `${c}:${m.amounts[c]}`).join("|");
+    Object.keys(m.amounts)
+      .sort()
+      .map((c) => `${c}:${m.amounts[c]}`)
+      .join("|");
   return (
     a.sent === b.sent &&
     a.followDate === b.followDate &&
@@ -132,8 +139,7 @@ export function mesIgual(a: Month | MesRemoto, b: Month | MesRemoto): boolean {
     a.followDone === b.followDone &&
     claves(a) === claves(b) &&
     a.steps.length === b.steps.length &&
-    a.steps.every((s, i) =>
-      s.text === b.steps[i]?.text && s.done === b.steps[i]?.done)
+    a.steps.every((s, i) => s.text === b.steps[i]?.text && s.done === b.steps[i]?.done)
   );
 }
 
@@ -196,18 +202,17 @@ export function adaptarMes(r: MesRemoto): Month {
 //   contraparte local por id de la BD, o por clave natural si el
 //   local aún tiene id temporal (UUID anterior al POST).
 // EVITAR: inventar método o cuentas cuando no hay contraparte local.
-export function adaptarAbono(
-  r: AbonoRemoto,
-  locales: AppliedPayment[],
-): AppliedPayment {
+export function adaptarAbono(r: AbonoRemoto, locales: AppliedPayment[]): AppliedPayment {
+  /** Compara la identidad funcional del abono cuando cambió su ID entre la copia local y la base. */
   const mismaClave = (p: AppliedPayment) =>
     p.clientId === r.clientId &&
     p.period === r.period &&
     p.concept === r.concept &&
     p.amount === r.amount &&
     p.date === r.date;
-  const previo = locales.find((p) => p.id === r.id)
-    ?? locales.find((p) => !/^\d+$/.test(p.id) && mismaClave(p));
+  const previo =
+    locales.find((p) => p.id === r.id) ??
+    locales.find((p) => !/^\d+$/.test(p.id) && mismaClave(p));
   return {
     id: r.id,
     clientId: r.clientId,

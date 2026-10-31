@@ -1,3 +1,6 @@
+/**
+ * Rutas HTTP de directorio de clientes y cuentas del portal. Los decoradores indican método, URL y permisos; el controlador entrega la operación al servicio.
+ */
 import {
   Body,
   Controller,
@@ -21,6 +24,7 @@ import { Roles } from '../auth/decorators/roles.decorator.js';
 export class ClientesController {
   constructor(private readonly clientesService: ClientesService) {}
 
+  /** Crear una ficha de cliente. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -28,6 +32,7 @@ export class ClientesController {
     return this.clientesService.crearCliente(datos);
   }
 
+  /** Actualizar una ficha de cliente. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -35,6 +40,7 @@ export class ClientesController {
     return this.clientesService.actualizarCliente(id, datos);
   }
 
+  /** Generar una nueva invitación de acceso. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post(':id/acceso-portal/enlace')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -42,6 +48,7 @@ export class ClientesController {
     return this.clientesService.generarNuevoEnlaceInvitacion(id);
   }
 
+  /** Generar un enlace de restablecimiento. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post(':id/acceso-portal/restablecimiento')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -49,6 +56,7 @@ export class ClientesController {
     return this.clientesService.generarEnlaceRestablecimiento(id);
   }
 
+  /** Consultar el acceso al portal. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get(':id/acceso-portal')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -56,6 +64,7 @@ export class ClientesController {
     return this.clientesService.obtenerAccesoPortal(id);
   }
 
+  /** Consultar los clientes del usuario autenticado. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get('mis-clientes')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('CLIENTE')
@@ -63,6 +72,7 @@ export class ClientesController {
     return this.clientesService.obtenerMisClientes(request.user.id);
   }
 
+  /** Buscar en el directorio de clientes. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)
@@ -70,6 +80,7 @@ export class ClientesController {
     return this.clientesService.obtenerClientes(buscar);
   }
 
+  /** Consultar una ficha por ID. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN', 1)

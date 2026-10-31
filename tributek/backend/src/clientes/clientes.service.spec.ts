@@ -1,3 +1,4 @@
+/** Pruebas de clientes. Cada test/it nombra el comportamiento esperado; los datos y dependencias de ensayo permiten comprobarlo de forma repetible. */
 import { ClientesService } from './clientes.service.js';
 
 type Cliente = {

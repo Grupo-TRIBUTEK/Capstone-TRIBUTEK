@@ -1,4 +1,12 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+/**
+ * Lógica de directorio de clientes y cuentas del portal. Aquí se coordinan validaciones y operaciones del módulo.
+ */
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
@@ -14,6 +22,7 @@ export class ClientesService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /** Guarda la ficha y, si se solicitó acceso al portal, prepara su cuenta e invitación. */
   async crearCliente(datos: CreateClienteDto) {
     const cliente = await this.prisma.db.orm.public.Cliente.create({
       ...this.clienteData(datos),
@@ -30,40 +39,49 @@ export class ClientesService {
     };
   }
 
+  /** Actualiza la ficha y procesa los cambios solicitados en la cuenta vinculada mediante UsuarioCliente. */
   async actualizarCliente(id: string, datos: CreateClienteDto) {
     const clienteId = BigInt(id);
     let vinculoPortal: any;
     let usuarioPortal: any;
     if (datos.accesoPortal) {
-      const vinculos = await this.prisma.db.orm.public.UsuarioCliente
-        .where({ clienteId })
-        .all();
+      const vinculos = await this.prisma.db.orm.public.UsuarioCliente.where({
+        clienteId,
+      }).all();
       vinculoPortal = vinculos.find((item: any) => item.esPrincipal) ?? vinculos[0];
       if (vinculoPortal) {
-        usuarioPortal = await this.prisma.db.orm.public.Usuario
-          .where({ id: vinculoPortal.usuarioId })
-          .first();
+        usuarioPortal = await this.prisma.db.orm.public.Usuario.where({
+          id: vinculoPortal.usuarioId,
+        }).first();
       }
     }
-    const nombreUsuario = datos.accesoPortal?.nombreUsuario !== undefined
-      ? await this.validarNombreUsuario(datos.accesoPortal.nombreUsuario, usuarioPortal?.id)
-      : undefined;
-    const emailUsuario = datos.accesoPortal?.email !== undefined
-      ? await this.validarEmailUsuario(datos.accesoPortal.email, usuarioPortal?.id)
-      : undefined;
-    const cliente = await this.prisma.db.orm.public.Cliente.where({ id: clienteId }).update(
-      this.clienteData(datos),
-    );
+    const nombreUsuario =
+      datos.accesoPortal?.nombreUsuario !== undefined
+        ? await this.validarNombreUsuario(
+            datos.accesoPortal.nombreUsuario,
+            usuarioPortal?.id,
+          )
+        : undefined;
+    const emailUsuario =
+      datos.accesoPortal?.email !== undefined
+        ? await this.validarEmailUsuario(datos.accesoPortal.email, usuarioPortal?.id)
+        : undefined;
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).update(this.clienteData(datos));
 
     if (datos.accesoPortal?.revocar && vinculoPortal) {
-      await this.prisma.db.orm.public.UsuarioCliente
-        .where({ usuarioId: vinculoPortal.usuarioId, clienteId })
-        .delete();
-      const otrosVinculos = await this.prisma.db.orm.public.UsuarioCliente
-        .where({ usuarioId: vinculoPortal.usuarioId })
-        .all();
+      await this.prisma.db.orm.public.UsuarioCliente.where({
+        usuarioId: vinculoPortal.usuarioId,
+        clienteId,
+      }).delete();
+      const otrosVinculos = await this.prisma.db.orm.public.UsuarioCliente.where({
+        usuarioId: vinculoPortal.usuarioId,
+      }).all();
       if (!otrosVinculos.length && usuarioPortal) {
-        await this.prisma.db.orm.public.Usuario.where({ id: usuarioPortal.id }).update({ activo: false });
+        await this.prisma.db.orm.public.Usuario.where({ id: usuarioPortal.id }).update({
+          activo: false,
+        });
       }
       return this.serializarCliente(cliente);
     }
@@ -88,12 +106,15 @@ export class ClientesService {
     if (datos.accesoPortal?.invitar && usuarioPortal && !usuarioPortal.activo) {
       return {
         ...this.serializarCliente(cliente),
-        accesoPortal: { activationUrl: await this.generarEnlaceActivacion(usuarioPortal.id) },
+        accesoPortal: {
+          activationUrl: await this.generarEnlaceActivacion(usuarioPortal.id),
+        },
       };
     }
     return this.serializarCliente(cliente);
   }
 
+  /** Devuelve el estado de la cuenta vinculada al cliente sin entregar su contraseña. */
   async obtenerAccesoPortal(id: string) {
     const usuario = await this.buscarUsuarioPortal(id);
     if (!usuario) return { tieneAcceso: false };
@@ -103,10 +124,13 @@ export class ClientesService {
       nombreUsuario: usuario.activo ? usuario.nombreUsuario : undefined,
       email: usuario.email,
       activo: usuario.activo,
-      activationUrl: usuario.activo ? undefined : await this.generarEnlaceActivacion(usuario.id),
+      activationUrl: usuario.activo
+        ? undefined
+        : await this.generarEnlaceActivacion(usuario.id),
     };
   }
 
+  /** Emite una invitación para una cuenta todavía pendiente; rechaza cuentas que ya están activas. */
   async generarNuevoEnlaceInvitacion(id: string) {
     const usuario = await this.buscarUsuarioPortal(id);
     if (!usuario || usuario.activo) {
@@ -115,91 +139,109 @@ export class ClientesService {
     return { activationUrl: await this.generarEnlaceActivacion(usuario.id) };
   }
 
+  /** Genera un enlace temporal para cambiar la contraseña de una cuenta activa. */
   async generarEnlaceRestablecimiento(id: string) {
     const usuario = await this.buscarUsuarioPortal(id);
     if (!usuario || !usuario.activo) {
-      throw new BadRequestException('El portal no tiene una cuenta activa para restablecer.');
+      throw new BadRequestException(
+        'El portal no tiene una cuenta activa para restablecer.',
+      );
     }
     const token = await this.jwtService.signAsync(
       { sub: usuario.id.toString(), purpose: 'reset-client-password' },
       { expiresIn: '24h' },
     );
     const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:3000';
-    return { resetUrl: `${frontendUrl}/activar-cuenta?modo=restablecer&token=${encodeURIComponent(token)}` };
+    return {
+      resetUrl: `${frontendUrl}/activar-cuenta?modo=restablecer&token=${encodeURIComponent(token)}`,
+    };
   }
 
+  /** Busca la cuenta vinculada al cliente, prefiriendo el vínculo marcado como principal. */
   private async buscarUsuarioPortal(id: string) {
     const clienteId = BigInt(id);
-    const vinculos = await this.prisma.db.orm.public.UsuarioCliente
-      .where({ clienteId })
-      .all();
+    const vinculos = await this.prisma.db.orm.public.UsuarioCliente.where({
+      clienteId,
+    }).all();
     const vinculo = vinculos.find((item: any) => item.esPrincipal) ?? vinculos[0];
     if (!vinculo) return null;
 
-    return this.prisma.db.orm.public.Usuario
-      .where({ id: vinculo.usuarioId })
-      .first();
+    return this.prisma.db.orm.public.Usuario.where({ id: vinculo.usuarioId }).first();
   }
 
+  /** Obtiene los clientes asociados al usuario autenticado para alimentar su portal. */
   async obtenerMisClientes(usuarioId: string) {
-    const usuario = await this.prisma.db.orm.public.Usuario
-      .where({ id: BigInt(usuarioId) })
-      .first();
-    const rolCliente = await this.prisma.db.orm.public.Rol
-      .where({ nombre: 'CLIENTE' as Varchar<30> })
-      .first();
+    const usuario = await this.prisma.db.orm.public.Usuario.where({
+      id: BigInt(usuarioId),
+    }).first();
+    const rolCliente = await this.prisma.db.orm.public.Rol.where({
+      nombre: 'CLIENTE' as Varchar<30>,
+    }).first();
     if (!usuario || !usuario.activo || !rolCliente || usuario.rolId !== rolCliente.id) {
-      throw new ForbiddenException('Esta cuenta no tiene acceso activo al portal de clientes.');
+      throw new ForbiddenException(
+        'Esta cuenta no tiene acceso activo al portal de clientes.',
+      );
     }
 
-    const vinculos = await this.prisma.db.orm.public.UsuarioCliente
-      .where({ usuarioId: usuario.id })
-      .all();
+    const vinculos = await this.prisma.db.orm.public.UsuarioCliente.where({
+      usuarioId: usuario.id,
+    }).all();
     const clientes = [];
     for (const vinculo of vinculos) {
-      const cliente = await this.prisma.db.orm.public.Cliente
-        .where({ id: vinculo.clienteId })
-        .first();
+      const cliente = await this.prisma.db.orm.public.Cliente.where({
+        id: vinculo.clienteId,
+      }).first();
       if (cliente) clientes.push({ ...cliente, id: cliente.id.toString() });
     }
     return { nombre: usuario.nombre, clientes };
   }
 
+  /** Limpia y comprueba el identificador de acceso; si contiene @, lo normaliza a minúsculas. */
   private async validarNombreUsuario(nombre?: string, usuarioId?: bigint) {
     const identificador = nombre?.trim();
     const nombreUsuario = identificador?.includes('@')
       ? identificador.toLowerCase()
       : identificador;
-    if (!nombreUsuario) throw new BadRequestException('Ingresa un nombre de usuario para el portal.');
-    if (nombreUsuario.length > 80) throw new BadRequestException('El nombre de usuario no puede superar los 80 caracteres.');
+    if (!nombreUsuario)
+      throw new BadRequestException('Ingresa un nombre de usuario para el portal.');
+    if (nombreUsuario.length > 80)
+      throw new BadRequestException(
+        'El nombre de usuario no puede superar los 80 caracteres.',
+      );
 
-    const usuarioExistente = await this.prisma.db.orm.public.Usuario
-      .where({ nombreUsuario: nombreUsuario as Varchar<80> })
-      .first();
+    const usuarioExistente = await this.prisma.db.orm.public.Usuario.where({
+      nombreUsuario: nombreUsuario as Varchar<80>,
+    }).first();
     if (usuarioExistente && usuarioExistente.id !== usuarioId) {
       throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
     }
     return nombreUsuario;
   }
 
+  /** Normaliza el correo y comprueba formato y largo antes de utilizarlo en la cuenta. */
   private async validarEmailUsuario(email?: string, usuarioId?: bigint) {
     const correo = email?.trim().toLowerCase();
     if (!correo || correo.length > 150 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
-      throw new BadRequestException('Ingresa un correo electrónico válido de hasta 150 caracteres.');
+      throw new BadRequestException(
+        'Ingresa un correo electrónico válido de hasta 150 caracteres.',
+      );
     }
-    const usuarioExistente = await this.prisma.db.orm.public.Usuario
-      .where({ email: correo as Varchar<150> })
-      .first();
+    const usuarioExistente = await this.prisma.db.orm.public.Usuario.where({
+      email: correo as Varchar<150>,
+    }).first();
     if (usuarioExistente && usuarioExistente.id !== usuarioId) {
-      throw new BadRequestException('Ese correo electrónico ya está asociado a otra cuenta.');
+      throw new BadRequestException(
+        'Ese correo electrónico ya está asociado a otra cuenta.',
+      );
     }
     return correo;
   }
 
+  /** Crea la cuenta con rol CLIENTE y su vínculo con la ficha para completar luego la activación. */
   private async crearCuentaInvitada(clienteId: bigint, nombre: string) {
-    const rol = await this.prisma.db.orm.public.Rol
-      .where({ nombre: 'CLIENTE' as Varchar<30> })
-      .first();
+    const rol = await this.prisma.db.orm.public.Rol.where({
+      nombre: 'CLIENTE' as Varchar<30>,
+    }).first();
     if (!rol) throw new BadRequestException('No est? configurado el rol CLIENTE.');
 
     const usuario = await this.prisma.db.orm.public.Usuario.create({
@@ -219,6 +261,7 @@ export class ClientesService {
     return usuario;
   }
 
+  /** Firma un token de activación válido por 24 horas y arma la URL del frontend. El enlace contiene una credencial temporal. */
   private async generarEnlaceActivacion(usuarioId: bigint) {
     const token = await this.jwtService.signAsync(
       { sub: usuarioId.toString(), purpose: 'set-client-password' },
@@ -228,6 +271,7 @@ export class ClientesService {
     return `${frontendUrl}/activar-cuenta?token=${encodeURIComponent(token)}`;
   }
 
+  /** Selecciona los campos que se guardan en Cliente, separándolos de las opciones de acceso al portal. */
   private clienteData(datos: CreateClienteDto) {
     return {
       tipoCliente: datos.tipoCliente,
@@ -241,10 +285,12 @@ export class ClientesService {
     } as any;
   }
 
+  /** Convierte el ID a texto para transportarlo en JSON sin perder precisión numérica. */
   private serializarCliente(cliente: any) {
     return { ...cliente, id: String(cliente.id) };
   }
 
+  /** Lista clientes por ID descendente y busca por nombre o RUT sin duplicar coincidencias. */
   async obtenerClientes(buscar?: string) {
     const textoBusqueda = buscar?.trim();
     const baseQuery = this.prisma.db.orm.public.Cliente.orderBy((cliente) =>
@@ -271,10 +317,11 @@ export class ClientesService {
       .map((cliente) => ({ ...cliente, id: String(cliente.id) }));
   }
 
+  /** Busca la ficha por ID y devuelve 404 si no existe. */
   async obtenerCliente(id: string) {
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: BigInt(id) })
-      .first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: BigInt(id),
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
     return cliente;
   }

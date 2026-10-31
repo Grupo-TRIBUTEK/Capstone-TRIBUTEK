@@ -1,3 +1,6 @@
+/**
+ * Define filtros, tabla y adaptación visual del historial de trazabilidad.
+ */
 .audit { color: var(--text-primary); font-family: var(--font-body); }
 .audit .audit-heading { flex-wrap: wrap; margin-bottom: 24px; border-bottom: 1px solid var(--secondary); }
 .audit > :not(.audit-heading):not(dialog) { width: calc(100% - 64px); max-width: 1500px; margin-left: auto; margin-right: auto; }

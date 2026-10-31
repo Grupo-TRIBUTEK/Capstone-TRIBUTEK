@@ -1,3 +1,6 @@
+/**
+ * Define la presentación compartida de las vistas de gestión mensual.
+ */
 .tk {
   --navy: var(--text-primary);
   --rose: var(--secondary);

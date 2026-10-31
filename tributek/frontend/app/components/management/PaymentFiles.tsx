@@ -1,4 +1,8 @@
+/**
+ * Interfaz PaymentFiles. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState } from "react";
 import Icon from "../ui/Icon";
 import { authenticatedFetch } from "../../features/auth/auth-client";
@@ -19,6 +23,7 @@ export type PaymentFolder = {
     createdAt: string;
   }[];
 };
+/** Interpreta JSON de comprobantes o lanza el mensaje de error del backend. */
 async function response<T>(r: Response): Promise<T> {
   if (!r.ok) {
     const body = await r.json().catch(() => null);
@@ -26,6 +31,7 @@ async function response<T>(r: Response): Promise<T> {
   }
   return r.json();
 }
+/** Crea o actualiza la carpeta del movimiento antes de abrirla. */
 export async function registerFolder(
   clientId: string,
   id: string,
@@ -40,6 +46,7 @@ export async function registerFolder(
     }),
   );
 }
+/** Abre los respaldos del pago y controla espera y errores. */
 export function PaymentFilesButton({
   clientId,
   id,
@@ -95,6 +102,7 @@ export function PaymentFilesButton({
     </>
   );
 }
+/** Muestra la carpeta y acciones de carga, descarga y eliminación de comprobantes. */
 export function PaymentFiles({
   folder: initial,
   close,
@@ -106,6 +114,7 @@ export function PaymentFiles({
   origin?: string;
   destination?: string;
 }) {
+  const dialogs = useDialogs()
   const [folder, setFolder] = useState(initial);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -258,9 +267,9 @@ export function PaymentFiles({
                   className="danger"
                   onClick={async () => {
                     if (
-                      !confirm(
+                      !(await dialogs.confirm(
                         "¿Quitar este comprobante? El monto del pago no cambiará.",
-                      )
+                      ))
                     )
                       return;
                     setBusy(true);
@@ -290,6 +299,7 @@ export function PaymentFiles({
     </Modal>
   );
 }
+/** Carga las carpetas del cliente y permite consultar una. */
 export function ClientPaymentFiles({
   clients,
 }: {

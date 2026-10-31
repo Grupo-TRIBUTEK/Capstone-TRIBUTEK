@@ -1,3 +1,6 @@
+/**
+ * Lógica de montos mensuales, abonos y postergaciones. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Numeric, Varchar } from '@prisma/orm-postgres/target/codec-types';
 import 'temporal-polyfill/global';
@@ -92,6 +95,7 @@ type PostergacionForma = {
   note: string;
 };
 
+/** Forma AAAA-MM con un mes de dos dígitos para mantener el mismo formato en la API. */
 const etiquetaPeriodo = (anio: number, mes: number) =>
   `${anio}-${String(mes).padStart(2, '0')}`;
 
@@ -111,12 +115,12 @@ export class ObligacionesService {
   //   abonos) y la pestaña Postergaciones.
   async listarMeses(clienteIdRaw: string) {
     const clienteId = parseId(clienteIdRaw, 'clienteId');
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const periodos = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId })
+    const periodos = await this.prisma.db.orm.public.PeriodoCliente.where({ clienteId })
       .orderBy((p) => p.anio.asc())
       .orderBy((p) => p.mes.asc())
       .all();
@@ -124,42 +128,49 @@ export class ObligacionesService {
 
     // Una consulta por tabla con `in` — evita el N+1 de recorrer períodos.
     const periodoIds = periodos.map((p) => p.id);
-    const meses = await this.prisma.db.orm.public.MesCliente
-      .where((m) => m.periodoId.in(periodoIds)).all();
+    const meses = await this.prisma.db.orm.public.MesCliente.where((m) =>
+      m.periodoId.in(periodoIds),
+    ).all();
     const mesPorPeriodo = new Map(meses.map((m) => [m.periodoId, m]));
     const mesIds = meses.map((m) => m.id);
 
     const montos = mesIds.length
-      ? await this.prisma.db.orm.public.MontoConcepto
-        .where((m) => m.mesId.in(mesIds)).all()
+      ? await this.prisma.db.orm.public.MontoConcepto.where((m) =>
+          m.mesId.in(mesIds),
+        ).all()
       : [];
     const pasos = mesIds.length
-      ? await this.prisma.db.orm.public.PasoMes
-        .where((p) => p.mesId.in(mesIds))
-        .orderBy((p) => p.orden.asc())
-        .orderBy((p) => p.id.asc())
-        .all()
+      ? await this.prisma.db.orm.public.PasoMes.where((p) => p.mesId.in(mesIds))
+          .orderBy((p) => p.orden.asc())
+          .orderBy((p) => p.id.asc())
+          .all()
       : [];
     const abonos = mesIds.length
-      ? await this.prisma.db.orm.public.AbonoMes
-        .where((a) => a.mesId.in(mesIds))
-        .orderBy((a) => a.id.asc())
-        .all()
+      ? await this.prisma.db.orm.public.AbonoMes.where((a) => a.mesId.in(mesIds))
+          .orderBy((a) => a.id.asc())
+          .all()
       : [];
-    const postergaciones = await this.prisma.db.orm.public.PostergacionMes
-      .where({ clienteId })
+    const postergaciones = await this.prisma.db.orm.public.PostergacionMes.where({
+      clienteId,
+    })
       .orderBy((p) => p.anio.asc())
       .orderBy((p) => p.mes.asc())
       .orderBy((p) => p.id.asc())
       .all();
 
+    /** Selecciona filas relacionadas con el mes indicado; sin mes devuelve una lista vacía. */
     const de = (mesId: bigint | undefined, filas: { mesId: bigint }[]) =>
       mesId ? filas.filter((f) => f.mesId === mesId) : [];
 
     const months: MesForma[] = periodos.map((periodo) => {
       const mesRow = mesPorPeriodo.get(periodo.id);
-      return this.formaMes(periodo, mesRow ?? null,
-        de(mesRow?.id, montos), de(mesRow?.id, pasos), clienteIdRaw);
+      return this.formaMes(
+        periodo,
+        mesRow ?? null,
+        de(mesRow?.id, montos),
+        de(mesRow?.id, pasos),
+        clienteIdRaw,
+      );
     });
 
     const periodoDeMes = new Map(meses.map((m) => [m.id, m.periodoId]));
@@ -173,7 +184,8 @@ export class ObligacionesService {
     });
 
     const deferrals: PostergacionForma[] = postergaciones.map((p) =>
-      this.formaPostergacion(p, clienteIdRaw));
+      this.formaPostergacion(p, clienteIdRaw),
+    );
 
     return { months, payments, deferrals };
   }
@@ -183,9 +195,9 @@ export class ObligacionesService {
   //   facturas — con filtros opcionales por período. Evita N+1
   //   usando consultas con `in` por tabla.
   async listarTodo(periodo?: string) {
-    const clientes = await this.prisma.db.orm.public.Cliente
-      .where((c) => c.estado.neq('Inactivo' as Varchar<30>))
-      .all();
+    const clientes = await this.prisma.db.orm.public.Cliente.where((c) =>
+      c.estado.neq('Inactivo' as Varchar<30>),
+    ).all();
 
     const vacio = {
       clients: clientes.map((c) => this.formaCliente(c)),
@@ -208,7 +220,10 @@ export class ObligacionesService {
       const [anioStr, mesStr] = periodo.split('-');
       const anio = parseAnio(anioStr);
       const mes = parseMes(mesStr);
-      const periodosDelMes = await this.prisma.db.orm.public.PeriodoCliente.where({ anio, mes }).all();
+      const periodosDelMes = await this.prisma.db.orm.public.PeriodoCliente.where({
+        anio,
+        mes,
+      }).all();
       const idsDelMes = new Set(periodosDelMes.map((p) => p.id));
       periodoIdsFiltrados = periodoIds.filter((id) => idsDelMes.has(id));
     }
@@ -216,8 +231,9 @@ export class ObligacionesService {
     if (!periodoIdsFiltrados.length) return vacio;
 
     // Consultas en batch para evitar N+1
-    const mesRows = await this.prisma.db.orm.public.MesCliente
-      .where((m) => m.periodoId.in(periodoIdsFiltrados)).all();
+    const mesRows = await this.prisma.db.orm.public.MesCliente.where((m) =>
+      m.periodoId.in(periodoIdsFiltrados),
+    ).all();
     const mesPorPeriodo = new Map(mesRows.map((m) => [m.periodoId, m]));
     const mesIds = mesRows.map((m) => m.id);
 
@@ -226,12 +242,19 @@ export class ObligacionesService {
         ? this.prisma.db.orm.public.MontoConcepto.where((m) => m.mesId.in(mesIds)).all()
         : [],
       mesIds.length
-        ? this.prisma.db.orm.public.PasoMes.where((p) => p.mesId.in(mesIds)).orderBy((p) => p.orden.asc()).all()
+        ? this.prisma.db.orm.public.PasoMes.where((p) => p.mesId.in(mesIds))
+            .orderBy((p) => p.orden.asc())
+            .all()
         : [],
       mesIds.length
-        ? this.prisma.db.orm.public.AbonoMes.where((a) => a.mesId.in(mesIds)).orderBy((a) => a.id.asc()).all()
+        ? this.prisma.db.orm.public.AbonoMes.where((a) => a.mesId.in(mesIds))
+            .orderBy((a) => a.id.asc())
+            .all()
         : [],
-      this.prisma.db.orm.public.PostergacionMes.where((p) => p.clienteId.in(clienteIds)).orderBy((p) => p.anio.asc()).orderBy((p) => p.mes.asc()).all(),
+      this.prisma.db.orm.public.PostergacionMes.where((p) => p.clienteId.in(clienteIds))
+        .orderBy((p) => p.anio.asc())
+        .orderBy((p) => p.mes.asc())
+        .all(),
       this.prisma.db.orm.public.Factura.where((f) => f.clienteId.in(clienteIds)).all(),
     ]);
 
@@ -266,10 +289,15 @@ export class ObligacionesService {
       const mesRow = mesPorPeriodo.get(periodo.id) ?? null;
       const mesId = mesRow?.id;
 
-      months.push(this.formaMes(periodo, mesRow,
-        mesId ? montosPorMes.get(mesId) ?? [] : [],
-        mesId ? pasosPorMes.get(mesId) ?? [] : [],
-        clienteIdRaw));
+      months.push(
+        this.formaMes(
+          periodo,
+          mesRow,
+          mesId ? (montosPorMes.get(mesId) ?? []) : [],
+          mesId ? (pasosPorMes.get(mesId) ?? []) : [],
+          clienteIdRaw,
+        ),
+      );
 
       if (mesId) {
         for (const abono of abonosPorMes.get(mesId) ?? []) {
@@ -279,8 +307,9 @@ export class ObligacionesService {
     }
 
     // La consulta ya filtró por clienteId, así que no hace falta refiltrar.
-    const deferrals = postergaciones
-      .map((p) => this.formaPostergacion(p, String(p.clienteId)));
+    const deferrals = postergaciones.map((p) =>
+      this.formaPostergacion(p, String(p.clienteId)),
+    );
 
     const invoices = facturas.map((f) => ({
       id: String(f.id),
@@ -348,48 +377,65 @@ export class ObligacionesService {
     const sent = this.parseBoolean(data.sent, 'sent', false);
     const followDone = this.parseBoolean(data.followDone, 'followDone', false);
     const followDate = parseFechaIsoOpcional(data.followDate, 'followDate');
-    const followNote = this.parseTexto(data.followNote, 'followNote', SEGUIMIENTO_NOTA_MAX);
+    const followNote = this.parseTexto(
+      data.followNote,
+      'followNote',
+      SEGUIMIENTO_NOTA_MAX,
+    );
     if (followDone && !followDate) {
-      throw new BadRequestException('Indica la fecha del seguimiento antes de marcarlo realizado.');
+      throw new BadRequestException(
+        'Indica la fecha del seguimiento antes de marcarlo realizado.',
+      );
     }
     const amounts = this.validarAmounts(data.amounts);
     const steps = this.validarSteps(data.steps);
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     const periodoId = await this.periodos.asegurar(clienteId, anio, mes);
 
     await this.prisma.db.transaction(async (tx) => {
-      const actual = await tx.orm.public.MesCliente
-        .where({ periodoId }).first();
+      const actual = await tx.orm.public.MesCliente.where({ periodoId }).first();
       const abonos = actual
         ? await tx.orm.public.AbonoMes.where({ mesId: actual.id }).all()
         : [];
       const pagado = new Map<string, number>();
       for (const abono of abonos) {
-        pagado.set(abono.concepto, (pagado.get(abono.concepto) ?? 0) + Number(abono.monto));
+        pagado.set(
+          abono.concepto,
+          (pagado.get(abono.concepto) ?? 0) + Number(abono.monto),
+        );
       }
       // Postergaciones del período: su monto pendiente también compromete
       // el concepto (abonos contra ellas ya están en `pagado`).
-      const postergaciones = await tx.orm.public.PostergacionMes
-        .where({ clienteId, anio, mes }).all();
+      const postergaciones = await tx.orm.public.PostergacionMes.where({
+        clienteId,
+        anio,
+        mes,
+      }).all();
       const postIds = postergaciones.map((p) => p.id);
       const pagadoPost = new Map<string, number>();
       if (postIds.length) {
-        const abonadosPost = await tx.orm.public.AbonoMes
-          .where((a) => a.postergacionId.in(postIds)).all();
+        const abonadosPost = await tx.orm.public.AbonoMes.where((a) =>
+          a.postergacionId.in(postIds),
+        ).all();
         for (const abono of abonadosPost) {
-          pagadoPost.set(abono.concepto, (pagadoPost.get(abono.concepto) ?? 0) + Number(abono.monto));
+          pagadoPost.set(
+            abono.concepto,
+            (pagadoPost.get(abono.concepto) ?? 0) + Number(abono.monto),
+          );
         }
       }
       for (const c of CONCEPTOS) {
-        const comprometido = (pagado.get(c) ?? 0)
-          + postergaciones
+        const comprometido =
+          (pagado.get(c) ?? 0) +
+          postergaciones
             .filter((p) => p.concepto === c)
-            .reduce((s, p) => s + Number(p.monto), 0)
-          - (pagadoPost.get(c) ?? 0);
+            .reduce((s, p) => s + Number(p.monto), 0) -
+          (pagadoPost.get(c) ?? 0);
         if (amounts[c] < comprometido) {
           throw new BadRequestException(
             `No puedes reducir ${c} por debajo de sus abonos y postergaciones.`,
@@ -421,9 +467,14 @@ export class ObligacionesService {
         mesId = creado.id;
       }
       for (const c of CONCEPTOS) {
-        const existente = await tx.orm.public.MontoConcepto.where({ mesId, concepto: c as Varchar<60> }).first();
+        const existente = await tx.orm.public.MontoConcepto.where({
+          mesId,
+          concepto: c as Varchar<60>,
+        }).first();
         if (existente) {
-          await tx.orm.public.MontoConcepto.where({ id: existente.id }).update({ monto: num14(amounts[c]) });
+          await tx.orm.public.MontoConcepto.where({ id: existente.id }).update({
+            monto: num14(amounts[c]),
+          });
         } else {
           await tx.orm.public.MontoConcepto.create({
             mesId,
@@ -443,18 +494,22 @@ export class ObligacionesService {
       }
     });
 
-    const periodo = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
-    const mesRow = await this.prisma.db.orm.public.MesCliente
-      .where({ periodoId }).first();
+    const periodo = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
+    const mesRow = await this.prisma.db.orm.public.MesCliente.where({
+      periodoId,
+    }).first();
     if (!periodo || !mesRow) {
       // Inalcanzable en la práctica: la transacción creó/mantuvo ambas filas.
       throw new NotFoundException('Período o mes no encontrado tras guardar.');
     }
-    const montos = await this.prisma.db.orm.public.MontoConcepto
-      .where({ mesId: mesRow.id }).all();
-    const pasos = await this.prisma.db.orm.public.PasoMes
-      .where({ mesId: mesRow.id })
+    const montos = await this.prisma.db.orm.public.MontoConcepto.where({
+      mesId: mesRow.id,
+    }).all();
+    const pasos = await this.prisma.db.orm.public.PasoMes.where({ mesId: mesRow.id })
       .orderBy((p) => p.orden.asc())
       .orderBy((p) => p.id.asc())
       .all();
@@ -479,14 +534,20 @@ export class ObligacionesService {
       throw new BadRequestException('Indica una fecha de pago válida, no futura.');
     }
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const periodo = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
+    const periodo = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
     const mesRow = periodo
-      ? await this.prisma.db.orm.public.MesCliente.where({ periodoId: periodo.id }).first()
+      ? await this.prisma.db.orm.public.MesCliente.where({
+          periodoId: periodo.id,
+        }).first()
       : null;
     if (!periodo || !mesRow) {
       throw new BadRequestException('Guarda primero los conceptos de ese período.');
@@ -495,17 +556,24 @@ export class ObligacionesService {
     const abono = await this.prisma.db.transaction(async (tx) => {
       let postergacionId: bigint | null = null;
       if (meta.postergacionId !== null) {
-        const postergacion = await tx.orm.public.PostergacionMes
-          .where({ id: meta.postergacionId }).first();
+        const postergacion = await tx.orm.public.PostergacionMes.where({
+          id: meta.postergacionId,
+        }).first();
         if (!postergacion) throw new BadRequestException('Postergación no encontrada.');
-        if (postergacion.clienteId !== clienteId || postergacion.anio !== anio
-          || postergacion.mes !== mes || postergacion.concepto !== concepto) {
+        if (
+          postergacion.clienteId !== clienteId ||
+          postergacion.anio !== anio ||
+          postergacion.mes !== mes ||
+          postergacion.concepto !== concepto
+        ) {
           throw new BadRequestException('El abono no corresponde a la postergación.');
         }
-        const abonadosPost = await tx.orm.public.AbonoMes
-          .where({ postergacionId: postergacion.id }).all();
-        const saldoPost = Number(postergacion.monto)
-          - abonadosPost.reduce((s: number, a: any) => s + Number(a.monto), 0);
+        const abonadosPost = await tx.orm.public.AbonoMes.where({
+          postergacionId: postergacion.id,
+        }).all();
+        const saldoPost =
+          Number(postergacion.monto) -
+          abonadosPost.reduce((s: number, a: any) => s + Number(a.monto), 0);
         if (amount > saldoPost) {
           throw new BadRequestException(
             'El abono supera el saldo de la postergación. Distribuye solo el monto que corresponde.',
@@ -513,7 +581,12 @@ export class ObligacionesService {
         }
         postergacionId = postergacion.id;
       } else {
-        const saldo = await this.saldoConcepto(tx, mesRow.id, { clienteId, anio, mes }, concepto);
+        const saldo = await this.saldoConcepto(
+          tx,
+          mesRow.id,
+          { clienteId, anio, mes },
+          concepto,
+        );
         if (amount > saldo) {
           throw new BadRequestException(
             'El abono supera el saldo del concepto. Distribuye solo el monto que corresponde.',
@@ -543,15 +616,16 @@ export class ObligacionesService {
   //   distribuciones erróneas). No valida saldo: solo quita el movimiento.
   async eliminarAbono(abonoIdRaw: string) {
     const abonoId = parseId(abonoIdRaw, 'abonoId');
-    const abono = await this.prisma.db.orm.public.AbonoMes
-      .where({ id: abonoId }).first();
+    const abono = await this.prisma.db.orm.public.AbonoMes.where({ id: abonoId }).first();
     if (!abono) throw new NotFoundException('Abono no encontrado.');
 
-    const mesRow = await this.prisma.db.orm.public.MesCliente
-      .where({ id: abono.mesId }).first();
+    const mesRow = await this.prisma.db.orm.public.MesCliente.where({
+      id: abono.mesId,
+    }).first();
     const periodo = mesRow
-      ? await this.prisma.db.orm.public.PeriodoCliente
-        .where({ id: mesRow.periodoId }).first()
+      ? await this.prisma.db.orm.public.PeriodoCliente.where({
+          id: mesRow.periodoId,
+        }).first()
       : null;
     const cliente = periodo
       ? await this.prisma.db.orm.public.Cliente.where({ id: periodo.clienteId }).first()
@@ -569,12 +643,14 @@ export class ObligacionesService {
   //   Postergaciones), ordenadas por período y id.
   async listarPostergaciones(clienteIdRaw: string) {
     const clienteId = parseId(clienteIdRaw, 'clienteId');
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const postergaciones = await this.prisma.db.orm.public.PostergacionMes
-      .where({ clienteId })
+    const postergaciones = await this.prisma.db.orm.public.PostergacionMes.where({
+      clienteId,
+    })
       .orderBy((p) => p.anio.asc())
       .orderBy((p) => p.mes.asc())
       .orderBy((p) => p.id.asc())
@@ -594,22 +670,26 @@ export class ObligacionesService {
     const due = parseFechaIso(data.due, 'due');
     const note = this.parseTexto(data.note, 'note', POSTERGACION_NOTA_MAX);
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const periodo = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
+    const periodo = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
     const mesRow = periodo
-      ? await this.prisma.db.orm.public.MesCliente.where({ periodoId: periodo.id }).first()
+      ? await this.prisma.db.orm.public.MesCliente.where({
+          periodoId: periodo.id,
+        }).first()
       : null;
     if (!periodo || !mesRow) {
       throw new BadRequestException('Guarda primero los conceptos de ese período.');
     }
 
-    const inicio = Temporal.PlainDate.from(
-      `${anio}-${String(mes).padStart(2, '0')}-01`,
-    );
+    const inicio = Temporal.PlainDate.from(`${anio}-${String(mes).padStart(2, '0')}-01`);
     if (Temporal.PlainDate.compare(due, inicio) < 0) {
       throw new BadRequestException(
         'La fecha de vencimiento no puede ser anterior al período.',
@@ -617,7 +697,12 @@ export class ObligacionesService {
     }
 
     const postergacion = await this.prisma.db.transaction(async (tx) => {
-      const saldo = await this.saldoConcepto(tx, mesRow.id, { clienteId, anio, mes }, concepto);
+      const saldo = await this.saldoConcepto(
+        tx,
+        mesRow.id,
+        { clienteId, anio, mes },
+        concepto,
+      );
       if (amount > saldo) {
         throw new BadRequestException('El monto supera el saldo disponible.');
       }
@@ -642,10 +727,7 @@ export class ObligacionesService {
   //   se libera al editarlo, así que el nuevo cabe en el saldo
   //   actual más lo liberado; no puede bajar de lo abonado
   //   contra ella.
-  async actualizarPostergacion(
-    postergacionIdRaw: string,
-    data: GuardarPostergacionDto,
-  ) {
+  async actualizarPostergacion(postergacionIdRaw: string, data: GuardarPostergacionDto) {
     const postergacionId = parseId(postergacionIdRaw, 'postergacionId');
     const anio = parseAnio(data.anio);
     const mes = parseMes(data.mes);
@@ -654,22 +736,26 @@ export class ObligacionesService {
     const due = parseFechaIso(data.due, 'due');
     const note = this.parseTexto(data.note, 'note', POSTERGACION_NOTA_MAX);
 
-    const postergacion = await this.prisma.db.orm.public.PostergacionMes
-      .where({ id: postergacionId }).first();
+    const postergacion = await this.prisma.db.orm.public.PostergacionMes.where({
+      id: postergacionId,
+    }).first();
     if (!postergacion) throw new NotFoundException('Postergación no encontrada.');
 
-    const periodo = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId: postergacion.clienteId, anio, mes }).first();
+    const periodo = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId: postergacion.clienteId,
+      anio,
+      mes,
+    }).first();
     const mesRow = periodo
-      ? await this.prisma.db.orm.public.MesCliente.where({ periodoId: periodo.id }).first()
+      ? await this.prisma.db.orm.public.MesCliente.where({
+          periodoId: periodo.id,
+        }).first()
       : null;
     if (!periodo || !mesRow) {
       throw new BadRequestException('Guarda primero los conceptos de ese período.');
     }
 
-    const inicio = Temporal.PlainDate.from(
-      `${anio}-${String(mes).padStart(2, '0')}-01`,
-    );
+    const inicio = Temporal.PlainDate.from(`${anio}-${String(mes).padStart(2, '0')}-01`);
     if (Temporal.PlainDate.compare(due, inicio) < 0) {
       throw new BadRequestException(
         'La fecha de vencimiento no puede ser anterior al período.',
@@ -678,21 +764,23 @@ export class ObligacionesService {
 
     const actualizado = await this.prisma.db.transaction(async (tx) => {
       const saldo = await this.saldoConcepto(
-        tx, mesRow.id,
-        { clienteId: postergacion.clienteId, anio, mes }, concepto,
+        tx,
+        mesRow.id,
+        { clienteId: postergacion.clienteId, anio, mes },
+        concepto,
       );
       // Si el período o concepto cambiaron, el monto anterior
       // ya no reserva espacio en el nuevo concepto.
-      const mismoConcepto = postergacion.anio === anio
-        && postergacion.mes === mes && postergacion.concepto === concepto;
+      const mismoConcepto =
+        postergacion.anio === anio &&
+        postergacion.mes === mes &&
+        postergacion.concepto === concepto;
       const limite = saldo + (mismoConcepto ? Number(postergacion.monto) : 0);
       if (amount > limite) {
         throw new BadRequestException('El monto supera el saldo disponible.');
       }
-      const abonados = await tx.orm.public.AbonoMes
-        .where({ postergacionId }).all();
-      const pagado = abonados
-        .reduce((s: number, a: any) => s + Number(a.monto), 0);
+      const abonados = await tx.orm.public.AbonoMes.where({ postergacionId }).all();
+      const pagado = abonados.reduce((s: number, a: any) => s + Number(a.monto), 0);
       if (amount < pagado) {
         throw new BadRequestException(
           'No puedes reducir la postergación por debajo de sus abonos.',
@@ -706,8 +794,7 @@ export class ObligacionesService {
         vencimiento: due,
         nota: note as Varchar<500>,
       });
-      return tx.orm.public.PostergacionMes
-        .where({ id: postergacionId }).first();
+      return tx.orm.public.PostergacionMes.where({ id: postergacionId }).first();
     });
 
     if (!actualizado) {
@@ -721,20 +808,23 @@ export class ObligacionesService {
   //   rechaza si tiene abonos asociados).
   async eliminarPostergacion(postergacionIdRaw: string) {
     const postergacionId = parseId(postergacionIdRaw, 'postergacionId');
-    const postergacion = await this.prisma.db.orm.public.PostergacionMes
-      .where({ id: postergacionId }).first();
+    const postergacion = await this.prisma.db.orm.public.PostergacionMes.where({
+      id: postergacionId,
+    }).first();
     if (!postergacion) throw new NotFoundException('Postergación no encontrada.');
 
-    const abonados = await this.prisma.db.orm.public.AbonoMes
-      .where({ postergacionId }).all();
+    const abonados = await this.prisma.db.orm.public.AbonoMes.where({
+      postergacionId,
+    }).all();
     if (abonados.length) {
       throw new BadRequestException(
         'Corrige primero los abonos asociados a esta postergación.',
       );
     }
 
-    await this.prisma.db.orm.public.PostergacionMes
-      .where({ id: postergacionId }).delete();
+    await this.prisma.db.orm.public.PostergacionMes.where({
+      id: postergacionId,
+    }).delete();
     return { id: postergacionIdRaw, deleted: true };
   }
 
@@ -755,11 +845,16 @@ export class ObligacionesService {
     const pagado = abonos
       .filter((a: any) => a.concepto === concepto && a.postergacionId === null)
       .reduce((s: number, a: any) => s + Number(a.monto), 0);
-    const postergaciones = await tx.orm.public.PostergacionMes
-      .where({ clienteId: periodo.clienteId, anio: periodo.anio, mes: periodo.mes, concepto })
-      .all();
-    const postergado = postergaciones
-      .reduce((s: number, p: any) => s + Number(p.monto), 0);
+    const postergaciones = await tx.orm.public.PostergacionMes.where({
+      clienteId: periodo.clienteId,
+      anio: periodo.anio,
+      mes: periodo.mes,
+      concepto,
+    }).all();
+    const postergado = postergaciones.reduce(
+      (s: number, p: any) => s + Number(p.monto),
+      0,
+    );
     return Number(delConcepto?.monto ?? 0) - pagado - postergado;
   }
 
@@ -772,7 +867,10 @@ export class ObligacionesService {
     pasos: Record<string, any>[],
     clientId: string,
   ): MesForma {
-    const amounts = Object.fromEntries(CONCEPTOS.map((c) => [c, 0])) as Record<string, number>;
+    const amounts = Object.fromEntries(CONCEPTOS.map((c) => [c, 0])) as Record<
+      string,
+      number
+    >;
     for (const monto of montos) amounts[monto.concepto] = Number(monto.monto);
     return {
       clientId,
@@ -807,9 +905,10 @@ export class ObligacionesService {
       originAccount: abono.cuentaOrigen ?? null,
       receivingAccount: abono.cuentaDestino ?? null,
       destination: abono.destino ?? null,
-      deferredId: abono.postergacionId === null || abono.postergacionId === undefined
-        ? null
-        : String(abono.postergacionId),
+      deferredId:
+        abono.postergacionId === null || abono.postergacionId === undefined
+          ? null
+          : String(abono.postergacionId),
     };
   }
 
@@ -829,6 +928,7 @@ export class ObligacionesService {
     };
   }
 
+  /** Acepta true o false y usa el valor predeterminado si no vino el campo. No convierte textos a booleanos. */
   private parseBoolean(raw: unknown, campo: string, defecto: boolean): boolean {
     if (raw === undefined || raw === null) return defecto;
     if (typeof raw !== 'boolean') {
@@ -837,10 +937,13 @@ export class ObligacionesService {
     return raw;
   }
 
+  /** Representa la ausencia como texto vacío y comprueba tipo y largo máximo. */
   private parseTexto(raw: unknown, campo: string, max: number): string {
     if (raw === undefined || raw === null) return '';
     if (typeof raw !== 'string' || raw.length > max) {
-      throw new BadRequestException(`El campo "${campo}" admite hasta ${max} caracteres.`);
+      throw new BadRequestException(
+        `El campo "${campo}" admite hasta ${max} caracteres.`,
+      );
     }
     return raw;
   }
@@ -855,22 +958,36 @@ export class ObligacionesService {
     destino: string | null;
     postergacionId: bigint | null;
   } {
+    /** Valida metadatos de texto opcionales y convierte su ausencia en null. */
     const texto = (v: unknown, campo: string, max: number): string | null => {
       if (v === undefined || v === null || v === '') return null;
       if (typeof v !== 'string' || v.length > max) {
-        throw new BadRequestException(`El campo "${campo}" admite hasta ${max} caracteres.`);
+        throw new BadRequestException(
+          `El campo "${campo}" admite hasta ${max} caracteres.`,
+        );
       }
       return v;
     };
     let destino: string | null = null;
-    if (raw.destination !== undefined && raw.destination !== null && raw.destination !== '') {
-      if (typeof raw.destination !== 'string' || !(DESTINOS as readonly string[]).includes(raw.destination)) {
+    if (
+      raw.destination !== undefined &&
+      raw.destination !== null &&
+      raw.destination !== ''
+    ) {
+      if (
+        typeof raw.destination !== 'string' ||
+        !(DESTINOS as readonly string[]).includes(raw.destination)
+      ) {
         throw new BadRequestException('Destino de pago inválido.');
       }
       destino = raw.destination;
     }
     let postergacionId: bigint | null = null;
-    if (raw.deferredId !== undefined && raw.deferredId !== null && raw.deferredId !== '') {
+    if (
+      raw.deferredId !== undefined &&
+      raw.deferredId !== null &&
+      raw.deferredId !== ''
+    ) {
       postergacionId = parseId(raw.deferredId, 'deferredId');
     }
     return {
@@ -883,6 +1000,7 @@ export class ObligacionesService {
     };
   }
 
+  /** Exige una clave del catálogo interno de obligaciones para evitar conceptos desconocidos. */
   private parseConcepto(raw: unknown): Concepto {
     if (typeof raw !== 'string' || !(CONCEPTOS as readonly string[]).includes(raw)) {
       throw new BadRequestException(
@@ -892,12 +1010,15 @@ export class ObligacionesService {
     return raw as Concepto;
   }
 
+  /** Exige un abono entero mayor que cero dentro del límite permitido. */
   private parseMontoPositivo(raw: unknown): number {
     if (typeof raw !== 'number' || !Number.isSafeInteger(raw) || raw <= 0) {
       throw new BadRequestException('El abono debe ser un monto entero mayor que cero.');
     }
     if (raw > MONTO_MAX) {
-      throw new BadRequestException('Los montos deben ser pesos enteros entre 0 y 999.999.999.');
+      throw new BadRequestException(
+        'Los montos deben ser pesos enteros entre 0 y 999.999.999.',
+      );
     }
     return raw;
   }
@@ -906,7 +1027,9 @@ export class ObligacionesService {
   //   enteros entre 0 y 999.999.999 (espejo de `saveMonth`, ficha/model.ts).
   private validarAmounts(raw: unknown): Record<Concepto, number> {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) {
-      throw new BadRequestException('El campo "amounts" debe traer los montos por concepto.');
+      throw new BadRequestException(
+        'El campo "amounts" debe traer los montos por concepto.',
+      );
     }
     const registro = raw as Record<string, unknown>;
     const claves = Object.keys(registro);
@@ -919,9 +1042,15 @@ export class ObligacionesService {
     const amounts = {} as Record<Concepto, number>;
     for (const c of CONCEPTOS) {
       const valor = registro[c];
-      if (typeof valor !== 'number' || !Number.isSafeInteger(valor)
-        || valor < 0 || valor > MONTO_MAX) {
-        throw new BadRequestException('Los montos deben ser pesos enteros entre 0 y 999.999.999.');
+      if (
+        typeof valor !== 'number' ||
+        !Number.isSafeInteger(valor) ||
+        valor < 0 ||
+        valor > MONTO_MAX
+      ) {
+        throw new BadRequestException(
+          'Los montos deben ser pesos enteros entre 0 y 999.999.999.',
+        );
       }
       amounts[c] = valor;
     }
@@ -937,15 +1066,21 @@ export class ObligacionesService {
       throw new BadRequestException('El campo "steps" debe ser una lista de pasos.');
     }
     if (raw.length > PASOS_MAX) {
-      throw new BadRequestException(`Revisa los pasos y el motivo del seguimiento: máximo ${PASOS_MAX}.`);
+      throw new BadRequestException(
+        `Revisa los pasos y el motivo del seguimiento: máximo ${PASOS_MAX}.`,
+      );
     }
     return raw.map((paso) => {
       if (!paso || typeof paso !== 'object') {
         throw new BadRequestException('Revisa los pasos y el motivo del seguimiento.');
       }
       const { text, done } = paso as { text?: unknown; done?: unknown };
-      if (typeof text !== 'string' || !text.trim() || text.length > PASO_TEXTO_MAX
-        || typeof done !== 'boolean') {
+      if (
+        typeof text !== 'string' ||
+        !text.trim() ||
+        text.length > PASO_TEXTO_MAX ||
+        typeof done !== 'boolean'
+      ) {
         throw new BadRequestException('Revisa los pasos y el motivo del seguimiento.');
       }
       return { text, done };

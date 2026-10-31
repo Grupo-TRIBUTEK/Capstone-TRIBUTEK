@@ -1,6 +1,10 @@
+/**
+ * Página de la ruta /contacto. Next.js utiliza page.tsx para publicar esta vista.
+ */
 import Navbar from "../components/layout/Navbar";
 import Footer from "../components/layout/Footer";
 
+/** Compone la página pública con los canales de contacto disponibles. */
 export default function ContactPage() {
   return (
     <>
@@ -8,29 +12,31 @@ export default function ContactPage() {
       <main className="min-h-[70vh] bg-surface px-6 py-20 text-text-primary md:py-28">
         <div className="mx-auto max-w-7xl">
           <header className="mx-auto max-w-3xl text-center">
-            <p className="text-sm font-semibold uppercase tracking-widest text-secondary-strong">Contacto</p>
+            <p className="text-sm font-semibold uppercase tracking-widest text-secondary-strong">
+              Contacto
+            </p>
             <h1 className="mt-3 font-display text-[35px] font-normal leading-tight text-text-primary md:text-[48px]">
               Contáctanos por nuestros canales principales.
             </h1>
             <p className="mx-auto mt-4 max-w-2xl leading-relaxed text-text-muted">
-              Encuéntranos en Puerto Montt o accede a tu cuenta para continuar con tu gestión.
+              Encuéntranos en Puerto Montt o accede a tu cuenta para continuar con tu
+              gestión.
             </p>
           </header>
 
           <div className="mt-10 grid items-start gap-8 lg:grid-cols-[0.9fr_1fr]">
             <div className="flex flex-col gap-5">
               <div className="rounded-card border border-border bg-surface p-5">
-                <h2 className="text-base font-semibold text-text-primary">Redes sociales y contacto</h2>
+                <h2 className="text-base font-semibold text-text-primary">
+                  Redes sociales y contacto
+                </h2>
                 <p className="mt-2 text-sm leading-relaxed text-text-muted">
-                  Síguenos en nuestras redes sociales para estar al tanto de nuestras novedades.
+                  Síguenos en nuestras redes sociales para estar al tanto de nuestras
+                  novedades.
                 </p>
                 {/* Links redes sociales */}
                 <ul className="mt-4 flex flex-col gap-2">
-                  {[
-                    "WhatsApp",
-                    "Instagram",
-                    "Facebook",
-                  ].map((channel) => (
+                  {["WhatsApp", "Instagram", "Facebook"].map((channel) => (
                     <li key={channel}>
                       <button
                         type="button"
@@ -52,9 +58,13 @@ export default function ContactPage() {
                   referrerPolicy="no-referrer-when-downgrade"
                 />
                 <div className="border-t border-border px-5 py-4">
-                  <p className="text-xs font-semibold uppercase tracking-widest text-secondary-strong">Dirección</p>
+                  <p className="text-xs font-semibold uppercase tracking-widest text-secondary-strong">
+                    Dirección
+                  </p>
                   <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
-                    <p className="select-text text-sm leading-relaxed text-text-primary">Guillermo Gallardo 166, 5480000 Puerto Montt, Los Lagos</p>
+                    <p className="select-text text-sm leading-relaxed text-text-primary">
+                      Guillermo Gallardo 166, 5480000 Puerto Montt, Los Lagos
+                    </p>
                     <a
                       href="https://www.google.com/maps/search/?api=1&query=Guillermo+Gallardo+166%2C+5480000+Puerto+Montt%2C+Los+Lagos"
                       target="_blank"
@@ -64,16 +74,22 @@ export default function ContactPage() {
                       Abrir mapa
                     </a>
                   </div>
-                {/* div de horario de atencion */}
+                  {/* div de horario de atencion */}
                   <div className="mt-4 border-t border-border pt-4 mt-5">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-secondary-strong">Horario (se puede hacer dinamicamente)</p>
-                    <p className="mt-2 text-sm font-medium text-text-primary">Lunes a viernes, 9:00 a 18:00 hrs</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-secondary-strong">
+                      Horario (se puede hacer dinamicamente)
+                    </p>
+                    <p className="mt-2 text-sm font-medium text-text-primary">
+                      Lunes a viernes, 9:00 a 18:00 hrs
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
             <div className="min-h-[320px] rounded-card border border-border bg-background p-6 md:p-8">
-              <h2 className="font-display text-2xl font-normal text-text-primary">Formulario</h2>
+              <h2 className="font-display text-2xl font-normal text-text-primary">
+                Formulario
+              </h2>
             </div>
           </div>
         </div>

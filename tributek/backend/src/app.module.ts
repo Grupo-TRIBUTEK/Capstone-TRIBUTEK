@@ -1,3 +1,6 @@
+/**
+ * Reúne los módulos de negocio del backend para que Nest conecte controladores y servicios.
+ */
 import { PaymentEvidenceModule } from './payment-evidence/payment-evidence.module.js';
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller.js';

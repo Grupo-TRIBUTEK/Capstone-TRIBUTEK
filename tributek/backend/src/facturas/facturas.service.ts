@@ -1,3 +1,6 @@
+/**
+ * Lógica de registros de facturación. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import type { Numeric, Varchar } from '@prisma/orm-postgres/target/codec-types';
 import 'temporal-polyfill/global';
@@ -35,6 +38,7 @@ type FacturaForma = {
   note: string;
 };
 
+/** Forma AAAA-MM con un mes de dos dígitos para mantener el mismo formato en la API. */
 const etiquetaPeriodo = (anio: number, mes: number) =>
   `${anio}-${String(mes).padStart(2, '0')}`;
 
@@ -46,12 +50,12 @@ export class FacturasService {
   //   ordenadas por período y id.
   async listar(clienteIdRaw: string) {
     const clienteId = parseId(clienteIdRaw, 'clienteId');
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const facturas = await this.prisma.db.orm.public.Factura
-      .where({ clienteId })
+    const facturas = await this.prisma.db.orm.public.Factura.where({ clienteId })
       .orderBy((f) => f.anio.asc())
       .orderBy((f) => f.mes.asc())
       .orderBy((f) => f.id.asc())
@@ -68,8 +72,9 @@ export class FacturasService {
     const { anio, mes, tipo, nombre, rut, amount, descripcion, nota, numero, fecha } =
       this.validarFactura(data);
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     const factura = await this.prisma.db.orm.public.Factura.create({
@@ -110,7 +115,12 @@ export class FacturasService {
     const nombre = this.parseTexto(data.name, 'name', NOMBRE_MAX, true);
     const rut = this.parseTexto(data.rut, 'rut', RUT_MAX, true);
     const amount = this.parseMonto(data.amount);
-    const descripcion = this.parseTexto(data.description, 'description', DESCRIPCION_MAX, true);
+    const descripcion = this.parseTexto(
+      data.description,
+      'description',
+      DESCRIPCION_MAX,
+      true,
+    );
     const nota = this.parseTexto(data.note, 'note', NOTA_MAX);
     const numero = this.parseTextoOpcional(data.number, 'number', NUMERO_MAX);
     const fecha = parseFechaIsoOpcional(data.date, 'date');
@@ -121,25 +131,50 @@ export class FacturasService {
     if (data.clientId !== undefined && data.clientId !== null && data.clientId !== '') {
       clienteId = parseId(data.clientId, 'clientId');
     }
-    return { clienteId, anio, mes, tipo, nombre, rut, amount, descripcion, nota, numero, fecha };
+    return {
+      clienteId,
+      anio,
+      mes,
+      tipo,
+      nombre,
+      rut,
+      amount,
+      descripcion,
+      nota,
+      numero,
+      fecha,
+    };
   }
 
   // QUÉ HACE: edita una factura (espejo del editor de
   //   facturación). El cliente puede cambiar en filas "extra".
   async actualizar(facturaIdRaw: string, data: GuardarFacturaDto) {
     const facturaId = parseId(facturaIdRaw, 'facturaId');
-    const { clienteId, anio, mes, tipo, nombre, rut, amount, descripcion, nota, numero, fecha } =
-      this.validarFactura(data);
+    const {
+      clienteId,
+      anio,
+      mes,
+      tipo,
+      nombre,
+      rut,
+      amount,
+      descripcion,
+      nota,
+      numero,
+      fecha,
+    } = this.validarFactura(data);
 
-    const factura = await this.prisma.db.orm.public.Factura
-      .where({ id: facturaId }).first();
+    const factura = await this.prisma.db.orm.public.Factura.where({
+      id: facturaId,
+    }).first();
     if (!factura) throw new NotFoundException('Factura no encontrada.');
 
     // El cliente de la fila: el del path (creación) o el que
     //   trae el body (edición con cambio de cliente).
     const clienteObjetivo = clienteId ?? factura.clienteId;
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteObjetivo }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteObjetivo,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     await this.prisma.db.orm.public.Factura.where({ id: facturaId }).update({
@@ -156,8 +191,9 @@ export class FacturasService {
       nota: nota === '' ? null : (nota as Varchar<1000>),
     });
 
-    const actualizado = await this.prisma.db.orm.public.Factura
-      .where({ id: facturaId }).first();
+    const actualizado = await this.prisma.db.orm.public.Factura.where({
+      id: facturaId,
+    }).first();
     if (!actualizado) {
       // Inalcanzable en la práctica: la actualización acabó de escribir la fila.
       throw new NotFoundException('Factura no encontrada.');
@@ -168,18 +204,17 @@ export class FacturasService {
   // QUÉ HACE: elimina una factura por id.
   async eliminar(facturaIdRaw: string) {
     const facturaId = parseId(facturaIdRaw, 'facturaId');
-    const factura = await this.prisma.db.orm.public.Factura
-      .where({ id: facturaId }).first();
+    const factura = await this.prisma.db.orm.public.Factura.where({
+      id: facturaId,
+    }).first();
     if (!factura) throw new NotFoundException('Factura no encontrada.');
 
     await this.prisma.db.orm.public.Factura.where({ id: facturaId }).delete();
     return { id: facturaIdRaw, deleted: true };
   }
 
-  private formaFactura(
-    factura: Record<string, any>,
-    clientId: string,
-  ): FacturaForma {
+  /** Adapta la fila de PostgreSQL al frontend: ID de texto, período AAAA-MM y monto numérico. */
+  private formaFactura(factura: Record<string, any>, clientId: string): FacturaForma {
     return {
       id: String(factura.id),
       clientId,
@@ -195,6 +230,7 @@ export class FacturasService {
     };
   }
 
+  /** Acepta los tipos internos monthly y extra para distinguir facturas mensuales y extraordinarias. */
   private parseTipo(raw: unknown): string {
     if (typeof raw !== 'string' || !(TIPOS as readonly string[]).includes(raw)) {
       throw new BadRequestException(
@@ -204,10 +240,18 @@ export class FacturasService {
     return raw;
   }
 
-  private parseTexto(raw: unknown, campo: string, max: number, obligatorio = false): string {
+  /** Valida el tipo y largo del texto y aplica las reglas del campo. */
+  private parseTexto(
+    raw: unknown,
+    campo: string,
+    max: number,
+    obligatorio = false,
+  ): string {
     if (raw === undefined || raw === null) return '';
     if (typeof raw !== 'string' || raw.length > max) {
-      throw new BadRequestException(`El campo "${campo}" admite hasta ${max} caracteres.`);
+      throw new BadRequestException(
+        `El campo "${campo}" admite hasta ${max} caracteres.`,
+      );
     }
     const texto = obligatorio ? raw.trim() : raw;
     if (obligatorio && !texto) {
@@ -216,20 +260,26 @@ export class FacturasService {
     return texto;
   }
 
+  /** Representa un texto ausente como null y limita su largo cuando fue enviado. */
   private parseTextoOpcional(raw: unknown, campo: string, max: number): string | null {
     if (raw === undefined || raw === null || raw === '') return null;
     if (typeof raw !== 'string' || raw.length > max) {
-      throw new BadRequestException(`El campo "${campo}" admite hasta ${max} caracteres.`);
+      throw new BadRequestException(
+        `El campo "${campo}" admite hasta ${max} caracteres.`,
+      );
     }
     return raw;
   }
 
+  /** Exige un monto entero no negativo dentro del máximo admitido. */
   private parseMonto(raw: unknown): number {
     if (typeof raw !== 'number' || !Number.isSafeInteger(raw) || raw < 0) {
       throw new BadRequestException('El monto de la factura debe ser un entero ≥ 0.');
     }
     if (raw > MONTO_MAX) {
-      throw new BadRequestException('Los montos deben ser pesos enteros entre 0 y 999.999.999.');
+      throw new BadRequestException(
+        'Los montos deben ser pesos enteros entre 0 y 999.999.999.',
+      );
     }
     return raw;
   }

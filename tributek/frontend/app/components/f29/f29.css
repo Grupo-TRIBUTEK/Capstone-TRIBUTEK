@@ -1,3 +1,6 @@
+/**
+ * Define la distribución, tablas, formularios y presentación del módulo F29.
+ */
 .f29 { --f29-line: var(--border); --f29-blue: var(--primary); color: var(--text-primary); }
 .f29 h1 { font: 700 32px var(--font-body); margin: 8px 0; }
 .f29 h2 { font: 700 20px var(--font-body); margin: 0; padding: 18px 20px; }

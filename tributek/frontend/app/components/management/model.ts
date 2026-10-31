@@ -1,3 +1,6 @@
+/**
+ * Reglas de pagos, saldos y postergaciones. Opera sobre datos y devuelve resultados para que otra capa los guarde.
+ */
 import {
   addPayment,
   concepts,
@@ -91,56 +94,55 @@ export type Ledger = Omit<Data, "payments"> & {
   management?: Management;
   payments: AppliedPayment[];
 };
+/** Crea colecciones vacías independientes para la extensión de gestión. */
 export const blankManagement = (): Management => ({
   profiles: {},
   deferrals: [],
   invoices: [],
   processes: [],
 });
+/** Lee la extensión de gestión o utiliza colecciones vacías para datos antiguos. */
 export const extra = (data: Data): Management =>
   (data as Ledger).management ?? blankManagement();
+/** Busca el mes del cliente o devuelve un borrador; consultarlo no lo guarda. */
 export const getMonth = (data: Data, id: string, period: string) =>
   data.months.find((m) => m.clientId === id && m.period === period) ??
   newMonth(id, period);
+/** Suma abonos vinculados a una postergación. */
 export const deferralPaid = (data: Data, id: string) =>
   (data.payments as AppliedPayment[])
     .filter((p) => p.deferredId === id)
     .reduce((s, p) => s + p.amount, 0);
+/** Descuenta de la postergación los abonos que ya recibió. */
 export const deferralBalance = (data: Data, d: Deferral) =>
   d.amount - deferralPaid(data, d.id);
+/** Descuenta pagos y saldo postergado para no cobrarlo dos veces en la deuda corriente. */
 export function balance(data: Data, m: Month, concept: Concept) {
   const deferred = extra(data)
     .deferrals.filter(
-      (d) =>
-        d.clientId === m.clientId &&
-        d.period === m.period &&
-        d.concept === concept,
+      (d) => d.clientId === m.clientId && d.period === m.period && d.concept === concept,
     )
     .reduce((s, d) => s + deferralBalance(data, d), 0);
-  return (
-    m.amounts[concept] - paid(data, m.clientId, m.period, concept) - deferred
-  );
+  return m.amounts[concept] - paid(data, m.clientId, m.period, concept) - deferred;
 }
+/** Resume deuda corriente, pagos y postergaciones y determina el estado mensual. */
 export function totals(data: Data, m: Month) {
   const pending = concepts.reduce((s, c) => s + balance(data, m, c), 0);
   const deferred = extra(data)
     .deferrals.filter((d) => d.clientId === m.clientId && d.period === m.period)
     .reduce((s, d) => s + d.amount, 0);
   const received = (data.payments as AppliedPayment[])
-    .filter(
-      (p) =>
-        p.clientId === m.clientId && p.period === m.period && !p.deferredId,
-    )
+    .filter((p) => p.clientId === m.clientId && p.period === m.period && !p.deferredId)
     .reduce((s, p) => s + p.amount, 0);
   const total = concepts.reduce((s, c) => s + m.amounts[c], 0) - deferred;
   return {
     total,
     received,
     pending,
-    status:
-      total > 0 && pending === 0 ? "PAGADO" : m.sent ? "ENVIADO" : "NO ENVIADO",
+    status: total > 0 && pending === 0 ? "PAGADO" : m.sent ? "ENVIADO" : "NO ENVIADO",
   };
 }
+/** Acumula saldos hasta el período; por defecto incluye servicios y reembolsos cobrables. */
 export function debt(
   data: Data,
   clientId: string,
@@ -149,11 +151,9 @@ export function debt(
 ) {
   return data.months
     .filter((m) => m.clientId === clientId && m.period <= period)
-    .reduce(
-      (s, m) => s + selection.reduce((n, c) => n + balance(data, m, c), 0),
-      0,
-    );
+    .reduce((s, m) => s + selection.reduce((n, c) => n + balance(data, m, c), 0), 0);
 }
+/** Valida los datos base y sus extensiones, incluidas las referencias entre pagos y postergaciones. */
 export function validateLedger(data: Ledger): Ledger {
   parseData(JSON.stringify(data));
   const e = extra(data),
@@ -165,6 +165,7 @@ export function validateLedger(data: Ledger): Ledger {
     !Array.isArray(e.processes)
   )
     throw new Error("Respaldo de gestión inválido.");
+  /** Comprueba que el ID esté presente en el directorio antes de aceptar una referencia. */
   const client = (id: string) => data.clients.some((c) => c.id === id);
   for (const d of e.deferrals) {
     if (
@@ -172,9 +173,7 @@ export function validateLedger(data: Ledger): Ledger {
       !d.id ||
       !client(d.clientId) ||
       !validPeriod(d.period) ||
-      !data.months.some(
-        (m) => m.clientId === d.clientId && m.period === d.period,
-      ) ||
+      !data.months.some((m) => m.clientId === d.clientId && m.period === d.period) ||
       !concepts.includes(d.concept) ||
       !Number.isSafeInteger(d.amount) ||
       d.amount <= 0 ||
@@ -188,7 +187,12 @@ export function validateLedger(data: Ledger): Ledger {
       throw new Error("La postergación tiene abonos superiores a su monto.");
   }
   for (const p of data.payments) {
-    if ([p.originAccount, p.receivingAccount].some(v => v !== undefined && (typeof v !== "string" || v.length > 200))) throw new Error("Revisa las cuentas del pago.");
+    if (
+      [p.originAccount, p.receivingAccount].some(
+        (v) => v !== undefined && (typeof v !== "string" || v.length > 200),
+      )
+    )
+      throw new Error("Revisa las cuentas del pago.");
     if (p.destination && !["tributek", "institution"].includes(p.destination))
       throw new Error("Destino de pago inválido.");
     if (p.deferredId) {
@@ -205,9 +209,7 @@ export function validateLedger(data: Ledger): Ledger {
   for (const m of data.months)
     for (const c of concepts)
       if (balance(data, m, c) < 0)
-        throw new Error(
-          "El monto no puede ser menor que sus abonos y postergaciones.",
-        );
+        throw new Error("El monto no puede ser menor que sus abonos y postergaciones.");
   for (const inv of e.invoices) {
     if (
       ids.has(inv.id) ||
@@ -230,9 +232,7 @@ export function validateLedger(data: Ledger): Ledger {
   for (const p of e.processes) {
     if (
       !client(p.clientId) ||
-      p.steps.some(
-        (s) => !stepStates.includes(s.state) || (s.date && !validDate(s.date)),
-      )
+      p.steps.some((s) => !stepStates.includes(s.state) || (s.date && !validDate(s.date)))
     )
       throw new Error("Revisa los pasos de formalización.");
   }
@@ -241,16 +241,19 @@ export function validateLedger(data: Ledger): Ledger {
       throw new Error("El honorario debe ser un monto entero válido.");
   return data;
 }
+/** Actualiza el mes sin permitir editar la postergación histórica fuera de su flujo específico. */
 export function updateMonth(data: Ledger, month: Month): Ledger {
   const previous = getMonth(data, month.clientId, month.period);
   if (month.amounts.Postergación !== previous.amounts.Postergación)
-    throw new Error("Usa Postergar para registrar una postergación. El concepto anterior conserva su historial.");
+    throw new Error(
+      "Usa Postergar para registrar una postergación. El concepto anterior conserva su historial.",
+    );
   return validateLedger(saveMonth(data, month) as Ledger);
 }
+/** Agrega una postergación si no está duplicada y no supera el saldo disponible. */
 export function postpone(data: Ledger, d: Deferral): Ledger {
   const e = extra(data);
-  if (e.deferrals.some((x) => x.id === d.id))
-    throw new Error("Postergación duplicada.");
+  if (e.deferrals.some((x) => x.id === d.id)) throw new Error("Postergación duplicada.");
   if (d.amount > balance(data, getMonth(data, d.clientId, d.period), d.concept))
     throw new Error("El monto supera el saldo disponible.");
   return validateLedger({
@@ -258,11 +261,10 @@ export function postpone(data: Ledger, d: Deferral): Ledger {
     management: { ...e, deferrals: [...e.deferrals, d] },
   });
 }
+/** Elimina la postergación solo si no tiene abonos, para no dejar referencias incompletas. */
 export function removeDeferral(data: Ledger, id: string): Ledger {
   if (deferralPaid(data, id) > 0)
-    throw new Error(
-      "Corrige primero los abonos asociados a esta postergación.",
-    );
+    throw new Error("Corrige primero los abonos asociados a esta postergación.");
   return validateLedger({
     ...data,
     management: {
@@ -284,7 +286,12 @@ export type PaymentInput = {
   destination: "tributek" | "institution";
   deferredId?: string;
 };
-export function allocatePayment(data: Ledger, input: PaymentInput, transferId = crypto.randomUUID()): Ledger {
+/** Reparte un pago entre saldos desde los meses más antiguos. Las líneas comparten transferId para identificar el movimiento completo; rechaza excesos sobre la deuda. */
+export function allocatePayment(
+  data: Ledger,
+  input: PaymentInput,
+  transferId = crypto.randomUUID(),
+): Ledger {
   if (
     !Number.isSafeInteger(input.amount) ||
     input.amount <= 0 ||
@@ -342,24 +349,34 @@ export function allocatePayment(data: Ledger, input: PaymentInput, transferId = 
   }
   return validateLedger(next);
 }
+/** Agrupa ingresos por fecha de pago en servicios y reembolsos y excluye pagos destinados a instituciones. */
 export function receivedByCategory(data: Ledger, period: string) {
-  const received = data.payments.filter(p => p.date.slice(0, 7) === period && p.destination !== "institution");
+  const received = data.payments.filter(
+    (p) => p.date.slice(0, 7) === period && p.destination !== "institution",
+  );
   return {
-    services: received.filter(p => services.includes(p.concept)).reduce((sum, p) => sum + p.amount, 0),
-    reimbursements: received.filter(p => p.concept === "Cobranza").reduce((sum, p) => sum + p.amount, 0),
+    services: received
+      .filter((p) => services.includes(p.concept))
+      .reduce((sum, p) => sum + p.amount, 0),
+    reimbursements: received
+      .filter((p) => p.concept === "Cobranza")
+      .reduce((sum, p) => sum + p.amount, 0),
   };
 }
+/** Convierte AAAA-MM a mes y año en español de Chile. */
 export function periodLabel(period: string) {
   return new Intl.DateTimeFormat("es-CL", {
     month: "long",
     year: "numeric",
   }).format(new Date(`${period}-15T12:00:00`));
 }
+/** Propone un vencimiento con el día y desplazamiento de meses indicados. */
 export function suggestedDue(period: string, months = 2, day = 20) {
   const [y, m] = period.split("-").map(Number);
   const d = new Date(y, m - 1 + months, day);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
+/** Construye filas por período y concepto para el informe mensual o acumulado. */
 export function reportRows(
   data: Data,
   clientId: string,

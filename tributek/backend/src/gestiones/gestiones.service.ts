@@ -1,3 +1,6 @@
+/**
+ * Lógica de checklist y seguimiento de constitución de empresas. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import 'temporal-polyfill/global';
@@ -43,8 +46,9 @@ export class GestionesService {
   //   ordenados por la columna `orden` (1..11, orden del catálogo).
   async obtenerFormalizacion(clienteIdRaw: string) {
     const clienteId = this.parseClienteId(clienteIdRaw);
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
     return this.leerChecklist(clienteId);
   }
@@ -59,8 +63,9 @@ export class GestionesService {
     usuarioId: string,
   ) {
     const clienteId = this.parseClienteId(clienteIdRaw);
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     const { pasos, nota } = this.validarBody(data);
@@ -73,14 +78,15 @@ export class GestionesService {
 
     await this.prisma.db.transaction(async (tx) => {
       // Solo cabeceras de ESTE cliente y tipo; los hijos se borran en cascada.
-      const anteriores = await tx.orm.public.Gestion
-        .where({ clienteId, tipo: TIPO_FORMALIZACION })
+      const anteriores = await tx.orm.public.Gestion.where({
+        clienteId,
+        tipo: TIPO_FORMALIZACION,
+      })
         .where((g) => g.parentId.isNull())
         .all();
       for (const cabecera of anteriores) {
         await tx.orm.public.Gestion.where({ id: cabecera.id }).delete();
       }
-
 
       const cabecera = await tx.orm.public.Gestion.create({
         clienteId,
@@ -135,21 +141,29 @@ export class GestionesService {
     }
     // Orden del catálogo (1..11): la tabla de Formalizaciones toma el primer
     // no-completado como "próximo paso", así que el array debe venir en orden ascendente.
-    return query.orderBy((g) => g.orden.asc()).orderBy((g) => g.id.asc()).all();
+    return query
+      .orderBy((g) => g.orden.asc())
+      .orderBy((g) => g.id.asc())
+      .all();
   }
 
+  /** Busca la cabecera de formalización más reciente y reconstruye sus pasos asociados. */
   private async leerChecklist(clienteId: bigint) {
-    const cabecera = await this.prisma.db.orm.public.Gestion
-      .where({ clienteId, tipo: TIPO_FORMALIZACION })
+    const cabecera = await this.prisma.db.orm.public.Gestion.where({
+      clienteId,
+      tipo: TIPO_FORMALIZACION,
+    })
       .where((g) => g.parentId.isNull())
       .orderBy((g) => g.id.desc())
       .first();
     if (!cabecera) {
-      return { steps: [] as Array<{ name: string; state: string; date: string }>, note: '' };
+      return {
+        steps: [] as Array<{ name: string; state: string; date: string }>,
+        note: '',
+      };
     }
 
-    const pasos = await this.prisma.db.orm.public.Gestion
-      .where({ parentId: cabecera.id })
+    const pasos = await this.prisma.db.orm.public.Gestion.where({ parentId: cabecera.id })
       .orderBy((g) => g.orden.asc())
       .all();
 
@@ -188,7 +202,10 @@ export class GestionesService {
 
     const vistos = new Set<string>();
     const pasos: PasoValidado[] = data.steps.map((paso) => {
-      if (typeof paso?.name !== 'string' || !(CATALOGO_PASOS as readonly string[]).includes(paso.name)) {
+      if (
+        typeof paso?.name !== 'string' ||
+        !(CATALOGO_PASOS as readonly string[]).includes(paso.name)
+      ) {
         throw new BadRequestException(`Paso desconocido: "${paso?.name ?? ''}".`);
       }
       if (vistos.has(paso.name)) {
@@ -196,17 +213,25 @@ export class GestionesService {
       }
       vistos.add(paso.name);
 
-      if (typeof paso?.state !== 'string' || !(ESTADOS_PASO as readonly string[]).includes(paso.state)) {
+      if (
+        typeof paso?.state !== 'string' ||
+        !(ESTADOS_PASO as readonly string[]).includes(paso.state)
+      ) {
         throw new BadRequestException(
           `Estado inválido en "${paso.name}": debe ser uno de ${ESTADOS_PASO.join(', ')}.`,
         );
       }
-      return { name: paso.name, state: paso.state, fecha: this.parseFecha(paso.date, paso.name) };
+      return {
+        name: paso.name,
+        state: paso.state,
+        fecha: this.parseFecha(paso.date, paso.name),
+      };
     });
 
     return { pasos, nota };
   }
 
+  /** Convierte la fecha opcional del paso a Temporal.PlainDate e identifica el paso si falla. */
   private parseFecha(valor: unknown, nombrePaso: string): Temporal.PlainDate | null {
     if (valor === undefined || valor === null || valor === '') return null;
     if (typeof valor !== 'string' || !FECHA_REGEX.test(valor)) {
@@ -221,6 +246,7 @@ export class GestionesService {
     }
   }
 
+  /** Convierte el ID decimal de cliente a BigInt; rechaza otros caracteres. */
   private parseClienteId(raw: string): bigint {
     if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
       throw new BadRequestException('clienteId inválido: debe ser un número.');
@@ -228,4 +254,3 @@ export class GestionesService {
     return BigInt(raw);
   }
 }
-

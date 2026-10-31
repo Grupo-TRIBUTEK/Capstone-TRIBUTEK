@@ -1,3 +1,6 @@
+/**
+ * Modelo base y reglas de la ficha. Estas funciones calculan o validan datos; el almacenamiento está separado.
+ */
 export const concepts = [
   "Honorarios",
   "Impuestos",
@@ -58,14 +61,17 @@ export const emptyData: Data = {
   months: [],
   payments: [],
 };
+/** Formatea pesos con separadores chilenos sin modificar el monto almacenado. */
 export const money = (amount: number) =>
   new Intl.NumberFormat("es-CL", {
     style: "currency",
     currency: "CLP",
     maximumFractionDigits: 0,
   }).format(amount);
+/** Comprueba el formato AAAA-MM y el intervalo del mes. */
 export const validPeriod = (value: string) =>
   /^(20\d{2}|2100)-(0[1-9]|1[0-2])$/.test(value);
+/** Valida una fecha y comprueba que su conversión no se desplace a otro día. */
 export function validDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const date = new Date(`${value}T12:00:00Z`);
@@ -73,10 +79,12 @@ export function validDate(value: string) {
     !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value
   );
 }
+/** Obtiene la fecha local del equipo en YYYY-MM-DD. */
 export function today() {
   const date = new Date();
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
+/** Crea un borrador mensual en cero; no lo persiste por sí mismo. */
 export function newMonth(clientId: string, period: string): Month {
   return {
     clientId,
@@ -91,6 +99,7 @@ export function newMonth(clientId: string, period: string): Month {
     followDone: false,
   };
 }
+/** Suma abonos del cliente y período, restringidos al concepto cuando se indica. */
 export function paid(
   data: Data,
   clientId: string,
@@ -106,6 +115,7 @@ export function paid(
     )
     .reduce((sum, p) => sum + p.amount, 0);
 }
+/** Calcula total, abonos, saldo y estado del mes según montos y envío. */
 export function summary(data: Data, month: Month) {
   const total = concepts.reduce((sum, c) => sum + month.amounts[c], 0);
   const received = paid(data, month.clientId, month.period);
@@ -121,6 +131,7 @@ export function summary(data: Data, month: Month) {
           : "NO ENVIADO",
   };
 }
+/** Acumula deuda de servicios hasta el período indicado; no mezcla reembolsos con ingresos por servicios. */
 export function serviceDebt(data: Data, clientId: string, through: string) {
   return data.months
     .filter((m) => m.clientId === clientId && m.period <= through)
@@ -135,6 +146,7 @@ export function serviceDebt(data: Data, clientId: string, through: string) {
       0,
     );
 }
+/** Valida nombre, largos y URL de la ficha antes de aceptar sus datos. */
 export function validateClient(client: Client) {
   if (!client.name.trim() || client.name.length > 180)
     throw new Error("Escribe una razón social de hasta 180 caracteres.");
@@ -152,6 +164,7 @@ export function validateClient(client: Client) {
       throw new Error("El enlace admite hasta 500 caracteres.");
   }
 }
+/** Valida y devuelve una copia con el mes actualizado. Impide bajar un monto por debajo de los abonos recibidos. */
 export function saveMonth(data: Data, month: Month): Data {
   if (
     !data.clients.some((c) => c.id === month.clientId) ||
@@ -197,6 +210,7 @@ export function saveMonth(data: Data, month: Month): Data {
       : [...data.months, month],
   };
 }
+/** Valida el abono contra un mes existente y devuelve el registro actualizado; otra capa se encarga de persistirlo. */
 export function addPayment(data: Data, payment: Payment): Data {
   const month = data.months.find(
     (m) => m.clientId === payment.clientId && m.period === payment.period,
@@ -224,6 +238,7 @@ export function addPayment(data: Data, payment: Payment): Data {
     throw new Error("Abono duplicado o límite de ensayo alcanzado.");
   return { ...data, payments: [...data.payments, payment] };
 }
+/** Prepara el texto de cobro mensual o acumulado del cliente. */
 export function message(
   data: Data,
   clientId: string,
@@ -251,6 +266,7 @@ export function message(
   }
   return `Hola, ${client?.name ?? "cliente"}.\n${accumulated ? "Cobros pendientes con TRIBUTEK hasta" : "Detalle pendiente del período"} ${period}.\n\n${rows.length ? rows.join("\n\n") : "Sin saldos pendientes registrados para esta selección."}\n\nTotal pendiente: ${money(total)}\nPor favor, envíanos el comprobante si ya realizaste el pago.`;
 }
+/** Lee y valida el respaldo local; usa el estado inicial si no existe contenido y rechaza estructuras incompatibles. */
 export function parseData(raw: string | null): Data {
   if (!raw) return emptyData;
   const data = JSON.parse(raw) as Data;
@@ -320,4 +336,5 @@ export function parseData(raw: string | null): Data {
   return data;
 }
 
+/** Muestra un nombre más claro sin cambiar las claves históricas guardadas en obligaciones y pagos. */
 export const conceptLabel = (value: string): string => (({ "Cotizaciones": "Cotizaciones previsionales", "Formalización": "Constitución de empresa", "Retención boletas": "Retención de boletas de honorarios", "Convenio": "Cuotas de convenio de deuda con TGR", "Cobranza": "Reembolso de gastos por cuenta del cliente" } as Record<string, string>)[value] || value);

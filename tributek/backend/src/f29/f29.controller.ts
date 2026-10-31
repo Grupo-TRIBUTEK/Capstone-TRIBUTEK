@@ -1,3 +1,6 @@
+/**
+ * Rutas HTTP de proyecciones informativas y fuentes RCV. Los decoradores indican método, URL y permisos; el controlador entrega la operación al servicio.
+ */
 import { Body, Controller, Get, Param, Put, Query, Req, UseGuards } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
@@ -10,6 +13,7 @@ import { F29Service } from './f29.service.js';
 export class F29Controller {
   constructor(private readonly f29Service: F29Service) {}
 
+  /** Consultar la proyección del cliente y período. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Get('proyeccion/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)
@@ -20,6 +24,7 @@ export class F29Controller {
     return this.f29Service.obtener(clienteId, filters.anio ?? '', filters.mes ?? '');
   }
 
+  /** Guardar los datos recibidos. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Put('proyeccion/:clienteId')
   @UseGuards(RolesGuard)
   @Roles('ADMIN', 1)

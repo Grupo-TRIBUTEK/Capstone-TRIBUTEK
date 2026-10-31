@@ -1,3 +1,6 @@
+/**
+ * Contrato de entrada para proyecciones informativas y fuentes RCV. DTO significa objeto de transferencia de datos; sus tipos describen campos. Las comprobaciones en ejecución dependen de decoradores, pipes y validaciones del servicio.
+ */
 // Proyección F29 que se guarda en PUT /f29/proyeccion/:clienteId.
 // QUÉ HACE: define la forma del body (1:1 con el tipo `Projection` de
 //   `f29/model.ts`: manual + ppm + revisión + fuentes RCV con detalle).

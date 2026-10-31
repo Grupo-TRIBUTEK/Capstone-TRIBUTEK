@@ -1,3 +1,6 @@
+/**
+ * Lógica de consultas del asistente a Ollama. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import {
   BadGatewayException,
   GatewayTimeoutException,
@@ -98,7 +101,9 @@ export class IaService {
       if (!response.ok) {
         const detail = (await response.json().catch(() => null)) as OllamaResponse | null;
         if (response.status === 404 && detail?.error?.includes('not found')) {
-          throw new BadGatewayException(`Falta el modelo ${model}. Ejecuta: ollama pull ${model}`);
+          throw new BadGatewayException(
+            `Falta el modelo ${model}. Ejecuta: ollama pull ${model}`,
+          );
         }
         throw new BadGatewayException('El servicio de IA devolvió un error.');
       }
@@ -117,9 +122,13 @@ export class IaService {
     } catch (error) {
       if (error instanceof BadGatewayException) throw error;
       if (error instanceof Error && error.name === 'AbortError') {
-        throw new GatewayTimeoutException('El servicio de IA excedió el tiempo de espera.');
+        throw new GatewayTimeoutException(
+          'El servicio de IA excedió el tiempo de espera.',
+        );
       }
-      throw new ServiceUnavailableException('No fue posible conectar con el servicio de IA.');
+      throw new ServiceUnavailableException(
+        'No fue posible conectar con el servicio de IA.',
+      );
     } finally {
       clearTimeout(timeout);
     }

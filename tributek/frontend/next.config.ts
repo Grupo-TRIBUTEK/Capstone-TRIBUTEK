@@ -1,3 +1,4 @@
+/** Configura Next.js. Las rewrites reenvían rutas de API al backend local sin que el navegador tenga que usar otro puerto. */
 import path from "node:path";
 import type { NextConfig } from "next";
 
@@ -6,6 +7,7 @@ const nextConfig: NextConfig = {
   experimental: {
     proxyTimeout: 70_000,
   },
+  /** Reenvía cada prefijo de API al servicio de Nest que escucha en el puerto 3001. */
   async rewrites() {
     return [
       { source: "/auditoria/:path*", destination: "http://localhost:3001/auditoria/:path*" },

@@ -1,3 +1,6 @@
+/**
+ * Configura la verificación del token JWT y la identidad que queda disponible en request.user.
+ */
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
@@ -12,6 +15,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
+  /** Construye request.user desde el JWT verificado por Passport para identificar la sesión en guards y controladores. */
   async validate(payload: {
     sub: string;
     nombreUsuario: string;

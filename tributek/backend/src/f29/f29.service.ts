@@ -1,3 +1,7 @@
+/**
+ * Lógica de proyecciones informativas y fuentes RCV. Aquí se coordinan validaciones y operaciones del módulo.
+ */
+import { parseId, parseAnio, parseMes } from '../common/parse.js';
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type { Numeric, Varchar } from '@prisma/orm-postgres/target/codec-types';
 import 'temporal-polyfill/global';
@@ -8,6 +12,7 @@ import { GuardarProyeccionDto } from './dto/guardar-proyeccion.dto.js';
 // El codec pg/numeric recibe texto decimal con la escala de la columna
 // (input branded `Numeric<P, S>`, no `number`) — helpers para no repetir casts.
 const num14 = (n: number): Numeric<14, 2> => n.toFixed(2) as Numeric<14, 2>;
+/** Representa la tasa con tres decimales para el tipo Numeric de PostgreSQL. */
 const num63 = (n: number): Numeric<6, 3> => n.toFixed(3) as Numeric<6, 3>;
 
 // Códigos de documento soportados (espejo de `f29/model.ts:120`).
@@ -35,8 +40,6 @@ type Manual = Record<ManualKey, number>;
 
 const MONTO_MAX = 1e12; // espejo de `safe()` en validateDatabase (f29/model.ts:236)
 const FILAS_MAX = 20000; // espejo de f29/model.ts:245
-const ANIO_MIN = 2000;
-const ANIO_MAX = 2099;
 const FECHA_RCV_REGEX = /^(\d{2})\/(\d{2})\/(\d{4})$/;
 
 const ESTADO_BORRADOR = 'Borrador' as Varchar<30>;
@@ -67,27 +70,34 @@ export class F29Service {
   //   mismo shape que acepta el PUT — `null` si aún no existe (la vista abre
   //   un borrador nuevo sin romper).
   async obtener(clienteIdRaw: string, anioRaw: string, mesRaw: string) {
-    const clienteId = this.parseId(clienteIdRaw, 'clienteId');
-    const anio = this.parseAnio(anioRaw);
-    const mes = this.parseMes(mesRaw);
+    const clienteId = parseId(clienteIdRaw, 'clienteId');
+    const anio = parseAnio(anioRaw);
+    const mes = parseMes(mesRaw);
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
-    const periodo = await this.prisma.db.orm.public.PeriodoCliente
-      .where({ clienteId, anio, mes }).first();
+    const periodo = await this.prisma.db.orm.public.PeriodoCliente.where({
+      clienteId,
+      anio,
+      mes,
+    }).first();
     if (!periodo) return null;
 
-    const proyeccion = await this.prisma.db.orm.public.ProyeccionF29
-      .where({ periodoId: periodo.id }).first();
+    const proyeccion = await this.prisma.db.orm.public.ProyeccionF29.where({
+      periodoId: periodo.id,
+    }).first();
     if (!proyeccion) return null;
 
-    const movimientos = await this.prisma.db.orm.public.F29Movimiento
-      .where({ proyeccionId: proyeccion.id })
+    const movimientos = await this.prisma.db.orm.public.F29Movimiento.where({
+      proyeccionId: proyeccion.id,
+    })
       .orderBy((m) => m.orden.asc())
       .orderBy((m) => m.id.asc())
       .all();
+    /** Selecciona movimientos del tipo indicado y los adapta al formato de filas RCV del frontend. */
     const filasDe = (tipo: 'venta' | 'compra') =>
       movimientos
         .filter((m) => m.tipo === tipo)
@@ -126,15 +136,18 @@ export class F29Service {
         fees: Number(proyeccion.honorarios),
       },
       ppmRate: Number(proyeccion.ppmTasa),
-      ppmOverride: proyeccion.ppmMontoManual === null || proyeccion.ppmMontoManual === undefined
-        ? null
-        : Number(proyeccion.ppmMontoManual),
-      ventas: proyeccion.ventasFuente === null && !ventas.length
-        ? null
-        : { name: proyeccion.ventasFuente ?? '', rows: ventas },
-      compras: proyeccion.comprasFuente === null && !compras.length
-        ? null
-        : { name: proyeccion.comprasFuente ?? '', rows: compras },
+      ppmOverride:
+        proyeccion.ppmMontoManual === null || proyeccion.ppmMontoManual === undefined
+          ? null
+          : Number(proyeccion.ppmMontoManual),
+      ventas:
+        proyeccion.ventasFuente === null && !ventas.length
+          ? null
+          : { name: proyeccion.ventasFuente ?? '', rows: ventas },
+      compras:
+        proyeccion.comprasFuente === null && !compras.length
+          ? null
+          : { name: proyeccion.comprasFuente ?? '', rows: compras },
     };
   }
   // QUÉ HACE: reemplazo total de la proyección en una transacción — crea el
@@ -144,9 +157,9 @@ export class F29Service {
   // AGREGADOS: calculados aquí con las mismas fórmulas que `calculate()`
   //   (f29/model.ts:191-199) — si cambia una, cambia la otra.
   async guardar(clienteIdRaw: string, data: GuardarProyeccionDto, usuarioId: string) {
-    const clienteId = this.parseId(clienteIdRaw, 'clienteId');
-    const anio = this.parseAnio(data.anio);
-    const mes = this.parseMes(data.mes);
+    const clienteId = parseId(clienteIdRaw, 'clienteId');
+    const anio = parseAnio(data.anio);
+    const mes = parseMes(data.mes);
     const manual = this.validarManual(data.manual);
     const ppmRate = this.validarPpmRate(data.ppmRate);
     const ppmOverride = this.validarPpmOverride(data.ppmOverride);
@@ -157,8 +170,9 @@ export class F29Service {
     const ventas = this.validarFuente(data.ventas, 'ventas');
     const compras = this.validarFuente(data.compras, 'compras');
 
-    const cliente = await this.prisma.db.orm.public.Cliente
-      .where({ id: clienteId }).first();
+    const cliente = await this.prisma.db.orm.public.Cliente.where({
+      id: clienteId,
+    }).first();
     if (!cliente) throw new NotFoundException('Cliente no encontrado.');
 
     const periodoId = await this.periodos.asegurar(clienteId, anio, mes);
@@ -167,8 +181,7 @@ export class F29Service {
     const autor = BigInt(usuarioId);
 
     await this.prisma.db.transaction(async (tx) => {
-      const anterior = await tx.orm.public.ProyeccionF29
-        .where({ periodoId }).first();
+      const anterior = await tx.orm.public.ProyeccionF29.where({ periodoId }).first();
       if (anterior) {
         await tx.orm.public.ProyeccionF29.where({ id: anterior.id }).delete();
       }
@@ -237,6 +250,7 @@ export class F29Service {
     ppmRate: number,
     ppmOverride: number | null,
   ) {
+    /** Acumula exento, neto, IVA y total de las filas de una fuente. */
     const suma = (filas: FilaValidada[]) =>
       filas.reduce(
         (a, f) => ({
@@ -254,16 +268,26 @@ export class F29Service {
     const debit = s.iva + voucherIva;
     const credit = c.iva + m.importation + m.previousCredit;
     const ivaPayable = Math.max(0, debit - credit);
-    const ppm = ppmOverride ?? Math.round(Math.max(0, s.net + m.voucherNet) * ppmRate / 100);
-    const taxes = ivaPayable + m.retained + m.singleTax + m.loanSalary
-      + m.loanFees + m.withholding + ppm;
+    const ppm =
+      ppmOverride ?? Math.round((Math.max(0, s.net + m.voucherNet) * ppmRate) / 100);
+    const taxes =
+      ivaPayable +
+      m.retained +
+      m.singleTax +
+      m.loanSalary +
+      m.loanFees +
+      m.withholding +
+      ppm;
     const total = taxes + m.contributions + m.fees;
     return { debit, credit, ivaPayable, ppm, total };
   }
 
+  /** Comprueba los campos de ingreso manual antes de guardar la proyección; el servidor no confía solo en las restricciones de la interfaz. */
   private validarManual(raw: unknown): Manual {
     if (!raw || typeof raw !== 'object') {
-      throw new BadRequestException(`El body debe incluir "manual" con las claves: ${CLAVES_MANUALES.join(', ')}.`);
+      throw new BadRequestException(
+        `El body debe incluir "manual" con las claves: ${CLAVES_MANUALES.join(', ')}.`,
+      );
     }
     const registro = raw as Record<string, unknown>;
     const clavesValidas = new Set<string>(CLAVES_MANUALES);
@@ -276,49 +300,69 @@ export class F29Service {
     for (const clave of CLAVES_MANUALES) {
       const valor = registro[clave];
       if (!this.esMontoSeguro(valor)) {
-        throw new BadRequestException(`El monto manual "${clave}" debe ser un entero entre 0 y ${MONTO_MAX}.`);
+        throw new BadRequestException(
+          `El monto manual "${clave}" debe ser un entero entre 0 y ${MONTO_MAX}.`,
+        );
       }
       manual[clave] = valor as number;
     }
     return manual;
   }
 
+  /** Exige una tasa de PPM finita entre 0 y 100. */
   private validarPpmRate(raw: unknown): number {
     if (typeof raw !== 'number' || !Number.isFinite(raw) || raw < 0 || raw > 100) {
-      throw new BadRequestException('ppmRate inválido: debe ser un número entre 0 y 100.');
+      throw new BadRequestException(
+        'ppmRate inválido: debe ser un número entre 0 y 100.',
+      );
     }
     return raw;
   }
 
+  /** Permite null para usar el cálculo automático; un monto manual debe ser un entero dentro del límite. */
   private validarPpmOverride(raw: unknown): number | null {
     if (raw === null || raw === undefined) return null;
     if (!this.esMontoSeguro(raw)) {
-      throw new BadRequestException(`ppmOverride inválido: debe ser null o un entero entre 0 y ${MONTO_MAX}.`);
+      throw new BadRequestException(
+        `ppmOverride inválido: debe ser null o un entero entre 0 y ${MONTO_MAX}.`,
+      );
     }
     return raw as number;
   }
+  /** Valida la estructura y filas de la fuente RCV antes de persistir sus movimientos. */
   private validarFuente(raw: unknown, tipo: 'ventas' | 'compras'): FuenteValidada {
     if (raw === null || raw === undefined) return { name: null, rows: [] };
     if (typeof raw !== 'object') {
       throw new BadRequestException(`"${tipo}" debe ser un objeto con name y rows.`);
     }
     const fuente = raw as { name?: unknown; rows?: unknown };
-    if (fuente.name !== undefined && fuente.name !== null && typeof fuente.name !== 'string') {
+    if (
+      fuente.name !== undefined &&
+      fuente.name !== null &&
+      typeof fuente.name !== 'string'
+    ) {
       throw new BadRequestException(`El nombre de archivo de "${tipo}" debe ser texto.`);
     }
-    const name = typeof fuente.name === 'string' && fuente.name.trim()
-      ? fuente.name.trim().slice(0, 255)
-      : null;
+    const name =
+      typeof fuente.name === 'string' && fuente.name.trim()
+        ? fuente.name.trim().slice(0, 255)
+        : null;
     if (!Array.isArray(fuente.rows)) {
-      throw new BadRequestException(`"${tipo}" debe incluir "rows" como lista de documentos.`);
+      throw new BadRequestException(
+        `"${tipo}" debe incluir "rows" como lista de documentos.`,
+      );
     }
     if (fuente.rows.length > FILAS_MAX) {
-      throw new BadRequestException(`"${tipo}" supera el máximo de ${FILAS_MAX} documentos.`);
+      throw new BadRequestException(
+        `"${tipo}" supera el máximo de ${FILAS_MAX} documentos.`,
+      );
     }
 
     const permitidos = new Set<number>(
       tipo === 'compras'
-        ? CODIGOS_SOPORTADOS.filter((c) => !(CODIGOS_EXCLUIDOS_COMPRAS as readonly number[]).includes(c))
+        ? CODIGOS_SOPORTADOS.filter(
+            (c) => !(CODIGOS_EXCLUIDOS_COMPRAS as readonly number[]).includes(c),
+          )
         : CODIGOS_SOPORTADOS,
     );
     const vistos = new Set<string>();
@@ -334,16 +378,22 @@ export class F29Service {
       }
       for (const campo of ['rut', 'name', 'folio', 'date'] as const) {
         if (typeof fila[campo] !== 'string') {
-          throw new BadRequestException(`Falta el campo "${campo}" en "${tipo}" fila ${i + 1}.`);
+          throw new BadRequestException(
+            `Falta el campo "${campo}" en "${tipo}" fila ${i + 1}.`,
+          );
         }
       }
       const rut = this.normalizarRut(fila.rut);
       const nombre = fila.name.trim();
       if (!rut || !fila.folio.trim() || !nombre) {
-        throw new BadRequestException(`Faltan datos del documento en "${tipo}" fila ${i + 1}.`);
+        throw new BadRequestException(
+          `Faltan datos del documento en "${tipo}" fila ${i + 1}.`,
+        );
       }
       if (rut.length > 20 || fila.folio.trim().length > 30 || nombre.length > 200) {
-        throw new BadRequestException(`Datos del documento demasiado largos en "${tipo}" fila ${i + 1}.`);
+        throw new BadRequestException(
+          `Datos del documento demasiado largos en "${tipo}" fila ${i + 1}.`,
+        );
       }
       const date = this.validarFechaRcv(fila.date, tipo, i + 1);
       const montos = {} as Pick<FilaValidada, 'exempt' | 'net' | 'iva' | 'total'>;
@@ -352,15 +402,17 @@ export class F29Service {
         const signoValido = fila.code === 61 ? n <= 0 : n >= 0;
         if (typeof n !== 'number' || !this.esMontoSeguro(Math.abs(n)) || !signoValido) {
           throw new BadRequestException(
-            `Monto "${campo}" inválido en "${tipo}" fila ${i + 1}: debe ser entero`
-            + (fila.code === 61 ? ' ≤ 0 (nota de crédito).' : ' ≥ 0.'),
+            `Monto "${campo}" inválido en "${tipo}" fila ${i + 1}: debe ser entero` +
+              (fila.code === 61 ? ' ≤ 0 (nota de crédito).' : ' ≥ 0.'),
           );
         }
         montos[campo] = n;
       }
       const clave = `${fila.code}|${rut}|${fila.folio.trim()}`;
       if (vistos.has(clave)) {
-        throw new BadRequestException(`Documento duplicado en "${tipo}": folio ${fila.folio.trim()}.`);
+        throw new BadRequestException(
+          `Documento duplicado en "${tipo}": folio ${fila.folio.trim()}.`,
+        );
       }
       vistos.add(clave);
       return {
@@ -377,59 +429,47 @@ export class F29Service {
     for (const campo of ['exempt', 'net', 'iva', 'total'] as const) {
       const suma = rows.reduce((s, f) => s + f[campo], 0);
       if (!Number.isSafeInteger(suma)) {
-        throw new BadRequestException(`El total de "${tipo}" excede la precisión admitida.`);
+        throw new BadRequestException(
+          `El total de "${tipo}" excede la precisión admitida.`,
+        );
       }
     }
     return { name, rows };
   }
 
+  /** Interpreta la fecha DD/MM/YYYY e informa la fuente y la fila si hay un error. */
   private validarFechaRcv(raw: string, tipo: string, fila: number): string {
     const partes = raw.match(FECHA_RCV_REGEX);
     if (!partes) {
-      throw new BadRequestException(`Fecha inválida en "${tipo}" fila ${fila}: usa el formato DD/MM/YYYY.`);
+      throw new BadRequestException(
+        `Fecha inválida en "${tipo}" fila ${fila}: usa el formato DD/MM/YYYY.`,
+      );
     }
     const dia = partes[1]!;
     const mes = partes[2]!;
     const anio = partes[3]!;
     const fecha = new Date(`${anio}-${mes}-${dia}T12:00:00`);
     if (fecha.getDate() !== Number(dia) || fecha.getMonth() + 1 !== Number(mes)) {
-      throw new BadRequestException(`Fecha inválida en "${tipo}" fila ${fila}: "${raw}".`);
+      throw new BadRequestException(
+        `Fecha inválida en "${tipo}" fila ${fila}: "${raw}".`,
+      );
     }
     return raw;
   }
 
+  /** Quita puntos y espacios y normaliza la K para comparar RUT. */
   private normalizarRut(rut: string): string {
     return rut.replace(/[.\s]/g, '').toUpperCase();
   }
 
+  /** Comprueba que el monto sea un entero no negativo dentro del máximo permitido. */
   private esMontoSeguro(valor: unknown): boolean {
-    return typeof valor === 'number'
-      && Number.isSafeInteger(valor)
-      && valor >= 0
-      && valor <= MONTO_MAX;
-  }
-
-  private parseId(raw: unknown, campo: string): bigint {
-    if (typeof raw !== 'string' || !/^\d+$/.test(raw)) {
-      throw new BadRequestException(`${campo} inválido: debe ser un número.`);
-    }
-    return BigInt(raw);
-  }
-
-  private parseAnio(raw: unknown): number {
-    const anio = typeof raw === 'string' ? Number(raw) : raw;
-    if (!Number.isInteger(anio) || (anio as number) < ANIO_MIN || (anio as number) > ANIO_MAX) {
-      throw new BadRequestException(`Año inválido: debe estar entre ${ANIO_MIN} y ${ANIO_MAX}.`);
-    }
-    return anio as number;
-  }
-
-  private parseMes(raw: unknown): number {
-    const mes = typeof raw === 'string' ? Number(raw) : raw;
-    if (!Number.isInteger(mes) || (mes as number) < 1 || (mes as number) > 12) {
-      throw new BadRequestException('Mes inválido: debe ser 1..12.');
-    }
-    return mes as number;
+    return (
+      typeof valor === 'number' &&
+      Number.isSafeInteger(valor) &&
+      valor >= 0 &&
+      valor <= MONTO_MAX
+    );
   }
 }
 

@@ -1,4 +1,8 @@
+/**
+ * Interfaz Formalization. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
+ */
 "use client";
+import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState, type FormEvent } from "react";
 import { authenticatedFetch } from "../../features/auth/auth-client";
 import { processSteps, stepStates, type Process, type ProcessStep } from "./model";
@@ -6,6 +10,7 @@ import { type ClientView } from "./ClientSheet";
 import { Field, Modal, downloadBlob } from "./ui";
 
 type Document = { id: string; nombreArchivo: string };
+/** Carga y edita el checklist de constitución de empresas que conserva el backend. */
 export default function Formalization({
   client,
   period,
@@ -17,6 +22,7 @@ export default function Formalization({
   onSaved?: () => void;
   onClose: () => void;
 }) {
+  const dialogs = useDialogs()
   // El checklist vive en el backend (fuente de verdad desde Fase 2); el estado
   // local arranca en "Pendiente" y lo sobreescribe el GET de abajo si ya existe proceso.
   const [draft, setDraft] = useState<Process>(() => ({
@@ -35,10 +41,9 @@ export default function Formalization({
   useEffect(() => {
     const controller = new AbortController();
     // Checklist desde el backend (fuente de verdad desde Fase 2).
-    authenticatedFetch(
-      `/gestiones/formalizacion/${encodeURIComponent(client.id)}`,
-      { signal: controller.signal },
-    )
+    authenticatedFetch(`/gestiones/formalizacion/${encodeURIComponent(client.id)}`, {
+      signal: controller.signal,
+    })
       .then(async (r) => {
         if (!r.ok) throw new Error("No se pudo cargar el checklist.");
         const body = (await r.json()) as {
@@ -73,8 +78,7 @@ export default function Formalization({
       .then(async (r) => {
         if (!r.ok) throw new Error("No se pudieron cargar los respaldos.");
         const rows = await r.json();
-        if (!Array.isArray(rows))
-          throw new Error("Respuesta de documentos inválida.");
+        if (!Array.isArray(rows)) throw new Error("Respuesta de documentos inválida.");
         if (!controller.signal.aborted) setDocuments(rows);
       })
       .catch((e) => {
@@ -82,10 +86,11 @@ export default function Formalization({
       });
     return () => controller.abort();
   }, [client.id, period]);
-  function close() {
-    if (!dirty || confirm("¿Descartar los cambios del checklist sin guardar?"))
-      onClose();
+  /** Confirma antes de descartar cambios del checklist. */
+  async function close() {
+    if (!dirty || (await dialogs.confirm("¿Descartar los cambios del checklist sin guardar?"))) onClose();
   }
+  /** Envía archivo y metadatos como FormData asociados al cliente, período y formalización. */
   async function upload(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
@@ -102,9 +107,7 @@ export default function Formalization({
         body,
       });
       if (!r.ok)
-        throw new Error(
-          "No se pudo subir el respaldo. Revisa el archivo y la conexión.",
-        );
+        throw new Error("No se pudo subir el respaldo. Revisa el archivo y la conexión.");
       const doc = await r.json();
       setDocuments((prev) => [doc, ...prev]);
       form.reset();
@@ -252,9 +255,7 @@ export default function Formalization({
                 onChange={(e) => {
                   const f = e.target.files?.[0];
                   e.target.setCustomValidity(
-                    f && f.size > 10 * 1024 * 1024
-                      ? "El archivo supera 10 MB."
-                      : "",
+                    f && f.size > 10 * 1024 * 1024 ? "El archivo supera 10 MB." : "",
                   );
                 }}
               />
@@ -266,9 +267,7 @@ export default function Formalization({
                 ))}
               </select>
             </Field>
-            <button disabled={busy}>
-              {busy ? "Subiendo…" : "Subir respaldo"}
-            </button>
+            <button disabled={busy}>{busy ? "Subiendo…" : "Subir respaldo"}</button>
           </form>
           <ul>
             {documents.map((doc) => (
@@ -279,8 +278,7 @@ export default function Formalization({
                       const r = await authenticatedFetch(
                         `/documentos/${encodeURIComponent(doc.id)}/descargar`,
                       );
-                      if (!r.ok)
-                        throw new Error("No se pudo descargar el respaldo.");
+                      if (!r.ok) throw new Error("No se pudo descargar el respaldo.");
                       downloadBlob(await r.blob(), doc.nombreArchivo);
                     } catch (e) {
                       setError((e as Error).message);

@@ -1,3 +1,6 @@
+/**
+ * Lógica de consulta del historial de acciones. Aquí se coordinan validaciones y operaciones del módulo.
+ */
 import { BadRequestException, Injectable } from '@nestjs/common';
 import 'temporal-polyfill/global';
 import { parseFechaIsoOpcional } from '../common/parse.js';
@@ -20,6 +23,7 @@ type AuditPage = { items: AuditEntry[]; total: number };
 export class AuditoriaService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /** Aplica filtros al historial y devuelve una página y su total; limita la consulta a 100 eventos por página. */
   async listar(query: AuditoriaQueryDto): Promise<AuditPage> {
     const pagina = Math.max(1, query.pagina ?? 1);
     const limite = Math.min(100, Math.max(1, query.limite ?? 20));
@@ -73,12 +77,10 @@ export class AuditoriaService {
         .limit(limite)
         .all(),
 
-      this.prisma.db.orm.public.Auditoria.where(where)
-        .all(),
+      this.prisma.db.orm.public.Auditoria.where(where).all(),
     ]);
 
     const total = todosLosRegistros.length;
-    
 
     return {
       items: items.map((a) => ({
