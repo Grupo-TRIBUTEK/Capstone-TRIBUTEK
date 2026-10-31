@@ -1,0 +1,3 @@
+| Nombre del error | Significado y precauciones antes de verificar el modelo |
+| --- | --- |
+| `authenticatedFetch is not defined` | El componente llamó una función que ya no está definida ni importada allí. La interfaz ya usa `consultarAsistente`, el helper importado que envía la solicitud con autenticación. Este error ocurre en el frontend antes de contactar al backend o al modelo, así que no indica por sí mismo un problema de Ollama. Antes de evaluar el modelo, confirma que el frontend compile, que exista una sesión válida, que el backend esté disponible y que `OLLAMA_URL` y `OLLAMA_MODEL` apunten al servicio y modelo esperados; luego verifica el flujo completo desde el panel. |

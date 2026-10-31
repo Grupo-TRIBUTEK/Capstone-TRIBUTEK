@@ -43,19 +43,9 @@ export default function IaAssistant() {
     setIsLoading(true);
 
     try {
-      // La consulta autenticada pasa por el backend; la ruta actual solo orienta la respuesta del modelo.
-      const response = await authenticatedFetch("/ia/consultas", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ consulta: question, contexto: pathname }),
-      });
-      const data = (await response.json().catch(() => null)) as ConsultaResponse | null;
-      if (!response.ok) {
-        const message = Array.isArray(data?.message) ? data.message.join(" ") : data?.message;
-        throw new Error(message || "No se pudo obtener una respuesta. Inténtalo de nuevo.");
-      }
-      if (!data?.respuesta?.trim()) throw new Error("El asistente devolvió una respuesta vacía.");
-      setMessages((current) => [...current, { id: nextId.current++, role: "assistant", text: data.respuesta!.trim() }]);
+      // El helper centraliza la autenticación, el endpoint y la validación de la respuesta.
+      const respuesta = await consultarAsistente(question, pathname);
+      setMessages((current) => [...current, { id: nextId.current++, role: "assistant", text: respuesta }]);
     } catch (requestError) {
       setError(
         requestError instanceof Error
