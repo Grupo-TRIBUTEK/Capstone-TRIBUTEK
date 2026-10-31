@@ -35,6 +35,7 @@ export default function IaAssistant() {
     setIsLoading(true);
 
     try {
+      // La consulta autenticada pasa por el backend; la ruta actual solo orienta la respuesta del modelo.
       const response = await authenticatedFetch("/ia/consultas", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

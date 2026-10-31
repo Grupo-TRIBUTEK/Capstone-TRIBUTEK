@@ -1,3 +1,9 @@
 {
-    "folder-color.pathColors": []
+    "folder-color.pathColors": [],
+    "folder-customization.folders": [
+        {
+            "path": "Capstone-TRIBUTEK\\tributek\\backend\\src\\ia\\",
+            "color": "foldercustomization.AnsiColor82"
+        }
+    ]
 }

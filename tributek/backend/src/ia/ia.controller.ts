@@ -9,6 +9,7 @@ import { ConsultaIaDto } from './dto/consulta-ia.dto.js';
 export class IaController {
   constructor(private readonly iaService: IaService) {}
 
+  // Recibe consultas de usuarios autenticados; la validación del cuerpo ocurre antes de llamar al servicio.
   @Post('consultas')
   consultar(@Body() consulta: ConsultaIaDto) {
     return this.iaService.consultar(consulta);
