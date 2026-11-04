@@ -4,15 +4,22 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { usePathname } from "next/navigation";
-import { getAccessToken } from "@/app/features/auth/auth-client";
-import { consultarAsistente } from "./ia/consultar";
+import { usePathname, useRouter } from "next/navigation";
+import { getAccessToken, authenticatedFetch, validateAdminAccess } from "@/app/features/auth/auth-client";
+import { proponerAccion } from "./ia/consultar"
+import { capturarInterfaz, comprobarDestino, ejecutarControl, validarPropuesta } from "./ia/interfaz"
+import { useDialogs } from "./ui/DialogProvider"
 
 type ChatMessage = { id: number; role: "user" | "assistant"; text: string };
 
-/** Mantiene el chat visual en memoria. Envía la pregunta y ruta actual, no el historial ni registros de clientes. */
+/** Mantiene el chat visual en memoria. Envía la pregunta, ruta y etiquetas de controles visibles. Las acciones requieren confirmación y una sesión válida. */
 export default function IaAssistant() {
-  const pathname = usePathname();
+  const pathname = usePathname()
+  const router = useRouter()
+  const dialogs = useDialogs()
+  const rutaActual = useRef(pathname)
+  rutaActual.current = pathname
+  const ocupado = useRef(false)
   const [hasSession, setHasSession] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [consulta, setConsulta] = useState("");
@@ -32,7 +39,16 @@ export default function IaAssistant() {
   async function sendConsulta(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const question = consulta.trim();
-    if (!question || isLoading) return;
+    if (!question || ocupado.current) return
+    ocupado.current = true
+    const ruta = pathname
+    const vence = Date.now() + 120000
+    const token = getAccessToken()
+    const captura = capturarInterfaz()
+    const vigente = () => {
+      if (Date.now() > vence || !token || token !== getAccessToken() || rutaActual.current !== ruta || window.location.pathname !== ruta)
+        throw new Error('La sesión o la vista cambió. Vuelve a solicitar la acción.')
+    }
 
     setMessages((current) => [
       ...current,
@@ -43,9 +59,35 @@ export default function IaAssistant() {
     setIsLoading(true);
 
     try {
-      // El helper centraliza la autenticación, el endpoint y la validación de la respuesta.
-      const respuesta = await consultarAsistente(question, pathname);
-      setMessages((current) => [...current, { id: nextId.current++, role: "assistant", text: respuesta }]);
+      const plan = await proponerAccion(question, ruta, captura.controles, messages.slice(-12).map(({ role, text }) => ({ role, text: text.slice(0, 3000) })))
+      vigente()
+      setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: plan.respuesta }])
+      const accion = validarPropuesta(plan.accion, captura, ruta)
+      if (plan.accion && !accion) throw new Error('La propuesta no corresponde a un control permitido.')
+      if (!accion) return
+      comprobarDestino(captura, accion)
+      const control = accion.tipo === 'navegar' ? null : captura.controles.find(c => c.id === accion.control)
+      const detalle = accion.tipo === 'navegar' ? `Abrir ${accion.destino}. Si tienes datos sin guardar, cancela y guárdalos primero.` :
+        accion.tipo === 'rellenar' ? `Completar «${control?.nombre}» con «${accion.valor}». Algunos campos guardan automáticamente al editar.` :
+        `Pulsar «${control?.nombre}». Esto tendrá el mismo efecto que usar ese botón manualmente y puede guardar o eliminar datos.`
+      const aceptado = await dialogs.confirm(detalle, { title: 'Confirmar acción del asistente', confirmLabel: 'Autorizar acción' })
+      if (!aceptado) {
+        setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: 'Acción cancelada. No ejecuté la propuesta.' }])
+        return
+      }
+      vigente()
+      const permitido = ruta.startsWith('/admin') ? await validateAdminAccess() : (await authenticatedFetch('/auth/perfil')).ok
+      if (!permitido) throw new Error('Tu sesión ya no autoriza esta acción. Inicia sesión nuevamente.')
+      vigente()
+      comprobarDestino(captura, accion)
+      if (accion.tipo === 'navegar') {
+        router.push(accion.destino)
+      } else {
+        ejecutarControl(captura, accion)
+      }
+      setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: accion.tipo === 'navegar'
+        ? 'Navegación solicitada. Elige el cliente o indícame el siguiente paso.'
+        : 'Acción aplicada a la interfaz. Revisa el resultado que muestra el formulario. Si aparece otra confirmación, debes resolverla tú.' }])
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -54,11 +96,12 @@ export default function IaAssistant() {
       );
     } finally {
       setIsLoading(false);
+      ocupado.current = false
     }
   }
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div data-ia-assistant className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
       {isOpen && (
         <section
           aria-label="Asistente IA"
@@ -81,7 +124,7 @@ export default function IaAssistant() {
           <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
             {messages.length === 0 && (
               <p className="text-sm text-text-muted">
-                Escribe tu consulta para comenzar.
+                Puedo abrir vistas y ayudarte con los controles visibles. Cada acción requiere tu confirmación. Prueba «Muéstrame un formulario 29».
               </p>
             )}
             {messages.map((message) => (

@@ -5,6 +5,7 @@ import {
   Body,
   Controller,
   Post,
+  Req,
   UseGuards,
   UsePipes,
   ValidationPipe,
@@ -21,7 +22,8 @@ export class IaController {
 
   // Recibe consultas de usuarios autenticados; la validación del cuerpo ocurre antes de llamar al servicio.
   @Post('consultas')
-  consultar(@Body() consulta: ConsultaIaDto) {
-    return this.iaService.consultar(consulta);
+  consultar(@Body() consulta: ConsultaIaDto, @Req() request: { user: { rolId: string, rolNombre?: string } }) {
+    const admin = Number(request.user.rolId) === 1 || ['ADMIN', 'ADMINISTRADOR'].includes((request.user.rolNombre ?? '').toUpperCase())
+    return this.iaService.consultar(consulta, admin)
   }
 }

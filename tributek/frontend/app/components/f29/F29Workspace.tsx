@@ -127,31 +127,55 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         setNotice(`Período detectado: ${periodLabel(next)}. Revisa los archivos antes de importarlos.`);
         foundFiles(pool, all, false, next);
     }
-    /** Abre o reutiliza la carpeta RCV; utiliza el input alternativo si falta la API. */
-    async function chooseFolder(choose = true, search?: { all: boolean; refresh: boolean }) {
-        const found = await folderFiles(choose);
-        if (!found) {
-            pendingSearch.current = search ?? null;
-            directoryInput.current?.click();
-            return;
+    /** Valida la selección y presenta el resultado con los diálogos del sistema. No importa datos todavía. */
+    async function validateRcvSelection(pool: File[], name: string, notify: boolean) {
+        const csv = pool.filter(file => /\.csv$/i.test(file.name))
+        if (!csv.length || csv.length > 2000) {
+            const message = !csv.length
+                ? 'No encontramos archivos CSV en la selección. Selecciona la carpeta que contiene los registros de compras y ventas e inténtalo nuevamente.'
+                : 'La selección contiene más de 2.000 archivos CSV. Selecciona una carpeta más pequeña.'
+            setError(message)
+            await dialogs.alert(message, { title: 'Revisar carpeta RCV', confirmLabel: 'Entendido' })
+            return null
         }
-        sourceMode.current = 'folder';
-        setFiles(found.files);
-        setFolder(found.name);
-        return found.files;
+        const message = `«${name}»: ${csv.length} ${csv.length === 1 ? 'archivo CSV disponible' : 'archivos CSV disponibles'}. Revisa el cliente y el período antes de importar. Esta selección todavía no modifica los montos de la proyección.`
+        setError('')
+        setNotice(message)
+        if (notify) await dialogs.alert(message, { title: files.length ? 'Selección RCV actualizada' : 'Archivos RCV disponibles', confirmLabel: 'Continuar' })
+        return csv
     }
-    /** Recibe los CSV del input y retoma la búsqueda pendiente. */
-    function receivedFiles(e: ChangeEvent<HTMLInputElement>) {
-        const selected = Array.from(e.target.files ?? []);
-        e.target.value = '';
-        if (!selected.length) { pendingSearch.current = null; return; }
-        sourceMode.current = 'files';
-        setFiles(selected);
-        setFolder(`${selected.length} CSV seleccionados`);
-        const search = pendingSearch.current;
-        pendingSearch.current = null;
-        if (search) foundFiles(selected, search.all, search.refresh);
-        else if (active) foundFiles(selected, false);
+    /** Abre o reutiliza la carpeta autorizada. Los permisos nativos los administra el navegador. */
+    async function chooseFolder(choose = true, search?: { all: boolean; refresh: boolean }) {
+        const found = await folderFiles(choose)
+        if (!found) {
+            pendingSearch.current = search ?? null
+            directoryInput.current?.click()
+            return
+        }
+        const csv = await validateRcvSelection(found.files, found.name, choose)
+        if (!csv) return
+        sourceMode.current = 'folder'
+        setFiles(csv)
+        setFolder(found.name)
+        setAvailable({})
+        return csv
+    }
+    /** Recibe la selección, valida sus CSV y retoma la búsqueda tras cerrar el aviso. */
+    async function receivedFiles(e: ChangeEvent<HTMLInputElement>) {
+        const selected = Array.from(e.target.files ?? [])
+        e.target.value = ''
+        const search = pendingSearch.current
+        pendingSearch.current = null
+        if (!selected.length) return
+        const name = selected[0]?.webkitRelativePath?.split('/')[0] || 'Archivos seleccionados'
+        const csv = await validateRcvSelection(selected, name, true)
+        if (!csv) return
+        sourceMode.current = 'files'
+        setFiles(csv)
+        setFolder(`${name} · ${csv.length} CSV`)
+        setAvailable({})
+        if (search) foundFiles(csv, search.all, search.refresh)
+        else if (active) foundFiles(csv, false)
     }
     /** Obtiene los archivos disponibles y busca coincidencias para uno o todos los clientes. */
     async function locate(all: boolean, refresh = false) {
