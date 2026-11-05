@@ -35,7 +35,7 @@ function createService(clientes: Cliente[]) {
         },
       },
     },
-  } as any);
+  } as any, {} as any);
 
   return service;
 }
@@ -48,7 +48,7 @@ describe('ClientesService', () => {
     ];
 
     await expect(createService(clientes).obtenerClientes()).resolves.toEqual(
-      clientes,
+      clientes.map(c => ({ ...c, id: String(c.id) })),
     );
   });
 
@@ -61,6 +61,20 @@ describe('ClientesService', () => {
 
     await expect(
       createService(clientes).obtenerClientes('  acme  '),
-    ).resolves.toEqual([clientes[0], clientes[2]]);
+    ).resolves.toEqual([clientes[0], clientes[2]].map(c => ({ ...c, id: String(c!.id) })));
   });
 });
+describe('RUT al guardar clientes', () => {
+  it('rechaza un RUT sin guion antes de crear un registro', async () => {
+    const create = vi.fn()
+    const service = new ClientesService({ db: { orm: { public: { Cliente: { create } } } } } as any, {} as any)
+    await expect(service.crearCliente({ tipoCliente: 'Empresa', rut: '123456785', nombreRazonSocial: 'Ensayo', estado: 'Activo' })).rejects.toThrow('guion')
+    expect(create).not.toHaveBeenCalled()
+  })
+  it('rechaza dos caracteres verificadores antes de actualizar un registro', async () => {
+    const update = vi.fn()
+    const service = new ClientesService({ db: { orm: { public: { Cliente: { where: () => ({ update }) } } } } } as any, {} as any)
+    await expect(service.actualizarCliente('1', { tipoCliente: 'Empresa', rut: '12345678-KK', nombreRazonSocial: 'Ensayo', estado: 'Activo' })).rejects.toThrow('guion')
+    expect(update).not.toHaveBeenCalled()
+  })
+})

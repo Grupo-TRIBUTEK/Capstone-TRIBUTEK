@@ -6,6 +6,7 @@ import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import Link from 'next/link';
 import Icon from '../ui/Icon';
+import { formatoRutValido, RUT_MENSAJE } from "../ui/rut"
 import HelpTip from '../ui/HelpTip'
 import { useData } from '../ficha/store';
 import { extra, type Ledger } from '../management/model';
@@ -266,6 +267,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     }
     /** Valida razón social y RUT antes de guardar el cliente de proyecciones. */
     function saveClient(c: Client) {
+        if (!formatoRutValido(c.rut)) throw new Error(RUT_MENSAJE)
         const client = { ...c, name: c.name.trim(), rut: normalizeRut(c.rut) };
         if (!client.name || !validRut(client.rut))
             throw new Error('Ingresa razón social y RUT válido con dígito verificador.');
@@ -391,7 +393,7 @@ function ClientForm({ client, save }: {
 }
 catch (e) {
     setError(String(e));
-} }}><label>Contribuyente<input required maxLength={200} value={name} onChange={e => setName(e.target.value)}/></label><label>RUT<input required disabled={client !== 'new'} value={rut} onChange={e => setRut(e.target.value)} placeholder="78239603-K"/></label>{error && <p role="alert">{error}</p>}<button type="submit" className="f29-primary">Guardar cliente</button></form>; }
+} }}><label>Contribuyente<input required maxLength={200} value={name} onChange={e => setName(e.target.value)}/></label><label>RUT<input required disabled={client !== 'new'} maxLength={12} aria-describedby="f29-rut-ayuda" aria-invalid={!!rut && !formatoRutValido(rut)} value={rut} onChange={e => setRut(e.target.value.toUpperCase())} placeholder="78239603-K"/></label><p id="f29-rut-ayuda" className="tk-subtle">Incluye el guion y un único dígito o K después.</p>{error && <p role="alert">{error}</p>}<button type="submit" className="f29-primary">Guardar cliente</button></form>; }
 /** Genera e inserta el canvas del informe en la vista previa. */
 function ReportPreview({ client, p }: {
     client: Client;

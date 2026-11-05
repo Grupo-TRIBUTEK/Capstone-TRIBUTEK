@@ -4,6 +4,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatoRutValido, RUT_MENSAJE } from "../../ui/rut"
 import { authenticatedFetch } from "@/app/features/auth/auth-client";
 
 export type ClientRecord = {
@@ -171,6 +172,9 @@ export default function ClientCreateModal({
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
+    if (!formatoRutValido(form.rut)) { setError(RUT_MENSAJE)
+      return
+    }
     setIsSubmitting(true);
 
     try {
@@ -291,8 +295,9 @@ export default function ClientCreateModal({
               </select>
             </Field>
             <Field label="RUT" required>
-              <input value={form.rut} onChange={(event) => updateField("rut", event.target.value)} className={inputClassName} required />
+              <input aria-describedby="cliente-rut-ayuda" aria-invalid={!!form.rut && !formatoRutValido(form.rut)} maxLength={12} placeholder="12345678-5" value={form.rut} onChange={(event) => updateField("rut", event.target.value.toUpperCase())} className={inputClassName} required />
             </Field>
+            <p id="cliente-rut-ayuda" className="text-sm text-text-muted">RUT con guion y un único dígito o K después. Ejemplo: 12345678-5.</p>
             <Field label="Nombre / Razón social" required className="sm:col-span-2">
               <input value={form.nombreRazonSocial} onChange={(event) => updateField("nombreRazonSocial", event.target.value)} className={inputClassName} required />
             </Field>

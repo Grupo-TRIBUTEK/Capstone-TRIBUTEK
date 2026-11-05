@@ -13,6 +13,7 @@ import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import { randomBytes } from 'node:crypto';
 import 'temporal-polyfill/global';
 import { PrismaService } from '../prisma/prisma.service.js';
+import { formatoRutValido, RUT_MENSAJE } from '../common/rut.js'
 import { CreateClienteDto } from './dto/create-cliente.dto.js';
 
 @Injectable()
@@ -273,9 +274,10 @@ export class ClientesService {
 
   /** Selecciona los campos que se guardan en Cliente, separándolos de las opciones de acceso al portal. */
   private clienteData(datos: CreateClienteDto) {
+    if (!formatoRutValido(datos.rut)) throw new BadRequestException(RUT_MENSAJE)
     return {
       tipoCliente: datos.tipoCliente,
-      rut: datos.rut,
+      rut: datos.rut.trim().toUpperCase(),
       nombreRazonSocial: datos.nombreRazonSocial,
       contactoPrincipal: datos.contactoPrincipal,
       emailContacto: datos.emailContacto,

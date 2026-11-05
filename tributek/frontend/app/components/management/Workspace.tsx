@@ -2,6 +2,7 @@
  * Interfaz Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { formatoRutValido, RUT_MENSAJE } from "../ui/rut"
 import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -479,6 +480,7 @@ const isServerView =
   //   confirmada por el servidor. La vista se recarga con `setReload`.
   // EVITAR: reflejar el cambio en pantalla antes de la respuesta.
   async function guardarFactura(invoice: Invoice, esNueva: boolean) {
+    if (!formatoRutValido(invoice.rut)) throw new Error(RUT_MENSAJE)
     const [anio, mes] = invoice.period.split("-");
     const url = esNueva
       ? `/facturas/${encodeURIComponent(invoice.clientId)}`

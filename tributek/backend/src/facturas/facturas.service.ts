@@ -1,3 +1,4 @@
+import { formatoRutValido, RUT_MENSAJE } from '../common/rut.js'
 /**
  * Lógica de registros de facturación. Aquí se coordinan validaciones y operaciones del módulo.
  */
@@ -113,7 +114,8 @@ export class FacturasService {
     const mes = parseMes(data.mes);
     const tipo = this.parseTipo(data.kind);
     const nombre = this.parseTexto(data.name, 'name', NOMBRE_MAX, true);
-    const rut = this.parseTexto(data.rut, 'rut', RUT_MAX, true);
+    const rut = this.parseTexto(data.rut, 'rut', RUT_MAX, true).toUpperCase()
+    if (!formatoRutValido(rut)) throw new BadRequestException(RUT_MENSAJE)
     const amount = this.parseMonto(data.amount);
     const descripcion = this.parseTexto(
       data.description,
