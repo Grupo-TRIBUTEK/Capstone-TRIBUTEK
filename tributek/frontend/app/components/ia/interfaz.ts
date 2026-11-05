@@ -29,7 +29,7 @@ function visible(e: Elemento) {
 function nombre(e: Elemento) {
   const labels = 'labels' in e ? Array.from(e.labels ?? []).map(l => l.textContent?.trim()).join(' ') : ''
   const base = e.getAttribute('aria-label') || labels || (e instanceof HTMLButtonElement ? e.textContent : '') || e.getAttribute('placeholder') || e.getAttribute('name') || ''
-  const fila = e.closest('tr')?.textContent?.replace(/\s+/g, ' ').trim() ?? ''
+  const fila = Array.from(e.closest('tr')?.children ?? []).map(c => Array.from(c.childNodes).map(n => n.textContent?.trim()).join(' ')).join(' ').replace(/\s+/g, ' ').trim()
   const toggle = e instanceof HTMLInputElement && ['checkbox', 'radio'].includes(e.type) ? `${e.checked ? 'Desmarcar' : 'Marcar'} ` : ''
   return `${toggle}${base.trim()}${fila ? ` — ${fila}` : ''}`.slice(0, 300)
 }
@@ -93,4 +93,11 @@ export function ejecutarControl(captura: CapturaInterfaz, accion: Exclude<Accion
   }
   e.dispatchEvent(new Event('input', { bubbles: true }))
   e.dispatchEvent(new Event('change', { bubbles: true }))
+}
+
+/** Envía títulos y avisos visibles, sin valores de formularios ni el propio chat. */
+export function describirVista() {
+  return Array.from(document.querySelectorAll('h1, h2, .tk-subtle, [role="alert"], [role="status"], .f29-error, .tk-error, .tk-empty'))
+    .filter(e => !e.closest('[data-ia-assistant], [data-ia-exclude], [hidden], [aria-hidden="true"]') && e.getClientRects().length > 0 && getComputedStyle(e).visibility !== 'hidden')
+    .slice(0, 20).map(e => e.textContent?.replace(/\s+/g, ' ').trim()).filter(Boolean).join('\n').slice(0, 5000)
 }

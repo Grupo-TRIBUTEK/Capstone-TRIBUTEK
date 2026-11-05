@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { getAccessToken, authenticatedFetch, validateAdminAccess } from "@/app/features/auth/auth-client";
 import { proponerAccion } from "./ia/consultar"
-import { capturarInterfaz, comprobarDestino, ejecutarControl, validarPropuesta } from "./ia/interfaz"
+import { capturarInterfaz, describirVista, comprobarDestino, ejecutarControl, validarPropuesta } from "./ia/interfaz"
 import { useDialogs } from "./ui/DialogProvider"
 
 type ChatMessage = { id: number; role: "user" | "assistant"; text: string };
@@ -28,6 +28,8 @@ export default function IaAssistant() {
   const [error, setError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const nextId = useRef(0);
+  const chatEnd = useRef<HTMLDivElement>(null)
+  useEffect(() => { chatEnd.current?.scrollIntoView({ block: "nearest" }) }, [messages, isLoading, isOpen])
 
   useEffect(() => {
     setHasSession(Boolean(getAccessToken()));
@@ -59,7 +61,7 @@ export default function IaAssistant() {
     setIsLoading(true);
 
     try {
-      const plan = await proponerAccion(question, ruta, captura.controles, messages.slice(-12).map(({ role, text }) => ({ role, text: text.slice(0, 3000) })))
+      const plan = await proponerAccion(question, ruta, captura.controles, messages.slice(-12).map(({ role, text }) => ({ role, text: text.slice(0, 3000) })), describirVista())
       vigente()
       setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: plan.respuesta }])
       const accion = validarPropuesta(plan.accion, captura, ruta)
@@ -67,8 +69,10 @@ export default function IaAssistant() {
       if (!accion) return
       comprobarDestino(captura, accion)
       const control = accion.tipo === 'navegar' ? null : captura.controles.find(c => c.id === accion.control)
+      const consultaVisual = /^(Abrir hoja|Ver ficha|Ver informe|Volver al panel)(?: — |$)/.test(control?.nombre ?? '')
       const detalle = accion.tipo === 'navegar' ? `Abrir ${accion.destino}. Si tienes datos sin guardar, cancela y guárdalos primero.` :
         accion.tipo === 'rellenar' ? `Completar «${control?.nombre}» con «${accion.valor}». Algunos campos guardan automáticamente al editar.` :
+        consultaVisual ? `Abrir «${control?.nombre}». Revisa que corresponda al cliente y al período que necesitas.` :
         `Pulsar «${control?.nombre}». Esto tendrá el mismo efecto que usar ese botón manualmente y puede guardar o eliminar datos.`
       const aceptado = await dialogs.confirm(detalle, { title: 'Confirmar acción del asistente', confirmLabel: 'Autorizar acción' })
       if (!aceptado) {
@@ -121,10 +125,16 @@ export default function IaAssistant() {
               ×
             </button>
           </header>
+          <div className="flex justify-end border-b border-border px-4 py-2">
+            <button type="button" disabled={isLoading} className="text-xs text-text-muted hover:underline disabled:opacity-50" onClick={() => { setMessages([])
+              setError('')
+              setConsulta('')
+            }}>Nueva conversación</button>
+          </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-4" aria-live="polite">
             {messages.length === 0 && (
               <p className="text-sm text-text-muted">
-                Puedo abrir vistas y ayudarte con los controles visibles. Cada acción requiere tu confirmación. Prueba «Muéstrame un formulario 29».
+                Puedo ayudarte a buscar clientes, abrir fichas y explicar los avisos de esta pantalla. Prueba «Abre el F29 del cliente C» o «No se detectan mis CSV». Te pediré autorización antes de actuar.
               </p>
             )}
             {messages.map((message) => (
@@ -148,6 +158,7 @@ export default function IaAssistant() {
                 {error}
               </p>
             )}
+            <div ref={chatEnd} />
           </div>
           <form ref={formRef} onSubmit={sendConsulta} className="flex items-end gap-2 border-t border-border p-3">
             <label className="sr-only" htmlFor="ia-consulta">Escribe tu consulta</label>

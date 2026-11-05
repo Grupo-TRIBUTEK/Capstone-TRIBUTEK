@@ -15,10 +15,17 @@ const vistas = [
 /** Resuelve navegación y lectura por identidad. No convierte preguntas de ayuda en cambios de datos. */
 export function orientar(consulta: string, ruta: string, controles: ControlIa[], historial: Mensaje[], admin: boolean): Propuesta | undefined {
   const q = normalizar(consulta)
-  if (/^(no|cancela|olvida|detente)\b/.test(q)) return { respuesta: 'De acuerdo. No propongo ninguna acción. Dime qué necesitas revisar.' }
+  if (/\b(csv|rcv)\b/.test(q) && /no se detect|no detect|no encuent|no aparece|no reconoce|no importa/.test(q)) return {
+    respuesta: 'Revisa estos puntos:\n1. El período seleccionado debe coincidir con el mes real de los CSV. Si tus archivos son de septiembre de 2026, selecciona septiembre de 2026 (2026-09), no octubre. No cambies el nombre del CSV para hacerlo coincidir.\n2. Comprueba que el RUT del archivo corresponda al cliente abierto.\n3. Selecciona la carpeta o los CSV y vuelve a buscar los RCV.\nSi continúa el problema, indícame el nombre completo de un archivo y el mensaje mostrado. No puedo confirmar la causa sin esos datos.',
+  }
+  if (/no (se )?guard|desaparec/.test(q) && /monto|concepto|obligacion|ficha/.test(q)) return {
+    respuesta: 'Para revisar el guardado:\n1. Confirma el cliente y el período de la ficha.\n2. Guarda y revisa si el aviso indica guardado en TRIBUTEK, solo guardado local o un error.\n3. Vuelve a abrir la misma ficha y período para comprobar el monto.\nSi desaparece, indícame el mensaje exacto. No vuelvas a registrar pagos ni borres datos para probar: primero debemos identificar dónde falla el guardado.',
+  }
+  if (/^(no|no gracias|cancelar|cancela|olvida|detente)[.! ]*$/.test(q)) return { respuesta: 'De acuerdo. No propongo ninguna acción. Dime qué necesitas revisar.' }
   const continuacion = /^(si|si por favor|adelante|abrelo|abre su hoja|abre su ficha|continua|ese|esa)$/.test(q)
   const anteriores = historial.filter(m => m.role === 'user').map(m => m.text)
-  const identidadNueva = /\bcliente\s+\S/.test(q) || ruts(consulta).length > 0
+  const identidadAnterior = [...anteriores].reverse().find(m => /\bcliente\s+\S/i.test(m) || ruts(m).length > 0) ?? ''
+  const identidadTexto = continuacion ? identidadAnterior : consulta
   const solicitud = continuacion ? [...anteriores.slice(-3), consulta].join(' ') : consulta
   const texto = normalizar(solicitud)
   const lectura = /\b(ver|vr|abrir|abre|abr[ae]lo|muestrame|mostrar|visualizar|visualizacion|buscar|busca|llevame|necesito ver|quiero ver)\b/.test(texto)
@@ -45,20 +52,19 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
   if (!f29 && /ficha/.test(texto) && ruta === '/admin/clientes') return navegar('/admin/obligaciones', 'Obligaciones, donde puedes abrir la ficha mensual')
   const controlesCliente = controles.filter(c => c.tipo === 'boton' && /^(abrir hoja|ver ficha|editar) — /i.test(c.nombre))
   const identidad = (c: ControlIa) => c.nombre.split(' — ')[1]?.split(/\b(?:\d{1,2}\.\d{3}\.\d{3}|\d{7,8})-[\dkK]\b/)[0]?.trim() ?? ''
-  const rut = ruts(solicitud).at(-1)
+  const rut = ruts(identidadTexto).at(-1)
   const nombres = controlesCliente.filter(c => {
     const nombre = normalizar(identidad(c))
-    return nombre && (` ${texto} `).includes(` ${nombre} `)
+    return nombre && (` ${normalizar(identidadTexto)} `).includes(` ${nombre} `)
   })
   // Una identidad nueva nunca hereda el RUT de otra solicitud.
-  const rutPrevio = !identidadNueva && continuacion ? ruts(anteriores.join(' ')).at(-1) : undefined
-  const objetivo = rut ?? rutPrevio
+  const objetivo = rut
   const matches = objetivo ? controlesCliente.filter(c => ruts(c.nombre).includes(objetivo)) : nombres
   const abrir = matches.filter(c => f29 ? c.nombre.startsWith('Abrir hoja') : c.nombre.startsWith('Ver ficha'))
   if (abrir.length === 1) return { respuesta: `Puedo abrir ${identidad(abrir[0]!)} en el período seleccionado. Revisa los datos de la confirmación.`, accion: { tipo: 'pulsar', control: abrir[0]!.id } }
   if (matches.length > 1) return { respuesta: 'Hay más de una coincidencia visible. Indícame el RUT y el período para abrir la ficha correcta.' }
   const filtro = controles.find(c => c.tipo === 'texto' && c.nombre === 'Buscar cliente o RUT')
-  const nombreSolicitado = /\bcliente\s+(.+?)(?:\s+(?:por favor|para|en el|del mes)|$)/i.exec(solicitud)?.[1]?.trim()
+  const nombreSolicitado = /\bcliente\s+(.+?)(?:\s+(?:por favor|para|en el|del mes)|$)/i.exec(identidadTexto)?.[1]?.trim()
   const busqueda = objetivo ?? (matches[0] ? identidad(matches[0]) : nombreSolicitado)
   if (filtro && busqueda && busqueda.length <= 100) {
     const marcador = `Buscaré «${busqueda}»`
