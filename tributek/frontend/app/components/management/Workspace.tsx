@@ -636,7 +636,7 @@ const isServerView =
         <>
           <section className="tk-metrics-group tk-home-metrics-group" aria-label="Resumen del periodo">
             <div className="tk-home-metrics-heading">
-              <h2 className="tk-metrics-group-label">Resumen del período · <span className="tk-period-heading-label">{periodLabel(period)}</span></h2>
+              <h2 className="tk-metrics-group-label">Resumen del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></h2>
               <Field label="Período de trabajo">
                 <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
                   {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
@@ -662,7 +662,7 @@ const isServerView =
               <div className="tk-grid">
                 {[{ c: "Cotizaciones", day: 12 }, { c: "Impuestos", day: 20 }].map(({ c, day }) => (
                   <div className="tk-due" key={conceptLabel(c)}>
-                    <span>{conceptLabel(c)} · referencia interna día {day}</span>
+                    <span>{conceptLabel(c)} - referencia interna día {day}</span>
                     <strong>{dueRows.filter((r) => r.concept === c).length} clientes</strong>
                     <Money value={dueRows.filter((r) => r.concept === c).reduce((s, r) => s + r.amount, 0)} hidden={hidden} />
                   </div>
@@ -691,10 +691,10 @@ const isServerView =
         <>
           <section
             className="tk-metrics-group"
-            aria-label={view === "clientes" ? `Resumen de clientes · ${periodLabel(period)}` : `Resumen de obligaciones del período · ${periodLabel(period)}`}
+            aria-label={view === "clientes" ? `Resumen de clientes - ${periodLabel(period)}` : `Resumen de obligaciones del período - ${periodLabel(period)}`}
           >
             <h2 className="tk-metrics-group-label">
-              {view === "clientes" ? <>Resumen de clientes · <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período · <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
+              {view === "clientes" ? <>Resumen de clientes - <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
             </h2>
             <div className="tk-metrics">
               <Metric label="Clientes visibles" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>

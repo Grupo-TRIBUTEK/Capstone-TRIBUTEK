@@ -1,6 +1,6 @@
 # Evaluación: almacenamiento del F29 en el backend
 
-> **Estado:** evaluación de línea de base · **Fecha:** 2026-04-10 · **Rama:** `backend`
+> **Estado:** evaluación de línea de base - **Fecha:** 2026-04-10 - **Rama:** `backend`
 > Documento de diagnóstico. Describe qué existe hoy y qué falta para que la
 > proyección F29 se persista en el servidor.
 
@@ -154,7 +154,7 @@ El F29 no es solo un total: se calcula sumando **grupos de documentos** por tipo
 
 ```ts
 saleGroups.map(([name, codes]) =>
-  resultRow(`IVA · ${name}`, sumRows(p.sales?.rows.filter(row => codes.includes(row.code)) ?? []).iva)
+  resultRow(`IVA - ${name}`, sumRows(p.sales?.rows.filter(row => codes.includes(row.code)) ?? []).iva)
 )
 ```
 

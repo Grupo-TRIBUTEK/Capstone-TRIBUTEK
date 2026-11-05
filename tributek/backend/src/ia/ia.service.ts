@@ -8,6 +8,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConsultaIaDto } from './dto/consulta-ia.dto.js';
+import { conversar, evitarBucle } from './conversacion.js'
 import { orientar, GUIA_TRIBUTEK } from './orientacion.js'
 import { ordenDirecta, rutasAdmin, rutasCliente, validarAccion } from './acciones.js'
 
@@ -20,6 +21,12 @@ Eres el asistente contextual de TRIBUTEK, un sistema web de gestión contable.
 1. COMPORTAMIENTO
 Responde siempre en español, de manera clara, natural, profesional y amable.
 Prioriza respuestas breves, pero explica los procedimientos cuando sea necesario.
+Habla de tú, con cercanía y paciencia. Puedes usar un emoji discreto en saludos, nunca en errores importantes ni en cada respuesta. No uses tono infantil ni frases condescendientes.
+Responde también preguntas generales, explicaciones y solicitudes de redacción que puedas atender con tus conocimientos, aunque no sean de TRIBUTEK. No fuerces una acción de interfaz para responder una pregunta.
+Tolera errores de escritura evidentes sin corregir ni interrogar al usuario por ellos. Si hay una interpretación clara y de bajo riesgo, explícala y responde.
+Si necesitas aclaración, entrega primero la parte útil que sí sabes y pregunta solo el dato indispensable. No repitas una aclaración ya respondida. Un saludo seguido de una solicitud se responde atendiendo la solicitud.
+Si no sabes algo, dilo sin inventar y ofrece una forma concreta de comprobarlo. No tienes navegación web ni acceso a toda la base de datos. No presentes datos actuales, tasas o normativa como verificados.
+Para problemas: explica lo observado, distingue una posible causa de una causa confirmada y da pasos cortos. No prometas reparar un error si solo puedes orientar.
 No repitas la pregunta ni muestres razonamiento interno.
 Puedes explicar conceptos, orientar, analizar, redactar y proponer soluciones.
 
@@ -65,6 +72,8 @@ Cuando una solicitud no pueda ejecutarse, explica qué falta.
 export class IaService {
   /** Envía la pregunta y contexto de navegación a Ollama. Traduce fallos a errores HTTP y libera el temporizador. No consulta registros ni ejecuta acciones del usuario. */
   async consultar({ consulta, contexto, controles, historial = [], vista }: ConsultaIaDto, administrador = false) {
+    const saludo = conversar(consulta)
+    if (saludo) return { respuesta: saludo }
     const rutas = administrador ? rutasAdmin : rutasCliente
     const orientacion = controles && orientar(consulta, contexto ?? '', controles, historial, administrador)
     if (orientacion) return orientacion
@@ -131,9 +140,9 @@ Controles disponibles: ${JSON.stringify(controles)}.` : SYSTEM_PROMPT
           throw new BadGatewayException('El asistente devolvió una propuesta inválida.')
         const accion = validarAccion(plan.accion, controles, rutas)
         if (plan.accion && !accion) return { respuesta: 'La acción propuesta no está disponible en esta pantalla. Indica la vista y el control que deseas usar.' }
-        return { respuesta: plan.respuesta.slice(0, 3000), accion, modelo: result.model ?? model }
+        return { respuesta: (accion ? plan.respuesta : evitarBucle(plan.respuesta, consulta, historial)).slice(0, 3000), accion, modelo: result.model ?? model }
       }
-      return { respuesta, modelo: result.model ?? model };
+      return { respuesta: evitarBucle(respuesta, consulta, historial), modelo: result.model ?? model };
     } catch (error) {
       if (error instanceof BadGatewayException) throw error;
       if (error instanceof Error && error.name === 'AbortError') {

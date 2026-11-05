@@ -176,7 +176,7 @@ export function PaymentForm({
                 : "Todos"
             }
           >
-            <option value="Todos">Pago todo · deuda más antigua primero</option>
+            <option value="Todos">Pago todo - deuda más antigua primero</option>
             {concepts.filter((c) => c !== "Postergación" || data.months.some((m) => m.clientId === clientId && m.period <= period && m.amounts.Postergación > 0)).map((c) => (
               <option key={conceptLabel(c)} value={c}>{c === "Postergación" ? "Postergación anterior" : conceptLabel(c)}</option>
             ))}
@@ -292,14 +292,14 @@ export default function ClientSheet({
       ? "Honorarios mensuales"
       : r.concept === "Impuestos" ? "Impuestos mensuales" : conceptLabel(r.concept);
     const origin = accumulated ? ` (${periodLabel(r.period)})` : "";
-    return `· *${label}${origin}:* ${money(r.amount)}`;
+    return `- *${label}${origin}:* ${money(r.amount)}`;
   }).join("\n") || "Sin saldos pendientes.";
   const postponedNote = includePostponed && deferrals.length
-    ? `\n\n⏳ *Postergaciones (informativo):*\n${deferrals.map((d) => `· ${conceptLabel(d.concept)} · ${d.period} · vence ${d.due}`).join("\n")}`
+    ? `\n\n⏳ *Postergaciones (informativo):*\n${deferrals.map((d) => `- ${conceptLabel(d.concept)} - ${d.period} - vence ${d.due}`).join("\n")}`
     : "";
   const text = accumulated
     ? `Buen día 😊\n\nLe escribimos para recordarle que, según nuestros registros, aún se encuentra pendiente el pago de los siguientes conceptos:\n\n📌 *COBROS PENDIENTES ACUMULADOS*\n${client.name}\n\n${detail}\n\n💰 *SALDO PENDIENTE: ${money(reportTotal)}*${postponedNote}\n\nAgradecemos mucho su gestión. Si el pago ya fue realizado, por favor envíenos el comprobante para actualizar nuestros registros.\n\n¡Muchas gracias! 🙌`
-    : `Buen día 😊\n\nLe enviamos el detalle de sus obligaciones mensuales para el período de ${periodLabel(period)}:\n\n📋 *OBLIGACIÓN MENSUAL · ${periodLabel(period).toLocaleUpperCase("es-CL")}*\n${client.name}\n\n${detail}\n\n💰 *TOTAL A PAGAR: ${money(reportTotal)}*${postponedNote}\n\nPor favor, revise los montos indicados. Si tiene alguna duda, puede contactarnos.\n\nSaludos cordiales ✨`;
+    : `Buen día 😊\n\nLe enviamos el detalle de sus obligaciones mensuales para el período de ${periodLabel(period)}:\n\n📋 *OBLIGACIÓN MENSUAL - ${periodLabel(period).toLocaleUpperCase("es-CL")}*\n${client.name}\n\n${detail}\n\n💰 *TOTAL A PAGAR: ${money(reportTotal)}*${postponedNote}\n\nPor favor, revise los montos indicados. Si tiene alguna duda, puede contactarnos.\n\nSaludos cordiales ✨`;
   /** Pide confirmar antes de cerrar con cambios pendientes. */
   async function close() {
     if (!dirty || (await dialogs.confirm("Hay cambios sin guardar. ¿Descartarlos?")))
@@ -374,7 +374,7 @@ export default function ClientSheet({
         <div className="tk-client-sheet-scroll">
         <div className="tk-header">
           <p className="tk-subtle">
-            {client.rut || "RUT sin registrar"} · {periodLabel(period)}
+            {client.rut || "RUT sin registrar"} - {periodLabel(period)}
           </p>
           <Badge>{current.status}</Badge>
         </div>
@@ -432,7 +432,7 @@ export default function ClientSheet({
                 ))}
                 {existing.amounts.Postergación > 0 && (
                   <details className="tk-panel">
-                    <summary>Postergación anterior · conservar historial</summary>
+                    <summary>Postergación anterior - conservar historial</summary>
                     <p>Monto original: <Money value={existing.amounts.Postergación} hidden={hidden} />. Saldo pendiente: <Money value={balance(data, existing, "Postergación")} hidden={hidden} />.</p>
                     <p>Este registro anterior mantiene sus abonos. Para asignar un vencimiento al saldo, usa Postergar y selecciona Postergación anterior.</p>
                   </details>
@@ -596,9 +596,9 @@ export default function ClientSheet({
                     setNotice(
                       await copyReportImage(
                         title,
-                        `${client.name} · ${client.rut} · ${periodLabel(period)}`,
+                        `${client.name} - ${client.rut} - ${periodLabel(period)}`,
                         rows.map((r) => ({
-                          label: `${r.period} · ${conceptLabel(r.concept)}`,
+                          label: `${r.period} - ${conceptLabel(r.concept)}`,
                           amount: r.amount,
                         })),
                         reportTotal,
@@ -619,9 +619,9 @@ export default function ClientSheet({
                   try {
                     printReport(
                       title,
-                      `${client.name} · ${client.rut} · ${periodLabel(period)}`,
+                      `${client.name} - ${client.rut} - ${periodLabel(period)}`,
                       rows.map((r) => ({
-                        label: `${r.period} · ${conceptLabel(r.concept)}`,
+                        label: `${r.period} - ${conceptLabel(r.concept)}`,
                         amount: r.amount,
                       })),
                       reportTotal,
@@ -702,7 +702,7 @@ export default function ClientSheet({
         {tab === "Datos" && (
           <>
             <section className="tk-panel">
-              <h3>Datos del cliente · PostgreSQL</h3>
+              <h3>Datos del cliente - PostgreSQL</h3>
               <div className="tk-grid">
                 <div className="tk-line">
                   <span>RUT</span>

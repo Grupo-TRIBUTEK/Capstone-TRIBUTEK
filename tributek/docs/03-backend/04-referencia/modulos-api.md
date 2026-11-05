@@ -62,7 +62,7 @@ Cliente.
 
 ## Gestiones — `/gestiones`
 
-Módulo nuevo (Fase 2 · Formalizaciones). Todas las rutas declaran
+Módulo nuevo (Fase 2 - Formalizaciones). Todas las rutas declaran
 `JwtAuthGuard` + `RolesGuard` con rol `ADMIN` (o ID `1`).
 
 | Método y ruta | Función |

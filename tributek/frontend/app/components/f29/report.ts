@@ -20,7 +20,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     ...associated(rows.filter((row) => row.code !== 61)),
     ...associated(rows.filter((row) => row.code === 61)).map((row) => ({
       ...row,
-      name: `Nota de crédito · ${row.name}`,
+      name: `Nota de crédito - ${row.name}`,
     })),
   ];
   const sales = reportRows(p.sales?.rows ?? []),
@@ -170,7 +170,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
     r.remainder > 0
       ? "El crédito fiscal considerado supera al IVA de ventas. El remanente se muestra separado de las otras obligaciones por pagar."
       : r.ivaPayable > 0
-        ? `Compras con factura de referencia: ${money(r.suggestedNet)} netos · ${money(r.suggestedGross)} con IVA. La procedencia del crédito fiscal debe revisarse con la contadora.`
+        ? `Compras con factura de referencia: ${money(r.suggestedNet)} netos - ${money(r.suggestedGross)} con IVA. La procedencia del crédito fiscal debe revisarse con la contadora.`
         : "No se genera IVA a pagar en esta proyección. El total corresponde a las otras obligaciones informadas.";
   text(
     r.remainder > 0
@@ -225,8 +225,8 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
   const right = panel(716, y, "OTRAS OBLIGACIONES", [
     ["IVA retenido por pagar", m.retained],
     ["Impuesto único", m.singleTax],
-    ["3% préstamo solidario · remuneraciones", m.loanSalary],
-    ["3% préstamo solidario · honorarios", m.loanFees],
+    ["3% préstamo solidario - remuneraciones", m.loanSalary],
+    ["3% préstamo solidario - honorarios", m.loanFees],
     ["Retención de honorarios", m.withholding],
     ["P.P.M.", r.ppm],
     ["Cotizaciones previsionales", m.contributions],
@@ -306,7 +306,7 @@ export function reportCanvas(client: Client, p: Projection): HTMLCanvasElement {
   y += 45;
   text("TRIBUTEK", 64, y, 23, true, navy);
   text(
-    "INFORMACIÓN CONFIDENCIAL · USO EXCLUSIVO DEL CLIENTE",
+    "INFORMACIÓN CONFIDENCIAL - USO EXCLUSIVO DEL CLIENTE",
     1336,
     y,
     14,

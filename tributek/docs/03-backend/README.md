@@ -1,6 +1,6 @@
 # Evaluación del backend y la base de datos — Panel administrador
 
-> **Estado:** evaluación de línea de base · **Fecha:** 2026-04-10 · **Rama:** `feature/panel-cliente`
+> **Estado:** evaluación de línea de base - **Fecha:** 2026-04-10 - **Rama:** `feature/panel-cliente`
 > Documento de diagnóstico. Describe lo que el código hace hoy, no lo que debería hacer.
 
 Este documento responde a una pregunta concreta: **cuando un administrador

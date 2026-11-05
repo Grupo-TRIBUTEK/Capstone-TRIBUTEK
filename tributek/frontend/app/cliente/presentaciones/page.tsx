@@ -140,7 +140,7 @@ export default function PresentacionesPage() {
       {/* Pie de página */}
       <footer className="mt-10 border-t border-border bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-6 py-6 text-body-sm text-text-muted sm:flex-row sm:items-center sm:justify-between">
-          <p className="font-semibold text-text-primary">TRIBUTEK · Portal de clientes</p>
+          <p className="font-semibold text-text-primary">TRIBUTEK - Portal de clientes</p>
           <p>Material de apoyo para clientes TRIBUTEK.</p>
           <p className="text-label">© {new Date().getFullYear()} TRIBUTEK</p>
         </div>

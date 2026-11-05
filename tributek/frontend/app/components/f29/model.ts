@@ -21,14 +21,14 @@ export type Source = {
   warnings: string[];
 };
 export const manualLabels = {
-  voucherNet: "Comprobante electrónico · neto",
+  voucherNet: "Comprobante electrónico - neto",
   importation: "IVA de importación",
   previousCredit: "Remanente mes anterior",
   retained: "IVA retenido por pagar",
   singleTax: "Impuesto único",
-  loanSalary: "3% préstamo solidario · remuneraciones",
-  loanFees: "3% préstamo solidario · honorarios",
-  withholding: "Retención de honorarios · monto",
+  loanSalary: "3% préstamo solidario - remuneraciones",
+  loanFees: "3% préstamo solidario - honorarios",
+  withholding: "Retención de honorarios - monto",
   contributions: "Cotizaciones previsionales",
   fees: "Honorarios",
 } as const;

@@ -1,4 +1,4 @@
-# 03 · Flujo de migración con Prisma
+# 03 - Flujo de migración con Prisma
 
 > **Propósito:** dejar por escrito el ciclo que se repite cada vez que se
 > cambia el modelo de datos, para que cualquiera del equipo ejecute los mismos
@@ -32,7 +32,7 @@ camino.
 
 ## Las 5 etapas
 
-### 1 · Declarar el cambio
+### 1 - Declarar el cambio
 
 Edita `prisma/contract.prisma`, el único archivo editable del modelo.
 
@@ -50,7 +50,7 @@ convención del resto del esquema (ver `Documento.nombreArchivo` →
 
 **No edites `contract.json` ni `contract.d.ts`.** Son artefactos generados.
 
-### 2 · Formatear y emitir
+### 2 - Formatear y emitir
 
 ```powershell
 cd tributek/backend
@@ -68,7 +68,7 @@ Ambos son **offline**: no tocan la base de datos.
 > Es el paso que más se olvida. Si te saltas `emit`, el código seguirá viendo
 > los tipos antiguos y la consulta fallará en runtime con un error confuso.
 
-### 3 · Planificar
+### 3 - Planificar
 
 ```powershell
 npx prisma migration plan
@@ -81,7 +81,7 @@ SQL que haría falta. No ejecuta nada: solo muestra.
 incompatible, una columna NOT NULL sobre una tabla con datos— sin haber tocado
 la base.
 
-### 4 · Aplicar
+### 4 - Aplicar
 
 ```powershell
 npx prisma db migrate
@@ -93,7 +93,7 @@ Ejecuta la migración contra `DATABASE_URL`.
 > contra una base compartida. Para una base local nueva, revisa las precauciones
 > en [01-configuracion-postgresql.md](01-configuracion-postgresql.md).
 
-### 5 · Verificar
+### 5 - Verificar
 
 ```powershell
 npx prisma db verify

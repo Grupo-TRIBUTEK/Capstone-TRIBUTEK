@@ -188,7 +188,7 @@ export default function PortalHome() {
                   ▶
                 </div>
                 <p className="text-body-sm text-white/80">
-                  Material informativo · TRIBUTEK
+                  Material informativo - TRIBUTEK
                 </p>
                 <h3 className="mt-1 text-2xl font-bold">Presentación para clientes</h3>
               </div>

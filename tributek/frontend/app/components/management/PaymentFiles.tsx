@@ -125,7 +125,7 @@ export function PaymentFiles({
     <Modal title="Comprobantes del pago" onClose={close} wide>
       <div className="tk-stack" style={{ padding: 24 }}>
         <p>
-          {folder.date} · Pago registrado:{" "}
+          {folder.date} - Pago registrado:{" "}
           <strong>{money(folder.amount)}</strong>
         </p>
         {error && (
@@ -215,7 +215,7 @@ export function PaymentFiles({
               </Field>
             </div>
           )}
-          <Field label="Archivos PDF, PNG o JPG · hasta 8 MB en total por envío">
+          <Field label="Archivos PDF, PNG o JPG - hasta 8 MB en total por envío">
             <input
               name="files"
               type="file"
@@ -239,7 +239,7 @@ export function PaymentFiles({
               <strong>{f.name}</strong>
               <p>
                 {f.method}
-                {f.amount !== null && ` · ${money(f.amount)}`}
+                {f.amount !== null && ` - ${money(f.amount)}`}
               </p>
               {f.origin && <p>Origen: {f.origin}</p>}
               {f.destination && <p>Receptora: {f.destination}</p>}
@@ -343,8 +343,8 @@ export function ClientPaymentFiles({
         {folders.map((f) => (
           <div key={`${f.clientId}/${f.id}`} className="tk-actions">
             <span>
-              {clients.find((c) => c.id === f.clientId)?.nombreRazonSocial} ·{" "}
-              {f.date} · {money(f.amount)}
+              {clients.find((c) => c.id === f.clientId)?.nombreRazonSocial} -{" "}
+              {f.date} - {money(f.amount)}
             </span>
             <button
               type="button"

@@ -49,8 +49,8 @@ describe('Payment evidence access and persistence', () => {
     });
     await service.upload('10', 'payment-1', client, [pdf(), pdf()], {
       method: 'Transferencia',
-      origin: 'Banco A · 123',
-      destination: 'Banco B · 456',
+      origin: 'Banco A - 123',
+      destination: 'Banco B - 456',
       amount: '500',
     });
     const saved = await service.register('10', 'payment-1', admin, {
@@ -58,8 +58,8 @@ describe('Payment evidence access and persistence', () => {
       amount: 1000,
     });
     expect(saved.files).toHaveLength(2);
-    expect(saved.files[0].origin).toBe('Banco A · 123');
-    expect(saved.files[0].destination).toBe('Banco B · 456');
+    expect(saved.files[0].origin).toBe('Banco A - 123');
+    expect(saved.files[0].destination).toBe('Banco B - 456');
     expect(await service.list('10', client)).toHaveLength(1);
   });
   it('rejects foreign users for listing, uploading and downloading', async () => {

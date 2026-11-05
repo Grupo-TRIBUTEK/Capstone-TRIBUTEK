@@ -118,7 +118,7 @@ export default function Formalization({
     }
   }
   return (
-    <Modal title={`Constitución de empresa · ${client.name}`} onClose={close} wide>
+    <Modal title={`Constitución de empresa - ${client.name}`} onClose={close} wide>
       <div className="tk-dialog-body tk-stack">
         {error && (
           <p role="alert" className="tk-error">
@@ -245,7 +245,7 @@ export default function Formalization({
           {busy ? "Guardando…" : "Guardar checklist"}
         </button>
         <section className="tk-panel">
-          <h3>Respaldos · {period}</h3>
+          <h3>Respaldos - {period}</h3>
           <form onSubmit={upload} className="tk-stack">
             <Field label="Archivo (máximo 10 MB)">
               <input

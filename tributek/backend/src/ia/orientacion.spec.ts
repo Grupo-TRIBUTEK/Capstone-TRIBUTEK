@@ -44,3 +44,29 @@ describe('Orientación del asistente', () => {
     expect(orientar('Llévame a pagos', '/admin', [], [], true)?.accion).toEqual({ tipo: 'navegar', destino: '/admin/pagos' })
   })
 })
+
+describe('Resumen general sin bucles', () => {
+  const historial = [
+    { role: 'user', text: 'me dices el estado genteal de los clientes?' },
+    { role: 'assistant', text: '¿Te refieres al estado general?' },
+    { role: 'user', text: 'si el estado general' },
+    { role: 'user', text: 'si' },
+  ]
+  it.each(['si', 'sii', 'sí', 'el estado general'])('continúa con %s sin repetir aclaraciones', consulta => {
+    expect(orientar(consulta, '/admin', [], historial, true)?.accion).toEqual({ tipo: 'navegar', destino: '/admin/clientes' })
+  })
+  it('resume estados visibles sin confundir activo con inactivo', () => {
+    const result = orientar('estado general de los clientes', '/admin/clientes', [
+      { id: 'a', tipo: 'boton', nombre: 'Editar — Cliente A 11111111-1 No enviado Activo' },
+      { id: 'b', tipo: 'boton', nombre: 'Editar — Cliente B 22222222-2 No enviado Inactivo' },
+    ], [], true)
+    expect(result?.respuesta).toContain('Activos: 1')
+    expect(result?.respuesta).toContain('Inactivos: 1')
+    expect(result?.respuesta).toContain('No enviado»: 2')
+    expect(result?.accion).toBeUndefined()
+  })
+  it('no inventa cifras ni permite acceso al resumen administrativo a clientes', () => {
+    expect(orientar('estado general de los clientes', '/admin/clientes', [], [], true)?.respuesta).toContain('No recibí filas')
+    expect(orientar('estado general de los clientes', '/cliente', [], [], false)?.accion).toBeUndefined()
+  })
+})

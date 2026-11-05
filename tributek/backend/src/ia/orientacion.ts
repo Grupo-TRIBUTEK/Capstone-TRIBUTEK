@@ -15,6 +15,32 @@ const vistas = [
 /** Resuelve navegación y lectura por identidad. No convierte preguntas de ayuda en cambios de datos. */
 export function orientar(consulta: string, ruta: string, controles: ControlIa[], historial: Mensaje[], admin: boolean): Propuesta | undefined {
   const q = normalizar(consulta)
+  // Las respuestas breves retoman la última solicitud sustantiva, sin volver a pedir lo mismo.
+  const afirmacion = /^(si+|si+ por favor|claro|ok|dale|el estado general|si el estado general)$/.test(q)
+  const ultimaSolicitud = [...historial].reverse().find(m => m.role === 'user' && !/^(si+|claro|ok|dale|si el estado general|el estado general)$/.test(normalizar(m.text)))?.text ?? ''
+  const temaResumen = normalizar(afirmacion ? ultimaSolicitud : consulta)
+  if (/clientes/.test(temaResumen) && /estado|resumen|panorama|como estan/.test(temaResumen)) {
+    if (!admin) return { respuesta: 'El resumen de la cartera de clientes requiere una sesión administrativa. Puedo ayudarte con la información de tu portal.' }
+    if (ruta !== '/admin/clientes') return {
+      respuesta: 'Claro. Para revisar el estado general abriré Clientes, donde aparecen el estado y el seguimiento mensual. Necesito tu autorización para cambiar de vista.',
+      accion: { tipo: 'navegar', destino: '/admin/clientes' },
+    }
+    const filas = controles.filter(c => c.tipo === 'boton' && c.nombre.startsWith('Editar — '))
+    if (!filas.length) return { respuesta: 'No recibí filas de clientes para resumir en esta pantalla. Revisa los filtros y si aparece un error de carga. Esto no significa que no existan clientes en la base de datos.' }
+    const unicos = new Map<string, string>()
+    for (const fila of filas) {
+      const rut = ruts(fila.nombre)[0]
+      if (rut) unicos.set(rut, normalizar(fila.nombre))
+    }
+    if (!unicos.size) return { respuesta: 'Los controles recibidos no permiten identificar con seguridad los clientes. Revisa el listado y sus filtros antes de resumirlo.' }
+    const estados = [...unicos.values()]
+    const activos = estados.filter(e => /\bactivo\b/.test(e)).length
+    const inactivos = estados.filter(e => /\binactivo\b/.test(e)).length
+    const pendientes = estados.filter(e => /\bpendiente\b/.test(e)).length
+    const noEnviados = estados.filter(e => /\bno enviado\b/.test(e)).length
+    return { respuesta: `Resumen de los ${estados.length} clientes identificados en el listado visible:\n• Activos: ${activos}\n• Inactivos: ${inactivos}\n• Filas que indican pendiente: ${pendientes}\n• Seguimiento mensual «No enviado»: ${noEnviados}\nEl estado del cliente y el seguimiento mensual son conceptos distintos. Este resumen corresponde a las filas recibidas y los filtros actuales, no necesariamente a toda la cartera. Puedo ayudarte a abrir una ficha si me indicas el nombre o RUT.` }
+  }
+
   if (/\b(csv|rcv)\b/.test(q) && /no se detect|no detect|no encuent|no aparece|no reconoce|no importa/.test(q)) return {
     respuesta: 'Revisa estos puntos:\n1. El período seleccionado debe coincidir con el mes real de los CSV. Si tus archivos son de septiembre de 2026, selecciona septiembre de 2026 (2026-09), no octubre. No cambies el nombre del CSV para hacerlo coincidir.\n2. Comprueba que el RUT del archivo corresponda al cliente abierto.\n3. Selecciona la carpeta o los CSV y vuelve a buscar los RCV.\nSi continúa el problema, indícame el nombre completo de un archivo y el mensaje mostrado. No puedo confirmar la causa sin esos datos.',
   }
@@ -22,7 +48,7 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
     respuesta: 'Para revisar el guardado:\n1. Confirma el cliente y el período de la ficha.\n2. Guarda y revisa si el aviso indica guardado en TRIBUTEK, solo guardado local o un error.\n3. Vuelve a abrir la misma ficha y período para comprobar el monto.\nSi desaparece, indícame el mensaje exacto. No vuelvas a registrar pagos ni borres datos para probar: primero debemos identificar dónde falla el guardado.',
   }
   if (/^(no|no gracias|cancelar|cancela|olvida|detente)[.! ]*$/.test(q)) return { respuesta: 'De acuerdo. No propongo ninguna acción. Dime qué necesitas revisar.' }
-  const continuacion = /^(si|si por favor|adelante|abrelo|abre su hoja|abre su ficha|continua|ese|esa)$/.test(q)
+  const continuacion = /^(si+|si por favor|adelante|abrelo|abre su hoja|abre su ficha|continua|ese|esa)$/.test(q)
   const anteriores = historial.filter(m => m.role === 'user').map(m => m.text)
   const identidadAnterior = [...anteriores].reverse().find(m => /\bcliente\s+\S/i.test(m) || ruts(m).length > 0) ?? ''
   const identidadTexto = continuacion ? identidadAnterior : consulta
