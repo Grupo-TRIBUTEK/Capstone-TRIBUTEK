@@ -5,7 +5,7 @@
   border-radius: 18px; background: var(--surface); color: var(--text-primary);
   box-shadow: 0 24px 80px var(--shadow-dialog); font-family: var(--font-body);
 }
-.tributek-dialog::backdrop { background: color-mix(in srgb, var(--black) 55%, transparent); backdrop-filter: blur(3px); }
+.tributek-dialog::backdrop { background: color-mix(in srgb, var(--black) 55%, transparent); backdrop-filter: blur(8px); }
 .tributek-dialog-header { display: flex; align-items: center; gap: 14px; padding: 24px 24px 0; }
 .tributek-dialog-symbol { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 12px; background: var(--secondary-surface); color: var(--text-primary); font-size: 22px; font-weight: 700; }
 .tributek-dialog-symbol.is-danger { background: var(--error-surface); color: var(--error); }

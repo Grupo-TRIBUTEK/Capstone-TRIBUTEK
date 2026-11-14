@@ -1,0 +1,91 @@
+/* Ritmo compartido del administrador: secciones 24, grupos 16, controles 8–12. */
+.admin-workspace {
+  --admin-gutter: 32px;
+  --admin-section-gap: 24px;
+  --admin-group-gap: 16px;
+  --admin-panel-padding: 24px;
+}
+
+.admin-workspace .tk-header { padding: 24px var(--admin-gutter); gap: var(--admin-group-gap); }
+.admin-workspace > .tk > :is(.tk-error, .tk-success, .tk-toolbar, .tk-content, .tk-featured-context) {
+  margin-inline: var(--admin-gutter);
+}
+.admin-workspace > .tk > :is(.tk-error, .tk-success, .tk-toolbar, .tk-featured-context) {
+  margin-block: var(--admin-section-gap) 0;
+}
+.admin-workspace .tk-content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--admin-section-gap);
+  padding-block: var(--admin-section-gap) 32px;
+}
+.admin-workspace .tk-content > :not(dialog) { margin-block: 0; }
+.admin-workspace .tk-metrics-group-label { margin: 0 0 var(--admin-group-gap); }
+.admin-workspace .tk-home-metrics-heading { margin: 0 0 var(--admin-section-gap); }
+.admin-workspace .tk-home-metrics-heading .tk-metrics-group-label { margin: 0; }
+.admin-workspace :is(.tk-metrics, .tk-home-metrics-rows) { margin: 0; gap: var(--admin-group-gap); }
+.admin-workspace :is(.tk-grid, .tk-stack) { gap: var(--admin-group-gap); }
+.admin-workspace .tk-toolbar { gap: var(--admin-group-gap); padding: 20px; }
+.admin-workspace .tk-card-head { padding: 20px var(--admin-panel-padding); gap: var(--admin-group-gap); }
+.admin-workspace :is(.tk-panel, .tk-dialog-body, .tk-client-sheet-scroll) { padding: var(--admin-panel-padding); }
+.admin-workspace .tk-dialog-head { padding: 20px var(--admin-panel-padding); }
+.admin-workspace .tk-actions { gap: 8px; }
+
+.admin-workspace .tk-home-metrics-group { padding-block: 8px 12px; }
+
+/* F29 y Trazabilidad usan los mismos bordes de página y separaciones. */
+.admin-workspace > :is(.f29, .audit) > :not(.tk-header):not(dialog):not(input) {
+  width: calc(100% - var(--admin-gutter) * 2);
+  margin-inline: var(--admin-gutter);
+}
+.admin-workspace > .f29 { padding-bottom: 32px; }
+.admin-workspace > .f29 > :is(.f29-toolbar, .f29-folder, .f29-actions, .f29-table-wrap, .f29-backup, .f29-panel, .f29-more, .f29-check, .tk-featured-filter, .f29-error, .f29-notice, .f29-source-status) {
+  margin-block: 0 var(--admin-section-gap);
+}
+.admin-workspace > .f29 > :is(.f29-toolbar, .f29-source-status) { margin-top: var(--admin-section-gap); }
+.admin-workspace :is(.f29-toolbar, .f29-folder, .f29-panel, .f29-backup) { padding: var(--admin-panel-padding); gap: var(--admin-group-gap); }
+.admin-workspace .f29-actions { gap: 8px; }
+.admin-workspace :is(.f29-sheet, .f29-results) { margin-block: var(--admin-section-gap); }
+.admin-workspace .f29-results { gap: var(--admin-group-gap); }
+.admin-workspace .f29-results > div { padding: var(--admin-panel-padding); }
+.admin-workspace .f29-determination { padding: 0 var(--admin-panel-padding) var(--admin-panel-padding); gap: var(--admin-section-gap); }
+.admin-workspace .audit-heading { margin-bottom: var(--admin-section-gap); }
+.admin-workspace .audit-filters { padding: 20px; gap: var(--admin-group-gap); margin-bottom: var(--admin-section-gap); }
+.admin-workspace .audit-filter-fields { gap: var(--admin-group-gap); padding-top: var(--admin-group-gap); }
+.admin-workspace .audit-records { margin-bottom: 32px; }
+.admin-workspace :is(.audit-records-title, .audit-pagination) { padding: 20px var(--admin-panel-padding); gap: var(--admin-group-gap); }
+
+@media (max-width: 767px) {
+  .admin-workspace { --admin-gutter: 24px; --admin-panel-padding: 20px; }
+}
+@media (max-width: 480px) {
+  .admin-workspace { --admin-gutter: 16px; --admin-section-gap: 20px; --admin-panel-padding: 16px; }
+  .admin-workspace .f29-determination { padding-inline: 8px; }
+}
+
+/* Contraste de superficies: base azul grisácea, arena y un solo indicador protagonista. */
+.admin-workspace {
+  --background: #F6F8FB;
+  --admin-metric-surface: #e2e8f0;
+  --admin-metric-warm: #f1e6e0;
+  background: var(--background);
+}
+.dark .admin-workspace {
+  --background: #101b2d;
+  --admin-metric-surface: #1c2b42;
+  --admin-metric-warm: #332a2d;
+}
+.admin-workspace .tk-header { background: color-mix(in srgb, var(--background) 65%, var(--surface)); }
+.admin-workspace .tk .tk-metric {
+  border: 1px solid color-mix(in srgb, var(--border) 75%, var(--secondary));
+  background: var(--admin-metric-surface);
+  box-shadow: none;
+}
+.admin-workspace .tk .tk-metric:nth-child(even) { background: var(--admin-metric-warm); }
+.admin-workspace .tk .tk-home-metrics-row:first-child .tk-metric:first-child {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--on-primary);
+}
+.admin-workspace .tk .tk-home-metrics-row:first-child .tk-metric:first-child .tk-metric-heading > span { color: var(--on-primary-muted); }
+.admin-workspace .tk .tk-home-metrics-row:first-child .tk-metric:first-child > strong { color: var(--on-primary); }

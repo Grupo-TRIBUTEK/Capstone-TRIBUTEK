@@ -3,6 +3,8 @@
  */
 export const entities = {
   Cliente: "Clientes",
+  Sistema: "Sistema",
+  Servicio: "Servicios",
   Transaccion: "Pagos y abonos",
   Obligacion: "Obligaciones",
   Documento: "Documentos",
@@ -13,6 +15,7 @@ export const entities = {
 } as const;
 export const actions = {
   CREAR: "Creación",
+  VERIFICAR: "Verificación técnica",
   ACTUALIZAR: "Actualización",
   ELIMINAR: "Eliminación",
   DESACTIVAR: "Desactivación",

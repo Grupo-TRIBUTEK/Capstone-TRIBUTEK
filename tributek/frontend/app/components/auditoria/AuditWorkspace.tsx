@@ -120,6 +120,7 @@ export default function AuditWorkspace() {
         </button>
       </header>
       <form className="audit-filters" onSubmit={apply}>
+        <div className="audit-search-row">
         <label className="audit-search">
           Buscar
           <input
@@ -130,6 +131,11 @@ export default function AuditWorkspace() {
             type="search"
           />
         </label>
+        <button type="submit" aria-label="Buscar en trazabilidad"><Icon name="search" className="h-4 w-4" /> Buscar</button>
+        </div>
+        <details className="audit-advanced">
+          <summary>Más filtros{[filters.entidad, filters.accion, filters.desde, filters.hasta].filter(Boolean).length > 0 && <span className="audit-filter-count">{[filters.entidad, filters.accion, filters.desde, filters.hasta].filter(Boolean).length} activos</span>}</summary>
+          <div className="audit-filter-fields">
         <label>
           Área
           <select
@@ -181,6 +187,8 @@ export default function AuditWorkspace() {
             Limpiar
           </button>
         </div>
+          </div>
+        </details>
       </form>
       <section
         className="audit-records"
@@ -245,7 +253,7 @@ export default function AuditWorkspace() {
                         </td>
                         <td>{label(entities, row.entidad)}</td>
                         <td>
-                          <span className="audit-tag">{label(actions, row.accion)}</span>
+                          <span className="audit-tag" data-action={row.accion}>{label(actions, row.accion)}</span>
                         </td>
                         <td>{row.entidadId ? `#${row.entidadId}` : "Sin referencia"}</td>
                         <td>
@@ -311,7 +319,7 @@ export default function AuditWorkspace() {
               <dt>Área</dt>
               <dd>{label(entities, selected.entidad)}</dd>
               <dt>Acción</dt>
-              <dd>{label(actions, selected.accion)}</dd>
+              <dd><span className="audit-tag" data-action={selected.accion}>{label(actions, selected.accion)}</span></dd>
               <dt>Referencia</dt>
               <dd>{selected.entidadId ? `#${selected.entidadId}` : "Sin referencia"}</dd>
               <dt>Descripción</dt>

@@ -239,7 +239,7 @@ export default function ClientCreateModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-primary/55 p-4 sm:p-8"
+      className="tributek-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-primary/55 p-4 sm:p-8"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose();
@@ -270,7 +270,7 @@ export default function ClientCreateModal({
           </button>
         </header>
 
-        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+        <form data-ia-protected onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
           <div className="grid min-h-0 flex-1 gap-4 overflow-y-auto px-6 py-6 sm:grid-cols-2 sm:px-8">
             {activationUrl && (
               <section className="sm:col-span-2 rounded-lg border border-success-border bg-success-surface p-4 text-sm text-success">
@@ -407,7 +407,7 @@ export default function ClientCreateModal({
       </section>
 
       {showDiscardConfirmation && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-primary/40 p-4" role="presentation">
+        <div className="tributek-overlay fixed inset-0 z-[60] flex items-center justify-center bg-primary/40 p-4" role="presentation">
           <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-2xl">
             <h3 id="discard-title" className="text-lg font-bold text-text-primary">¿Deseas salir?</h3>
             <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>

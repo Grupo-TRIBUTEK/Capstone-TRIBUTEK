@@ -2,6 +2,7 @@
  * Interfaz ClientSheet. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
+import { FeaturedBadge, FeaturedStar, useFeaturedClient } from "../ui/FeaturedClient";
 import { useDialogs } from "../ui/DialogProvider"
 import { useState, type FormEvent } from "react";
 import { conceptLabel, concepts, receivables, money, today, type Client } from "../ficha/model";
@@ -250,6 +251,7 @@ export default function ClientSheet({
   hidden: boolean;
 }) {
   const dialogs = useDialogs()
+  const featured = useFeaturedClient();
   const existing = getMonth(data, client.id, period);
   const [draft, setDraft] = useState(() =>
     data.months.includes(existing)
@@ -372,6 +374,7 @@ export default function ClientSheet({
     <Modal title={client.name} onClose={close} wide className="tk-client-sheet">
       <div className="tk-dialog-body tk-client-sheet-body">
         <div className="tk-client-sheet-scroll">
+        <div className="tk-featured-name"><FeaturedStar rut={client.rut} name={client.name} />{featured.isFeatured(client.rut) && <FeaturedBadge />}</div>
         <div className="tk-header">
           <p className="tk-subtle">
             {client.rut || "RUT sin registrar"} - {periodLabel(period)}
@@ -465,86 +468,7 @@ export default function ClientSheet({
                   />
                   Detalle informado al cliente
                 </label>
-                <details className="tk-details">
-                  <summary>Trabajo y próximo contacto</summary>
-                  <div className="tk-stack">
-                    {draft.steps.map((s, i) => (
-                      <label key={s.id} className="tk-actions">
-                        <input
-                          type="checkbox"
-                          checked={s.done}
-                          onChange={(e) => {
-                            setDirty(true);
-                            setDraft({
-                              ...draft,
-                              steps: draft.steps.map((x, j) =>
-                                j === i ? { ...x, done: e.target.checked } : x,
-                              ),
-                            });
-                          }}
-                        />
-                        {s.text}
-                      </label>
-                    ))}
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        const text = (await dialogs.prompt("Escribe el nombre de la tarea que quieres agregar.", "", { title: "Agregar tarea", inputLabel: "Nombre de la tarea", confirmLabel: "Agregar tarea" }));
-                        if (text?.trim()) {
-                          setDirty(true);
-                          setDraft({
-                            ...draft,
-                            steps: [
-                              ...draft.steps,
-                              {
-                                id: crypto.randomUUID(),
-                                text: text.trim(),
-                                done: false,
-                              },
-                            ],
-                          });
-                        }
-                      }}
-                    >
-                      Agregar tarea
-                    </button>
-                    <Field label="Próximo contacto">
-                      <input
-                        type="date"
-                        value={draft.followDate}
-                        onChange={(e) => {
-                          setDirty(true);
-                          setDraft({
-                            ...draft,
-                            followDate: e.target.value,
-                            followDone: false,
-                          });
-                        }}
-                      />
-                    </Field>
-                    <Field label="Motivo">
-                      <input
-                        value={draft.followNote}
-                        maxLength={500}
-                        onChange={(e) => {
-                          setDirty(true);
-                          setDraft({ ...draft, followNote: e.target.value });
-                        }}
-                      />
-                    </Field>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={draft.followDone}
-                        onChange={(e) => {
-                          setDirty(true);
-                          setDraft({ ...draft, followDone: e.target.checked });
-                        }}
-                      />{" "}
-                      Contacto realizado
-                    </label>
-                  </div>
-                </details>
+
                 <a
                   className="tk-button"
                   href={`/admin/pagos?cliente=${encodeURIComponent(client.id)}`}
@@ -701,7 +625,7 @@ export default function ClientSheet({
         )}
         {tab === "Datos" && (
           <>
-            <section className="tk-panel">
+            <section data-ia-private className="tk-panel">
               <h3>Datos del cliente - PostgreSQL</h3>
               <div className="tk-grid">
                 <div className="tk-line">
@@ -743,6 +667,7 @@ export default function ClientSheet({
               </p>
             </section>
             <form
+              data-ia-protected
               className="tk-stack"
               onSubmit={(e) => {
                 e.preventDefault();

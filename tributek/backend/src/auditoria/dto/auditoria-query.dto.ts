@@ -39,10 +39,12 @@ export class AuditoriaQueryDto {
   accion?: string;
 
   @IsOptional()
+  @ValidateIf((_, value) => value !== '')
   @IsDateString()
   desde?: string;
 
   @IsOptional()
+  @ValidateIf((_, value) => value !== '')
   @IsDateString()
   hasta?: string;
 }

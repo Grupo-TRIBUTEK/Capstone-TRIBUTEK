@@ -1,3 +1,4 @@
+import { navegarVista } from './navegacion.js'
 import { type AccionIa, type ControlIa, rutasAdmin, rutasCliente } from './acciones.js'
 
 type Mensaje = { role: string, text: string }
@@ -14,6 +15,8 @@ const vistas = [
 
 /** Resuelve navegación y lectura por identidad. No convierte preguntas de ayuda en cambios de datos. */
 export function orientar(consulta: string, ruta: string, controles: ControlIa[], historial: Mensaje[], admin: boolean): Propuesta | undefined {
+  const navegacion = navegarVista(consulta, ruta, historial, admin)
+  if (navegacion) return navegacion
   const q = normalizar(consulta)
   // Las respuestas breves retoman la última solicitud sustantiva, sin volver a pedir lo mismo.
   const afirmacion = /^(si+|si+ por favor|claro|ok|dale|el estado general|si el estado general)$/.test(q)
@@ -25,7 +28,7 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
       respuesta: 'Claro. Para revisar el estado general abriré Clientes, donde aparecen el estado y el seguimiento mensual. Necesito tu autorización para cambiar de vista.',
       accion: { tipo: 'navegar', destino: '/admin/clientes' },
     }
-    const filas = controles.filter(c => c.tipo === 'boton' && c.nombre.startsWith('Editar — '))
+    const filas = controles.filter(c => c.tipo === 'boton' && /^(Editar — |Destacar a |Quitar destacado de )/.test(c.nombre))
     if (!filas.length) return { respuesta: 'No recibí filas de clientes para resumir en esta pantalla. Revisa los filtros y si aparece un error de carga. Esto no significa que no existan clientes en la base de datos.' }
     const unicos = new Map<string, string>()
     for (const fila of filas) {
@@ -55,7 +58,7 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
   const solicitud = continuacion ? [...anteriores.slice(-3), consulta].join(' ') : consulta
   const texto = normalizar(solicitud)
   const lectura = /\b(ver|vr|abrir|abre|abr[ae]lo|muestrame|mostrar|visualizar|visualizacion|buscar|busca|llevame|necesito ver|quiero ver)\b/.test(texto)
-  if (!lectura || /\b(como|por que|no puedo|no funciona|error|elimina|borra|guarda|modifica)\b/.test(q)) return undefined
+  if (!lectura || /^no\b/.test(q) || /\b(como|por que|no puedo|no funciona|error|elimina|borra|guarda|modifica)\b/.test(q)) return undefined
   const f29 = /formulario\s*29|f\s*29|proyeccion|hoja/.test(texto) || (ruta === '/admin/f29' && /cliente|informe|vista previa/.test(texto))
   const rutas = admin ? rutasAdmin : rutasCliente
   const navegar = (destino: string, nombre: string): Propuesta => rutas.includes(destino)
@@ -95,7 +98,7 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
   if (filtro && busqueda && busqueda.length <= 100) {
     const marcador = `Buscaré «${busqueda}»`
     if (historial.slice(-4).some(m => m.role === 'assistant' && m.text.startsWith(marcador))) return { respuesta: f29
-      ? 'No encuentro una hoja coincidente entre los controles visibles. Revisa los filtros y si el cliente está incorporado a F29 con «Traer clientes de TRIBUTEK». No significa que el cliente no exista en la base de datos.'
+      ? 'No encuentro una hoja coincidente entre los controles visibles. Revisa los filtros y si se cargó el directorio de clientes de TRIBUTEK. No significa que el cliente no exista en la base de datos.'
       : 'La búsqueda ya fue solicitada. Revisa las filas y los filtros del listado. Para ver la ficha mensual, pídeme abrir Obligaciones.' }
     return { respuesta: `${marcador} en el listado. Autoriza la búsqueda y después dime «abre su hoja» o «abre su ficha» para continuar.`, accion: { tipo: 'rellenar', control: filtro.id, valor: busqueda } }
   }
@@ -108,7 +111,7 @@ export function orientar(consulta: string, ruta: string, controles: ControlIa[],
 export const GUIA_TRIBUTEK = `TRIBUTEK administra clientes, obligaciones mensuales, pagos, facturación, postergaciones, constitución de empresas y trazabilidad.
 Proyección F29 es una estimación interna, no una declaración enviada al SII. Abrir hoja muestra el borrador o proyección del cliente en el período seleccionado. Ver informe abre la vista previa. Guardar proyección solicita persistencia y debe comprobarse el aviso de resultado.
 Los CSV RCV se relacionan por RUT y período del nombre. Ejemplo RCV_COMPRA_REGISTRO_11111111-1_202609 corresponde a septiembre de 2026. Si no se detectan, revisar RUT, período, selección de archivos y el mensaje visible. Nunca afirmar que falta la base de datos sin evidencia.
-Configurar carpeta RCV abre permisos del navegador que la aplicación no puede diseñar. Seleccionar archivos no equivale a importar ni guardar la proyección. Traer clientes de TRIBUTEK incorpora el directorio al módulo F29.
+Configurar carpeta RCV abre permisos del navegador que la aplicación no puede diseñar. Seleccionar archivos no equivale a importar ni guardar la proyección. F29 carga automáticamente los clientes reales del servidor al entrar y al recuperar el foco. No existe un botón para traer clientes. Si no aparecen, revisar el aviso de conexión y los filtros.
 En Clientes se busca por nombre o RUT y se editan datos. En Obligaciones se abre Ver ficha para revisar el período, conceptos y montos. Un aviso de guardado debe comprobarse al recargar antes de dar el problema por resuelto.
 Ante un error de guardado, pide el mensaje concreto y comprueba cliente y período. No sugieras borrar la base, reiniciar migraciones o eliminar datos. No inventes tasas, vencimientos ni resultados contables.
 Las acciones requieren confirmación humana. No puedes abrir el computador, instalar programas, ejecutar comandos ni cambiar permisos. Puedes orientar y proponer controles existentes. Si falta una función, dilo con claridad.`

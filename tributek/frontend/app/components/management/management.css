@@ -487,9 +487,9 @@ button.button-destructive:hover:not(:disabled) {
   width: min(1050px, calc(100vw - 28px));
 }
 .tk-dialog::backdrop {
-  background: var(--modal-backdrop-color);
-  backdrop-filter: blur(var(--modal-backdrop-blur));
-  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur));
+  background: var(--modal-backdrop-color, rgba(37, 47, 70, .55));
+  backdrop-filter: blur(var(--modal-backdrop-blur, 8px));
+  -webkit-backdrop-filter: blur(var(--modal-backdrop-blur, 8px));
 }
 .tk-dialog.tk-client-sheet:has(.tk-client-sheet-footer) {
   display: flex;
@@ -944,3 +944,14 @@ button.button-destructive:hover:not(:disabled) {
     overflow: visible;
   }
 }
+
+/* Prioridades y contexto compartido, conservando los colores de TRIBUTEK. */
+.tk .tk-featured-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; margin: 18px 32px 0; padding: 18px 22px; background: var(--secondary-surface); border-left: 4px solid var(--secondary); border-radius: 12px; }
+.tk .tk-featured-context > div:first-child { display: grid; gap: 3px; }
+.tk .tk-featured-context strong { font-size: 18px; }
+.tk .tk-featured-context > div:first-child > span:last-child { color: var(--text-muted); font-size: 13px; }
+.tk .tk-toolbar .search { flex: 1; min-width: 220px; }
+.tk table tbody tr:hover > td { background: var(--surface-muted); }
+.tk table tbody tr.tk-featured-row:hover > td { background: var(--secondary-surface); }
+.tk .tk-button.primary { background: var(--primary); color: var(--on-primary); border-color: var(--primary); }
+@media (max-width: 640px) { .tk .tk-featured-context { margin: 16px; padding: 16px; } }

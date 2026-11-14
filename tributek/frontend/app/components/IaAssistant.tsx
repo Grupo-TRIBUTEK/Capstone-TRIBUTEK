@@ -18,7 +18,7 @@ export default function IaAssistant() {
   const router = useRouter()
   const dialogs = useDialogs()
   const rutaActual = useRef(pathname)
-  rutaActual.current = pathname
+  useEffect(() => { rutaActual.current = pathname }, [pathname])
   const ocupado = useRef(false)
   const [hasSession, setHasSession] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -32,7 +32,7 @@ export default function IaAssistant() {
   useEffect(() => { chatEnd.current?.scrollIntoView({ block: "nearest" }) }, [messages, isLoading, isOpen])
 
   useEffect(() => {
-    setHasSession(Boolean(getAccessToken()));
+    queueMicrotask(() => setHasSession(Boolean(getAccessToken())));
   }, []);
 
   if (!hasSession) return null;
@@ -74,7 +74,7 @@ export default function IaAssistant() {
         accion.tipo === 'rellenar' ? `Completar «${control?.nombre}» con «${accion.valor}». Algunos campos guardan automáticamente al editar.` :
         consultaVisual ? `Abrir «${control?.nombre}». Revisa que corresponda al cliente y al período que necesitas.` :
         `Pulsar «${control?.nombre}». Esto tendrá el mismo efecto que usar ese botón manualmente y puede guardar o eliminar datos.`
-      const aceptado = await dialogs.confirm(detalle, { title: 'Confirmar acción del asistente', confirmLabel: 'Autorizar acción' })
+      const aceptado = await dialogs.confirm(detalle, { title: 'Acción solicitada', confirmLabel: 'Autorizar acción' })
       if (!aceptado) {
         setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: 'Acción cancelada. No ejecuté la propuesta.' }])
         return
@@ -90,8 +90,8 @@ export default function IaAssistant() {
         ejecutarControl(captura, accion)
       }
       setMessages(current => [...current, { id: nextId.current++, role: 'assistant', text: accion.tipo === 'navegar'
-        ? 'Navegación solicitada. Elige el cliente o indícame el siguiente paso.'
-        : 'Acción aplicada a la interfaz. Revisa el resultado que muestra el formulario. Si aparece otra confirmación, debes resolverla tú.' }])
+        ? 'Acción solicitada: navegación enviada. Revisa que se haya abierto la vista y luego continuamos.'
+        : 'Acción solicitada: aplicada a la interfaz. Revisa el resultado y el aviso de guardado. Si aparece otra confirmación, debes resolverla tú.' }])
     } catch (requestError) {
       setError(
         requestError instanceof Error

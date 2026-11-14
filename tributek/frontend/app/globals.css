@@ -56,10 +56,10 @@
   --shadow-overlay: #252f461a;
   --shadow-card: #252f4614;
   --shadow-soft: #252f4608;
-  --modal-backdrop-blur: 4px;
+  --modal-backdrop-blur: 8px;
   --modal-backdrop-opacity: 0.55;
   --modal-shadow: var(--shadow-modal);
-  --modal-backdrop-blur: 4px;
+  --modal-backdrop-blur: 8px;
   --modal-backdrop-color: rgba(37, 47, 70, 0.55);
 
   /* Las exportaciones conservan una paleta clara en ambos temas. */
@@ -572,3 +572,7 @@ body {
   color: #ffffff;
   font-weight: 600;
 }
+
+/* Los pseudo-elementos backdrop no siempre heredan las variables del documento. */
+dialog::backdrop { background: rgba(37, 47, 70, .55); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+.tributek-overlay { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }

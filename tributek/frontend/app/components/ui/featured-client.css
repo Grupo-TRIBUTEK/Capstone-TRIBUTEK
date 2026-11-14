@@ -1,0 +1,11 @@
+.tk .tk-featured-name { display: flex; align-items: center; gap: 10px; }
+.tk .tk-featured-name > div { min-width: 0; }
+.tk .tk-featured-star { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; width: 40px; min-height: 40px; padding: 8px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface); color: var(--text-muted); }
+.tk .tk-featured-star[aria-pressed="true"] { color: var(--secondary-strong); border-color: var(--secondary); background: var(--secondary-surface); }
+.tk .tk-featured-star:focus-visible { outline: 3px solid var(--secondary); outline-offset: 3px; }
+.tk .tk-featured-row > td { background: var(--secondary-surface); }
+.tk .tk-featured-row > td:first-child { box-shadow: inset 4px 0 var(--secondary); }
+.tk .tk-featured-badge { display: inline-flex; width: fit-content; margin: 4px 0; padding: 3px 9px; border: 1px solid var(--secondary-soft); border-radius: 999px; background: var(--secondary-surface); color: var(--secondary-strong); font-size: 12px; font-weight: 600; }
+.tk .tk-featured-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; margin: 12px 0; }
+.tk .tk-featured-filter > span { color: var(--text-muted); font-size: 13px; }
+.tk .tk-featured-filter > button[aria-pressed="true"] { border-color: var(--secondary); background: var(--secondary-surface); color: var(--secondary-strong); }

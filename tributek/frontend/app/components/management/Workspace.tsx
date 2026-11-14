@@ -42,6 +42,7 @@ import {
   downloadBlob,
 } from "./ui";
 import Icon from "../ui/Icon";
+import { FeaturedBadge, FeaturedFilter, FeaturedStar, useFeaturedClient } from "../ui/FeaturedClient";
 
 export type View =
   | "inicio"
@@ -231,6 +232,7 @@ export default function Workspace({ view }: { view: View }) {
   const [periodValue, setPeriod] = useState("");
   const period = periodValue || (store.ready ? today().slice(0, 7) : "2026-09");
   const [search, setSearch] = useState("");
+  const featured = useFeaturedClient();
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const [concept, setConcept] = useState("");
   const [status, setStatus] = useState("");
@@ -375,7 +377,7 @@ const isServerView =
   });
 
   const visible = clients.filter(
-    (c) =>
+    (c) => (!featured.only || featured.isFeatured(c.rut)) &&
       `${c.name} ${c.rut}`.toLocaleLowerCase("es").includes(search.toLocaleLowerCase("es")) &&
       (!machine || c.machine === machine) &&
       (!active || (active === "active") === c.active) &&
@@ -385,6 +387,8 @@ const isServerView =
           ? debt(vista, c.id, period, [concept as Concept])
           : balance(vista, getMonth(vista, c.id, period), concept as Concept)) > 0),
   );
+
+  visible.sort((a, b) => Number(featured.isFeatured(b.rut)) - Number(featured.isFeatured(a.rut)));
 
   const openDeferrals = metaVista.deferrals.filter((d) => d.period <= period && deferralBalance(vista, d) > 0);
 
@@ -609,6 +613,10 @@ const isServerView =
           {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
         </div>
       </header>
+      {clients.find(c => featured.isFeatured(c.rut)) && (() => {
+        const c = clients.find(c => featured.isFeatured(c.rut))!;
+        return <section className="tk-featured-context" aria-label="Cliente destacado"><div><span className="tk-eyebrow">Cliente destacado</span><strong>{c.name}</strong><span>{c.rut} · {periodLabel(period)}</span></div><div className="tk-actions"><button onClick={() => setSelected({ client: c, data: vista })}>Abrir ficha</button><Link className="tk-button" href="/admin/f29">Ver proyección F29</Link></div></section>;
+      })()}
       {load === "error" && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
       {notice && <p role="status" className="tk-success"><StatusMessage text={notice} /> <button onClick={() => setNotice("")}>Cerrar</button></p>}
       {view !== "inicio" && <div className="tk-toolbar">
@@ -621,8 +629,8 @@ const isServerView =
         <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>
         {(view === "clientes" || view === "obligaciones") && (
           <>
-            <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
             <details className="tk-details"><summary>Más filtros</summary><div className="tk-actions">
+            <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
               <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
               <Field label="Máquina"><select value={machine} onChange={(e) => setMachine(e.target.value)}><option value="">Todas</option>{Array.from(new Set(clients.map((c) => c.machine).filter(Boolean))).map((m) => <option key={m}>{m}</option>)}</select></Field>
               <Field label="Clientes"><select value={active} onChange={(e) => setActive(e.target.value)}><option value="">Activos e inactivos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></Field>
@@ -704,6 +712,7 @@ const isServerView =
           </section>
           <section className="tk-card">
             <div className="tk-card-head"><h2>Clientes</h2></div>
+            <div className="tk-panel"><FeaturedFilter /></div>
             <div className="tk-table-wrap">
               <table><thead><tr><th>Cliente</th><th>RUT</th><th>Deuda acumulada</th><th>Estado del mes</th><th>Estado</th><th>Máquina</th><th>Honorario</th><th></th></tr></thead><tbody>
                 {visible.map((c) => {
@@ -713,8 +722,8 @@ const isServerView =
                   //   suma de esta columna coincide exactamente con la métrica.
                   const deuda = debt(vista, c.id, period);
                   return (
-                    <tr key={c.id}>
-                      <td><strong>{c.name}</strong><small>{c.rut}</small></td>
+                    <tr key={c.id} className={featured.isFeatured(c.rut) ? "tk-featured-row" : undefined}>
+                      <td><div className="tk-featured-name"><FeaturedStar rut={c.rut} name={c.name} /><div><strong>{c.name}</strong><small>{c.rut}</small>{featured.isFeatured(c.rut) && <FeaturedBadge />}</div></div></td>
                       <td>{c.rut}</td>
                       <td>{deuda > 0 ? <strong><Money value={deuda} hidden={hidden} /></strong> : <Money value={deuda} hidden={hidden} />}</td>
                       <td><Badge>{t.status}</Badge></td>
@@ -733,7 +742,7 @@ const isServerView =
               </tbody></table>
             </div>
             {load === "error" && <Empty>No se pudieron cargar los clientes desde TRIBUTEK. Revisa el mensaje de error y reintenta.</Empty>}
-            {!visible.length && load === "ready" && <Empty>{search || status || concept ? "No hay clientes para estos filtros." : "No hay clientes registrados."}</Empty>}
+            {!visible.length && load === "ready" && <Empty>{search || status || concept || featured.only ? "No hay clientes para estos filtros. Puedes mostrar todos o ajustar la búsqueda." : "No hay clientes registrados."}</Empty>}
           </section>
         </>
       )}

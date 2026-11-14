@@ -48,16 +48,13 @@ export default function Sidebar() {
         </button>
       </div>
       <nav aria-label="Menú administrativo" className="mt-5 space-y-6">
-        {["Gestión"].map((group) => (
+        {["Principal", "Gestión mensual", "Control"].map((group) => (
           <details
             key={group}
-            open={
-              group === "Gestión" ||
-              adminNavigation.some((i) => i.group === group && i.href === pathname)
-            }
+            open
           >
             <summary className="admin-sidebar-section-label mb-3 cursor-pointer text-xs font-semibold uppercase tracking-widest text-on-primary-muted">
-              {group === "Gestión" ? "Gestión mensual" : "Más herramientas"}
+              {group}
             </summary>
             <ul
               className={`grid grid-cols-1 gap-1.5 sm:grid-cols-2 md:grid-cols-1 ${collapsed ? "md:gap-2" : ""}`}

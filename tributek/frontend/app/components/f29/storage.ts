@@ -46,44 +46,55 @@ async function remembered(): Promise<Directory | undefined> {
     tx.oncomplete = () => database.close();
   });
 }
-/** Solicita o reutiliza una carpeta autorizada y recopila CSV; devuelve null si falta la API del selector. */
-export async function folderFiles(choose = false): Promise<{
-  name: string;
-  files: File[];
-} | null> {
-  const picker = (window as FolderWindow).showDirectoryPicker;
-  if (!picker) return null;
-  let handle = choose ? undefined : await remembered();
-  if (!handle) {
-    handle = await picker({ mode: "read" });
-    const database = await db();
-    await new Promise<void>((resolve, reject) => {
-      const tx = database.transaction("folder", "readwrite");
-      tx.objectStore("folder").put(handle, "rcv");
-      tx.oncomplete = () => {
-        database.close();
-        resolve();
-      };
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-  if (
-    (await handle.queryPermission({ mode: "read" })) !== "granted" &&
-    (await handle.requestPermission({ mode: "read" })) !== "granted"
-  )
-    throw new Error("No se autorizó la lectura de la carpeta RCV.");
+async function guardar(key: string, value: unknown) {
+  const database = await db();
+  try { await new Promise<void>((resolve, reject) => { const tx = database.transaction('folder', 'readwrite'); tx.objectStore('folder').put(value, key); tx.oncomplete = () => resolve(); tx.onerror = () => reject(tx.error); tx.onabort = () => reject(tx.error); }); }
+  finally { database.close(); }
+}
+async function seleccion(): Promise<{ name: string; files: File[] } | undefined> {
+  const database = await db();
+  try { return await new Promise((resolve, reject) => { const tx = database.transaction('folder'); const request = tx.objectStore('folder').get('selection'); request.onsuccess = () => resolve(request.result); request.onerror = () => reject(request.error); }); }
+  finally { database.close(); }
+}
+/** Persiste una copia de los CSV cuando el navegador no admite referencias permanentes a carpetas. */
+export async function rememberFilesSelection(name: string, files: File[]) {
+  if (files.reduce((n, f) => n + f.size, 0) > 50 * 1024 * 1024) throw new Error('La selección supera los 50 MB de caché local.');
+  await guardar('selection', { name, files });
+  // Una selección explícita nueva sustituye cualquier carpeta anterior.
+  await guardar('rcv', null);
+}
+async function leerCarpeta(handle: Directory) {
   const files: File[] = [];
-  /** Recorre subcarpetas hasta la profundidad permitida y reúne archivos CSV. */
   async function visit(dir: Directory, depth: number) {
     if (depth > 3) return;
     for await (const entry of dir.values()) {
-      if (entry.kind === "directory") await visit(entry as Directory, depth + 1);
-      else if (/\.csv$/i.test(entry.name))
-        files.push(await (entry as FileSystemFileHandle).getFile());
-      if (files.length > 2000)
-        throw new Error("Selecciona una carpeta con menos de 2.000 CSV.");
+      if (entry.kind === 'directory') await visit(entry as Directory, depth + 1);
+      else if (/\.csv$/i.test(entry.name)) files.push(await (entry as FileSystemFileHandle).getFile());
+      if (files.length > 2000) throw new Error('Selecciona una carpeta con menos de 2.000 CSV.');
     }
   }
   await visit(handle, 0);
+  return files;
+}
+/** Recupera sin abrir permisos automáticamente: la renovación requiere un clic del usuario. */
+export async function restoreFolder(): Promise<{ name: string; files: File[]; needsPermission: boolean; source: 'folder' | 'files' } | null> {
+  const handle = await remembered();
+  if (handle && (window as FolderWindow).showDirectoryPicker) {
+    if (await handle.queryPermission({ mode: 'read' }) !== 'granted') return { name: handle.name, files: [], needsPermission: true, source: 'folder' };
+    return { name: handle.name, files: await leerCarpeta(handle), needsPermission: false, source: 'folder' };
+  }
+  const saved = await seleccion();
+  return saved ? { name: `${saved.name} - ${saved.files.length} CSV (copia local)`, files: saved.files, needsPermission: false, source: 'files' } : null;
+}
+/** Solicita o reutiliza una carpeta autorizada y recopila CSV; devuelve null si falta la API del selector. */
+export async function folderFiles(choose = false): Promise<{ name: string; files: File[] } | null> {
+  const picker = (window as FolderWindow).showDirectoryPicker;
+  if (!picker) return null;
+  let handle = choose ? undefined : await remembered();
+  if (!handle) handle = await picker.call(window, { mode: 'read' });
+  if (await handle.queryPermission({ mode: 'read' }) !== 'granted' && await handle.requestPermission({ mode: 'read' }) !== 'granted') throw new Error('No se autorizó la lectura de la carpeta RCV.');
+  const files = await leerCarpeta(handle);
+  await guardar('rcv', handle);
+  await guardar('selection', null);
   return { name: handle.name, files };
 }

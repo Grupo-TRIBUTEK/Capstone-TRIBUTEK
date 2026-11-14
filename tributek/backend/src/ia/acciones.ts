@@ -1,3 +1,4 @@
+import { controlPrivado } from './privacidad.js'
 /** Contrato limitado de propuestas. Nunca ejecuta código ni modifica la base de datos. */
 export type ControlIa = { id: string, nombre: string, tipo: string, opciones?: string[] }
 export type AccionIa =
@@ -6,7 +7,7 @@ export type AccionIa =
   | { tipo: 'rellenar', control: string, valor: string }
 
 export const rutasAdmin = ['/admin', '/admin/clientes', '/admin/obligaciones', '/admin/facturacion', '/admin/pagos', '/admin/f29', '/admin/postergaciones', '/admin/formalizaciones', '/admin/auditoria']
-export const rutasCliente = ['/cliente', '/cliente/presentaciones', '/cliente#documentos']
+export const rutasCliente = ['/cliente', '/cliente/presentaciones', '/cliente#documentos', '/cliente/documentos/subir', '/cliente/documentos/obtener']
 
 /** Rechaza propuestas inventadas, rutas externas y valores fuera del catálogo recibido. */
 export function validarAccion(value: unknown, controles: ControlIa[], rutas: string[]): AccionIa | undefined {
@@ -15,7 +16,7 @@ export function validarAccion(value: unknown, controles: ControlIa[], rutas: str
   if (a.tipo === 'navegar' && typeof a.destino === 'string' && rutas.includes(a.destino))
     return { tipo: 'navegar', destino: a.destino }
   const control = controles.find(c => c.id === a.control)
-  if (!control) return undefined
+  if (!control || controlPrivado(control.nombre)) return undefined
   if (a.tipo === 'pulsar' && control.tipo === 'boton') return { tipo: 'pulsar', control: control.id }
   if (a.tipo === 'rellenar' && control.tipo !== 'boton' && typeof a.valor === 'string' && a.valor.length <= 1000 &&
       (!control.opciones || control.opciones.includes(a.valor)))
@@ -64,7 +65,7 @@ export function abrirF29(consulta: string, historial: { role: string, text: stri
   const filtro = controles.find(c => c.tipo === 'texto' && c.nombre === 'Buscar cliente o RUT')
   if (rut && filtro) {
     const yaBusco = historial.some(m => m.role === 'assistant' && m.text.includes(`Buscaré el RUT ${rut}`))
-    if (yaBusco) return { respuesta: `No aparece una hoja visible para el RUT ${rut}. Revisa si está incorporado al módulo F29 mediante «Traer clientes de TRIBUTEK». No abriré otro cliente en su lugar.` }
+    if (yaBusco) return { respuesta: `No aparece una hoja visible para el RUT ${rut}. Revisa la conexión con el directorio automático de TRIBUTEK. No abriré otro cliente en su lugar.` }
     return { respuesta: `Buscaré el RUT ${rut} en el listado. Después de autorizar, dime «abre su hoja» para continuar con el resultado.`, accion: { tipo: 'rellenar', control: filtro.id, valor: rut } }
   }
   return undefined

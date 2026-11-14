@@ -4,6 +4,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import "./admin-spacing.css";
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "../components/layout/Sidebar";
@@ -65,7 +66,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     <div className="min-h-screen bg-background text-text-primary md:flex">
       <Sidebar />
 
-      <div className={`min-w-0 flex-1 ${hasManagementHeader ? "" : "p-6 md:p-8"}`}>
+      <div className={`admin-workspace min-w-0 flex-1 ${hasManagementHeader ? "" : "p-6 md:p-8"}`}>
         {children}
       </div>
       <IaAssistant />

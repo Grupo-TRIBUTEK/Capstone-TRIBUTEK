@@ -1,7 +1,7 @@
 /**
  * Rutas HTTP de consulta del historial de acciones. Los decoradores indican método, URL y permisos; el controlador entrega la operación al servicio.
  */
-import { Controller, Get, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Query, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
 import { RolesGuard } from '../auth/roles.guard.js';
 import { Roles } from '../auth/decorators/roles.decorator.js';
@@ -9,6 +9,7 @@ import { AuditoriaService } from './auditoria.service.js';
 import { AuditoriaQueryDto } from './dto/auditoria-query.dto.js';
 
 @Controller('auditoria')
+@UsePipes(new ValidationPipe({ transform: true, whitelist: true }))
 @UseGuards(JwtAuthGuard)
 export class AuditoriaController {
   constructor(private readonly auditoriaService: AuditoriaService) {}

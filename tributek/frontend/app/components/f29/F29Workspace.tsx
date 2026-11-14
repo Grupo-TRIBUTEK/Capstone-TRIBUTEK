@@ -6,14 +6,13 @@ import { useDialogs } from "../ui/DialogProvider"
 import { useEffect, useRef, useState, type ChangeEvent } from 'react';
 import Link from 'next/link';
 import Icon from '../ui/Icon';
-import { formatoRutValido, RUT_MENSAJE } from "../ui/rut"
+import { FeaturedBadge, FeaturedFilter, FeaturedStar, useFeaturedClient } from '../ui/FeaturedClient';
 import HelpTip from '../ui/HelpTip'
-import { useData } from '../ficha/store';
-import { extra, type Ledger } from '../management/model';
 import { Modal, StatusMessage } from '../management/ui';
 import { authenticatedFetch } from '../../features/auth/auth-client';
-import { associated, calculate, emptyDatabase, manualLabels, matchesFile, rcvPeriods, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validRut, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
-import { folderFiles, readDatabase, writeDatabase } from './storage';
+import { associated, calculate, emptyDatabase, manualLabels, matchesFile, rcvPeriods, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
+import { folderFiles, readDatabase, writeDatabase, restoreFolder, rememberFilesSelection } from './storage';
+import { directoryClients } from './directory';
 import { download, exportImage, reportCanvas } from './report';
 import { importRcv } from './rcv';
 import './f29.css';
@@ -26,13 +25,15 @@ const currentMonth = () => { const d = new Date(); return `${d.getFullYear()}-${
 /** Coordina clientes, período, borradores e importación RCV, con respaldo local y sincronización remota en los puntos indicados. */
 export default function F29Workspace() {
   const dialogs = useDialogs()
-    const ledger = useData();
+    const [directory, setDirectory] = useState<unknown>(null), [directoryError, setDirectoryError] = useState('');
+    const [folderPermission, setFolderPermission] = useState(false);
+    const featured = useFeaturedClient();
     const [db, setDb] = useState<Database>(emptyDatabase), [ready, setReady] = useState(false), [blocked, setBlocked] = useState('');
-    const [period, setPeriod] = useState(''), [search, setSearch] = useState(''), [active, setActive] = useState<Client | null>(null), [draft, setDraft] = useState<Projection | null>(null), [dirty, setDirty] = useState(false);
+    const [period, setPeriod] = useState(''), [search, setSearch] = useState(''), [activeSelection, setActive] = useState<Client | null>(null), [draft, setDraft] = useState<Projection | null>(null), [dirty, setDirty] = useState(false);
     const [notice, setNotice] = useState(''), [error, setError] = useState(''), [busy, setBusy] = useState(false);
     const [files, setFiles] = useState<File[]>([]), [folder, setFolder] = useState('Sin carpeta seleccionada');
     const [candidates, setCandidates] = useState<Candidate[] | null>(null), [acuse, setAcuse] = useState(false), [identity, setIdentity] = useState(false);
-    const [editClient, setEditClient] = useState<Client | 'new' | null>(null), [preview, setPreview] = useState(false);
+    const [preview, setPreview] = useState(false);
     const [available, setAvailable] = useState<Record<string, string>>({});
     const [periodChoice, setPeriodChoice] = useState<{ pool: File[]; all: boolean; periods: string[] } | null>(null);
     const sourceMode = useRef<'folder' | 'files'>('folder');
@@ -45,6 +46,34 @@ export default function F29Workspace() {
     catch (e) {
         setBlocked(String(e));
     } setReady(true); }); }, []);
+    useEffect(() => {
+        let current: AbortController | undefined;
+        const refresh = async () => {
+            if (document.visibilityState === 'hidden') return;
+            current?.abort(); const controller = new AbortController(); current = controller;
+            try {
+                const response = await authenticatedFetch('/clientes', { cache: 'no-store', signal: controller.signal });
+                if (!response.ok) throw new Error('No se pudo consultar el directorio de clientes de TRIBUTEK.');
+                const data: unknown = await response.json(); directoryClients(data, []);
+                if (!controller.signal.aborted) { setDirectory(data); setDirectoryError(''); }
+            } catch (e) { if (!controller.signal.aborted) { setDirectory(null); setDirectoryError(e instanceof Error ? e.message : 'No se pudieron cargar los clientes.'); } }
+        };
+        void refresh();
+        const interval = window.setInterval(() => { void refresh(); }, 30000);
+        window.addEventListener('focus', refresh); document.addEventListener('visibilitychange', refresh);
+        return () => { current?.abort(); window.clearInterval(interval); window.removeEventListener('focus', refresh); document.removeEventListener('visibilitychange', refresh); };
+    }, []);
+    useEffect(() => {
+        let live = true;
+        restoreFolder().then(saved => {
+            if (!live || !saved) return;
+            setFolder(saved.name); setFolderPermission(saved.needsPermission);
+            if (saved.files.length) { setFiles(saved.files); sourceMode.current = saved.source === 'folder' ? 'folder' : 'files'; }
+        }).catch(() => { if (live) setNotice('No se pudo recuperar la carpeta guardada. Puedes seleccionarla de nuevo.'); });
+        return () => { live = false; };
+    }, []);
+    const currentClients = directory === null ? [] : directoryClients(directory, db.clients);
+    const active = activeSelection ? currentClients.find(c => c.id === activeSelection.id) ?? null : null;
     useEffect(() => { if (!dirty)
         return; /** Activa la advertencia nativa antes de abandonar la página con cambios pendientes. */
 const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventListener('beforeunload', warn); return () => window.removeEventListener('beforeunload', warn); }, [dirty]);
@@ -52,7 +81,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     function attempt(fn: () => void | Promise<void>) { setError(''); setNotice(''); Promise.resolve().then(fn).catch(e => { if (e instanceof DOMException && e.name === 'AbortError')
         return; setError(e instanceof Error ? e.message : String(e)); }); }
     /** Guarda una revisión local y actualiza el estado de la vista. */
-    function commit(next: Database) { const saved = writeDatabase(next, db.revision); setDb(saved); return saved; }
+    function commit(next: Database) { const current = directory === null ? [] : directoryClients(directory, next.clients); const saved = writeDatabase({ ...next, clients: [...next.clients.filter(c => !current.some(remote => remote.id === c.id)), ...current] }, db.revision); setDb(saved); return saved; }
     /** Guarda la proyección local y solicita sincronización al backend, informando su resultado. */
     function save(p = draft) { if (!p)
         return; commit({ ...db, projections: [...db.projections.filter(x => x.clientId !== p.clientId || x.period !== p.period), p] }); setDraft(p); setDirty(false); setNotice('Proyección guardada localmente…'); syncProjection(p).then(msg => setNotice(msg ? `Guardada localmente. ${msg}` : 'Proyección guardada en TRIBUTEK.')).catch(e => setNotice(`Guardada localmente. No se pudo sincronizar con el servidor: ${e instanceof Error ? e.message : String(e)}`)); }
@@ -63,7 +92,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     //   el periodo exista.
     // DEVUELVE: un mensaje de aviso (cliente inexistente) o null si todo fue bien.
     async function syncProjection(p: Projection): Promise<string | null> {
-        const client = db.clients.find(c => c.id === p.clientId);
+        const client = currentClients.find(c => c.id === p.clientId) ?? db.clients.find(c => c.id === p.clientId);
         if (!client) return 'Cliente no encontrado en la lista local.';
         const dirRes = await authenticatedFetch('/clientes');
         if (!dirRes.ok) throw new Error('no se pudo consultar el directorio de clientes.');
@@ -104,11 +133,11 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     function change(p: Projection) { setDraft({ ...p, reviewed: false }); setDirty(true); }
     /** Asocia CSV a clientes y período y prepara la elección de otro mes detectado cuando corresponde. */
     function foundFiles(pool: File[], all: boolean, refresh = false, targetPeriod = period) {
-        const list = (all ? db.clients : active ? [active] : []).map(client => ({ client, files: pool.filter(f => matchesFile(f.name, client, targetPeriod)) }));
+        const list = (all ? currentClients : active ? [active] : []).map(client => ({ client, files: pool.filter(f => matchesFile(f.name, client, targetPeriod)) }));
         setAvailable(Object.fromEntries(list.map(c => [c.client.id, c.files.length ? `${c.files.length} RCV encontrados` : 'Sin RCV'])));
         if (refresh) { setNotice('Disponibilidad actualizada.'); return; }
         if (!list.some(c => c.files.length)) {
-            const periods = rcvPeriods(pool.map(f => f.name), all ? db.clients : active ? [active] : []);
+            const periods = rcvPeriods(pool.map(f => f.name), all ? currentClients : active ? [active] : []);
             if (periods.length) { setPeriodChoice({ pool, all, periods }); return; }
             throw new Error('No hay RCV que coincidan con el RUT del cliente. Revisa el RUT y el nombre de los archivos CSV.');
         }
@@ -158,6 +187,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         sourceMode.current = 'folder'
         setFiles(csv)
         setFolder(found.name)
+        setFolderPermission(false)
         setAvailable({})
         return csv
     }
@@ -173,7 +203,9 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         if (!csv) return
         sourceMode.current = 'files'
         setFiles(csv)
-        setFolder(`${name} - ${csv.length} CSV`)
+        setFolder(`${name} - ${csv.length} CSV (copia local)`)
+        setFolderPermission(false)
+        try { await rememberFilesSelection(name, csv); } catch { setNotice('Los CSV están disponibles en esta sesión, pero el navegador no permitió guardarlos para la próxima visita.'); }
         setAvailable({})
         if (search) foundFiles(csv, search.all, search.refresh)
         else if (active) foundFiles(csv, false)
@@ -230,57 +262,6 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
             setBusy(false);
         }
     }
-    /** Reúne candidatos del directorio para incorporarlos al módulo F29. */
-    async function importClients() {
-        const candidates: {
-            name: string;
-            rut: string;
-        }[] = ledger.data.clients.map(c => ({ name: c.name, rut: extra(ledger.data as Ledger).profiles[c.id]?.rut ?? '' }));
-        let remoteError = '';
-        try {
-            const response = await authenticatedFetch('/clientes');
-            if (!response.ok)
-                throw new Error('Directorio remoto no disponible.');
-            const remote = await response.json();
-            if (!Array.isArray(remote))
-                throw new Error('Directorio inválido.');
-            for (const c of remote) {
-                if (typeof c.nombreRazonSocial === 'string' && typeof c.rut === 'string')
-                    candidates.push({ name: c.nombreRazonSocial, rut: c.rut });
-            }
-        }
-        catch {
-            remoteError = ' No se pudo consultar el servidor; se usó el directorio local disponible.';
-        }
-        const clients = [...db.clients];
-        let invalid = 0;
-        for (const c of candidates) {
-            if (!validRut(c.rut)) {
-                invalid++;
-                continue;
-            }
-            if (!clients.some(x => normalizeRut(x.rut) === normalizeRut(c.rut)))
-                clients.push({ id: crypto.randomUUID(), name: c.name, rut: normalizeRut(c.rut) });
-        }
-        commit({ ...db, clients });
-        setNotice(`Se agregaron ${clients.length - db.clients.length} clientes a F29. ${invalid ? `${invalid} entradas sin RUT válido se omitieron.` : ''}${remoteError}`);
-    }
-    /** Valida razón social y RUT antes de guardar el cliente de proyecciones. */
-    function saveClient(c: Client) {
-        if (!formatoRutValido(c.rut)) throw new Error(RUT_MENSAJE)
-        const client = { ...c, name: c.name.trim(), rut: normalizeRut(c.rut) };
-        if (!client.name || !validRut(client.rut))
-            throw new Error('Ingresa razón social y RUT válido con dígito verificador.');
-        if (db.clients.some(x => x.id !== client.id && x.rut === client.rut))
-            throw new Error('Este RUT ya está en F29.');
-        commit({ ...db, clients: [...db.clients.filter(x => x.id !== client.id), client] });
-        if (active?.id === client.id)
-            setActive(client);
-        setEditClient(null);
-    }
-    /** Confirma y elimina el cliente y proyecciones del módulo F29, sin eliminar su ficha del directorio general. */
-    async function removeClient() { if (!active || !(await leave()) || !(await dialogs.confirm(`¿Eliminar a ${active.name} del módulo F29 y sus proyecciones? Esto no elimina al cliente del directorio general.`)))
-        return; commit({ ...db, clients: db.clients.filter(c => c.id !== active.id), projections: db.projections.filter(p => p.clientId !== active.id) }); setActive(null); setDraft(null); setDirty(false); }
     /** Solicita un período para trabajar conservando los meses anteriores. */
     async function startMonth() { if (!(await leave()))
         return; const raw = (await dialogs.prompt('Selecciona el mes en el que quieres trabajar. Los períodos anteriores se conservarán.', period, { title: 'Iniciar mes de trabajo', confirmLabel: 'Iniciar mes', inputLabel: 'Período de trabajo', inputType: 'month', validate: value => validPeriod(value) ? undefined : 'Selecciona un mes válido entre los años 2000 y 2099.' })); if (!raw)
@@ -293,18 +274,21 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         return; if (file.size > 30000000)
         throw new Error('El respaldo supera 30 MB.'); const next = validateDatabase(JSON.parse(await file.text())); if (!(await dialogs.confirm('¿Reemplazar todos los datos F29 de este navegador por el respaldo?')))
         return; commit(next); setActive(null); setDraft(null); setDirty(false); setNotice('Respaldo restaurado.'); }
-    const selected = db.clients.filter(c => `${c.name} ${c.rut}`.toLowerCase().includes(search.toLowerCase()));
+    const selected = currentClients.filter(c => (!featured.only || featured.isFeatured(c.rut)) && `${c.name} ${c.rut}`.toLowerCase().includes(search.toLowerCase())).sort((a, b) => Number(featured.isFeatured(b.rut)) - Number(featured.isFeatured(a.rut)));
     if (!ready)
         return <p>Cargando proyecciones F29…</p>;
     if (blocked)
         return <div className="tk"><h1>Proyección F29</h1><p role="alert">No se pudieron leer los datos guardados. No se sobrescribirán. {blocked}</p></div>;
     return <main className="tk f29">
-    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1><p className="tk-subtle">{active ? `RUT ${active.rut} - ${periodLabel(period)}` : periodLabel(period)}</p></div>{active && <button onClick={async () => { if ((await leave())) {
+    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1>{active && <div className="tk-featured-name"><FeaturedStar rut={active.rut} name={active.name} />{featured.isFeatured(active.rut) && <FeaturedBadge />}</div>}<p className="tk-subtle">{active ? `RUT ${active.rut} - ${periodLabel(period)}` : periodLabel(period)}</p></div>{active && <button onClick={async () => { if ((await leave())) {
         setActive(null);
         setDraft(null);
         setDirty(false);
     } }}>Volver al panel</button>}</header>
     
+    {directoryError && <p role="alert" className="f29-error">{directoryError} La lista se actualizará automáticamente al recuperar la conexión.</p>}
+    {directory === null && !directoryError && <p role="status">Cargando clientes de TRIBUTEK…</p>}
+    {folderPermission && <p className="f29-notice">Carpeta recordada: {folder}. <button onClick={() => attempt(async () => { await chooseFolder(false); })}>Autorizar carpeta guardada</button></p>}
     {error && <p role="alert" className="f29-error">{error}</p>}{notice && <p role="status" className="f29-notice"><StatusMessage text={notice} /></p>}
     <input hidden type="file" ref={directoryInput} multiple {...({ webkitdirectory: '' } as Record<string, string>)} onChange={e => attempt(() => receivedFiles(e))}/>
     <input hidden type="file" ref={csvInput} accept=".csv" multiple onChange={e => attempt(() => receivedFiles(e))}/>
@@ -316,21 +300,21 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
             setPeriod(e.target.value);
             setAvailable({});
         } }} style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}/></label><label className="f29-grow">Buscar cliente o RUT<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Razón social o RUT"/></label></div>
-      <div className="f29-actions"><button className="f29-primary" onClick={() => attempt(startMonth)}>Iniciar mes</button><button onClick={() => setEditClient('new')}>Agregar cliente</button><button disabled={busy} onClick={() => attempt(() => locate(true, true))}>Actualizar estados</button><button disabled={!db.clients.length || busy} onClick={() => attempt(() => locate(true))}>Procesar todos</button></div>
-      <section className="f29-folder"><div><strong>Carpeta RCV global</strong><p>{folder}</p></div><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => csvInput.current?.click()}>Importar CSV</button><button onClick={() => attempt(importClients)}>Traer clientes de TRIBUTEK</button></section>
-      <div className="f29-table-wrap"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Estado del período</th><th>Resultado estimado</th><th>Acción</th></tr></thead><tbody>{selected.map(c => { const p = db.projections.find(p => p.clientId === c.id && p.period === period), r = p ? calculate(p) : null; return <tr key={c.id}><td><strong>{c.name}</strong></td><td>{c.rut}</td><td>{p?.reviewed ? 'Revisado' : p?.sales && p?.purchases ? 'Importado - por revisar' : p?.sales || p?.purchases ? 'RCV parcial' : 'Pendiente'}{available[c.id] && <small>{available[c.id]}</small>}</td><td>{r ? <>{r.remainder > 0 && <small>Remanente <Amount value={r.remainder}/></small>}A pagar <Amount value={r.total}/></> : '—'}</td><td><button onClick={() => open(c)}>Abrir hoja</button></td></tr>; })}</tbody></table>{!selected.length && <p className="tk-empty">Sin clientes para mostrar.</p>}</div>
+      <div className="f29-actions"><button className="f29-primary" onClick={() => attempt(startMonth)}>Iniciar mes</button><Link className="tk-button" href="/admin/clientes">Gestionar clientes</Link><button disabled={busy} onClick={() => attempt(() => locate(true, true))}>Actualizar estados</button><button disabled={!currentClients.length || busy} onClick={() => attempt(() => locate(true))}>Procesar todos</button></div>
+      <section className="f29-folder"><div><strong>Carpeta RCV global</strong><p>{folder}</p></div><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => csvInput.current?.click()}>Importar CSV</button></section>
+      <FeaturedFilter />
+      <div className="f29-table-wrap"><table><thead><tr><th>Cliente</th><th>RUT</th><th>Estado del período</th><th>Resultado estimado</th><th>Acción</th></tr></thead><tbody>{selected.map(c => { const p = db.projections.find(p => p.clientId === c.id && p.period === period), r = p ? calculate(p) : null; return <tr key={c.id} className={featured.isFeatured(c.rut) ? "tk-featured-row" : undefined}><td><div className="tk-featured-name"><FeaturedStar rut={c.rut} name={c.name} /><div><strong>{c.name}</strong>{featured.isFeatured(c.rut) && <FeaturedBadge />}</div></div></td><td>{c.rut}</td><td>{p?.reviewed ? 'Revisado' : p?.sales && p?.purchases ? 'Importado - por revisar' : p?.sales || p?.purchases ? 'RCV parcial' : 'Pendiente'}{available[c.id] && <small>{available[c.id]}</small>}</td><td>{r ? <>{r.remainder > 0 && <small>Remanente <Amount value={r.remainder}/></small>}A pagar <Amount value={r.total}/></> : '—'}</td><td><button onClick={() => open(c)}>Abrir hoja</button></td></tr>; })}</tbody></table>{!selected.length && <p className="tk-empty">{directory === null ? 'El directorio todavía no está disponible.' : 'No hay clientes para estos filtros.'}</p>}</div>
       <details className="f29-backup"><summary>Respaldo F29</summary><button onClick={() => download(new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' }), `TRIBUTEK-F29-respaldo-${currentMonth()}.json`)}>Descargar respaldo</button> <button onClick={() => restoreInput.current?.click()}>Restaurar respaldo</button><p><Link href="/admin/clientes">Ir al directorio general de clientes</Link></p></details>
     </> : draft && <>
       <p className="f29-source-status">Carpeta / archivos RCV: {folder}</p>
       <div className="f29-actions f29-sticky"><button className="f29-primary" onClick={() => attempt(() => save())}>{dirty ? 'Guardar cambios' : 'Guardar proyección'}</button><button onClick={() => attempt(() => locate(false))}>Buscar RCV automáticamente</button><button onClick={() => attempt(() => copy(message(active, draft)))}>Copiar mensaje</button><button onClick={() => setPreview(true)}>Ver informe</button><button onClick={() => attempt(async () => { setNotice(await exportImage(active, draft, true)); })}>Copiar informe</button><span aria-live="polite">{dirty ? 'Cambios sin guardar' : 'Hoja guardada / sin cambios'}</span></div>
-      <details className="f29-more"><summary>Más opciones</summary><div className="f29-actions"><button onClick={() => csvInput.current?.click()}>Importar CSV</button><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => attempt(() => copy(summary(active, draft)))}>Copiar resumen</button><button onClick={() => setEditClient(active)}>Editar nombre</button><button className="f29-danger" onClick={() => attempt(removeClient)}>Eliminar cliente de F29</button></div></details>
+      <details className="f29-more"><summary>Más opciones</summary><div className="f29-actions"><button onClick={() => csvInput.current?.click()}>Importar CSV</button><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => attempt(() => copy(summary(active, draft)))}>Copiar resumen</button><Link className="tk-button" href="/admin/clientes">Gestionar datos del cliente</Link></div></details>
       
       <Sheet p={draft} onChange={change}/>
       <details className="f29-panel"><summary>Archivos utilizados y detalle de documentos</summary>{(['sales', 'purchases'] as Kind[]).map(kind => <SourceDetail key={kind} kind={kind} source={draft[kind]}/>)}</details>
       <label className="f29-check"><input type="checkbox" checked={draft.reviewed} onChange={e => { setDraft({ ...draft, reviewed: e.target.checked }); setDirty(true); }}/> Revisé los registros, el acuse y los campos manuales de esta proyección.</label>
       <details className="f29-panel"><summary>Mensaje para el cliente</summary><pre>{message(active, draft)}</pre></details>
     </>}
-    {editClient && <Modal title={editClient === 'new' ? 'Agregar cliente a F29' : 'Editar nombre en F29'} onClose={() => setEditClient(null)}><ClientForm client={editClient} save={saveClient}/></Modal>}
     {periodChoice && <Modal title="Período detectado en los RCV" onClose={() => setPeriodChoice(null)}>
       <p>Estás trabajando en {periodLabel(period)}, pero los archivos de este cliente corresponden a otro período. Selecciona el mes que deseas importar.</p>
       {periodChoice.periods.map(value => <button key={value} onClick={() => selectDetectedPeriod(value)}>Usar {periodLabel(value)}</button>)}
@@ -384,16 +368,6 @@ function SourceDetail({ kind, source }: {
     kind: Kind;
     source?: Source;
 }) { return <section><h3>{kind === 'sales' ? 'Ventas' : 'Compras'}</h3>{!source ? <p>Sin registros importados.</p> : <><p>{source.name} - {source.rows.length} documentos - importado {new Date(source.importedAt).toLocaleString('es-CL')}</p>{source.warnings.map(w => <p key={w} className="f29-error">{w}</p>)}<div className="f29-table-wrap"><table><thead><tr><th>RUT</th><th>Razón social</th><th>Docs.</th><th>Neto</th><th>IVA</th><th>Total</th></tr></thead><tbody>{associated(source.rows).map(row => <tr key={row.rut}><td>{row.rut}</td><td>{row.name}</td><td>{row.docs}</td><td><Amount value={row.net}/></td><td><Amount value={row.iva}/></td><td><Amount value={row.total}/></td></tr>)}</tbody></table></div><details><summary>Ver documentos originales importados</summary><div className="f29-table-wrap"><table><thead><tr><th>Tipo</th><th>Folio</th><th>Fecha</th><th>Razón social</th><th>Exento</th><th>Neto</th><th>IVA</th><th>Total</th></tr></thead><tbody>{source.rows.map((row: Row) => <tr key={`${row.code}|${row.rut}|${row.folio}`}><td>{row.code}</td><td>{row.folio}</td><td>{row.date}</td><td>{row.name}</td><td><Amount value={row.exempt}/></td><td><Amount value={row.net}/></td><td><Amount value={row.iva}/></td><td><Amount value={row.total}/></td></tr>)}</tbody></table></div></details></>}</section>; }
-/** Edita razón social y RUT del cliente del módulo. */
-function ClientForm({ client, save }: {
-    client: Client | 'new';
-    save: (c: Client) => void;
-}) { const [name, setName] = useState(client === 'new' ? '' : client.name), [rut, setRut] = useState(client === 'new' ? '' : client.rut), [error, setError] = useState(''); return <form className="f29" onSubmit={e => { e.preventDefault(); try {
-    save({ id: client === 'new' ? crypto.randomUUID() : client.id, name, rut });
-}
-catch (e) {
-    setError(String(e));
-} }}><label>Contribuyente<input required maxLength={200} value={name} onChange={e => setName(e.target.value)}/></label><label>RUT<input required disabled={client !== 'new'} maxLength={12} aria-describedby="f29-rut-ayuda" aria-invalid={!!rut && !formatoRutValido(rut)} value={rut} onChange={e => setRut(e.target.value.toUpperCase())} placeholder="78239603-K"/></label><p id="f29-rut-ayuda" className="tk-subtle">Incluye el guion y un único dígito o K después.</p>{error && <p role="alert">{error}</p>}<button type="submit" className="f29-primary">Guardar cliente</button></form>; }
 /** Genera e inserta el canvas del informe en la vista previa. */
 function ReportPreview({ client, p }: {
     client: Client;
