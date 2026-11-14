@@ -51,6 +51,16 @@ export async function login(nombreUsuario: string, password: string) {
   return data;
 }
 
+/** Lee el usuario autenticado almacenado en este navegador. */
+export function getStoredUser(): AuthUser | null {
+  const raw = window.localStorage.getItem(USER_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as AuthUser;
+  } catch {
+    return null;
+  }
+}
 /** Añade Authorization: Bearer cuando existe token y conserva las otras opciones de fetch. */
 export async function authenticatedFetch(path: string, init: RequestInit = {}) {
   const token = getAccessToken();

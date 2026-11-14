@@ -124,6 +124,53 @@ button.button-destructive:hover:not(:disabled) {
   background: var(--surface);
   border-bottom: none;
 }
+.tk-header-user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  line-height: 1.2;
+  text-align: right;
+}
+.tk-header-user-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+.tk-header-user-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.18);
+}
+.tk-header-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.tk-header-user-role {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+.tk-header-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.audit-header-end {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .tk-header-divider {
   border: 0;
   border-top: 1px solid var(--border);
@@ -338,13 +385,16 @@ button.button-destructive:hover:not(:disabled) {
   width: 100%;
 }
 .tk-metric-label {
-  flex: 1 1 auto;
-  min-width: 0;
   color: inherit;
   opacity: 0.82;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
+}
+.tk-metric-info-anchor {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
 }
 .tk-metric-icon {
   flex: 0 0 auto;
@@ -353,10 +403,77 @@ button.button-destructive:hover:not(:disabled) {
   justify-content: center;
   width: 30px;
   height: 30px;
-  margin-top: -2px;
+  border: 0;
   border-radius: var(--radius-pill);
   background: var(--indicator-icon-bg-soft);
   color: inherit;
+}
+.tk-metric-icon-trigger {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  box-shadow: none;
+  outline: none;
+}
+.tk-metric-icon-trigger:focus,
+.tk-metric-icon-trigger:focus-visible {
+  outline: none;
+  box-shadow: none;
+}
+.tk-metric-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 40;
+  width: min(320px, calc(100vw - 40px));
+  padding: 12px 14px;
+  border: var(--panel-border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-panel-token);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s ease, transform 0.15s ease, visibility 0.15s;
+}
+.tk-metric-popover.is-open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.tk-metric-popover-title {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.tk-metric-popover-list {
+  margin: 0;
+  display: grid;
+  gap: 8px;
+}
+.tk-metric-popover-row dt {
+  margin: 0 0 2px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tk-metric-popover-row dd {
+  margin: 0;
+  white-space: pre-line;
+  color: var(--text-primary);
 }
 .tk-metric-value {
   display: block;

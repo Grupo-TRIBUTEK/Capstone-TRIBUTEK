@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { authenticatedFetch } from "@/app/features/auth/auth-client";
 import Icon from "../ui/Icon";
+import AdminUser from "../layout/AdminUser";
 import {
   actions,
   entities,
@@ -115,9 +116,12 @@ export default function AuditWorkspace() {
             Consulta quién realizó cada acción y cuándo ocurrió.
           </p>
         </div>
-        <button type="button" onClick={() => setRefresh((n) => n + 1)} disabled={loading}>
-          Actualizar historial
-        </button>
+        <div className="audit-header-end">
+          <button type="button" onClick={() => setRefresh((n) => n + 1)} disabled={loading}>
+            Actualizar historial
+          </button>
+          <AdminUser />
+        </div>
       </header>
       <hr className="tk-header-divider" />
       <form className="audit-filters" onSubmit={apply}>

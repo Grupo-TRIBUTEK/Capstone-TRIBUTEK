@@ -42,6 +42,7 @@ import {
   downloadBlob,
 } from "./ui";
 import Icon from "../ui/Icon";
+import AdminUser from "../layout/AdminUser";
 import { FeaturedBadge, FeaturedFilter, FeaturedStar, useFeaturedClient } from "../ui/FeaturedClient";
 
 export type View =
@@ -608,7 +609,7 @@ const isServerView =
           <p className="tk-subtle">{viewDescriptions[view]}</p>
         </div>
         <div className="tk-actions">
-          {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
+          <AdminUser />
         </div>
       </header>
       <hr className="tk-header-divider" />
@@ -623,9 +624,42 @@ const isServerView =
             {view === "clientes" ? <>Resumen de clientes - <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
           </h2>
           <div className="tk-metrics">
-            <Metric icon="calculator" label="Deuda acumulada con TRIBUTEK" className="tk-metric-primary" help="Suma de los saldos pendientes de los clientes visibles hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
-            <Metric icon="wallet" label="Con deuda de servicios" className="tk-home-metric-debt" help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-            <Metric icon="users" label="Clientes visibles" className="tk-home-metric-debt" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>
+            <Metric
+              icon="calculator"
+              label="Deuda acumulada con TRIBUTEK"
+              className="tk-metric-primary"
+              help="Suma de los saldos pendientes de los clientes visibles hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Suma los saldos pendientes de cobro de los clientes visibles, acumulados hasta el período seleccionado.",
+                concepts: "Honorarios, Formalización (Constitución de empresa), Otro y Cobranza (reembolso de gastos por cuenta del cliente).",
+                conditions: "Incluye clientes que pasan búsqueda/filtros actuales. Considera meses con período ≤ seleccionado. Por concepto descuenta abonos registrados y montos postergados aún no cobrados en el período original.",
+                formula: "Σ clientes visibles Σ meses (mes.período ≤ período) Σ {Honorarios, Formalización, Otro, Cobranza} (monto − abonos del concepto/período − saldo postergado del concepto/período).",
+              }}
+            ><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
+            <Metric
+              icon="wallet"
+              label="Con deuda de servicios"
+              className="tk-home-metric-debt"
+              help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Cuenta cuántos clientes visibles mantienen deuda de servicios acumulada hasta el período seleccionado.",
+                concepts: "Solo servicios: Honorarios, Formalización (Constitución de empresa) y Otro. No incluye Cobranza ni otros conceptos.",
+                conditions: "Cliente visible (búsqueda/filtros actuales) y con saldo > 0 en servicios considerando meses con período ≤ seleccionado, abonos y postergaciones por concepto.",
+                formula: "Cantidad de clientes visibles tales que deuda_servicios(cliente, período) > 0, donde deuda_servicios = Σ meses ≤ período Σ {Honorarios, Formalización, Otro} saldo pendiente.",
+              }}
+            >{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric
+              icon="users"
+              label="Clientes visibles"
+              className="tk-home-metric-debt"
+              help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales."
+              info={{
+                description: "Total de clientes que cumplen los criterios de búsqueda y filtros activos en la vista.",
+                concepts: "No aplica (conteo de clientes).",
+                conditions: "Aplica búsqueda por razón social/RUT, destacados (si corresponde), máquina, estado activo/inactivo, estado del mes y concepto pendiente según la vista.",
+                formula: "Conteo de registros de clientes cuyo conjunto de filtros actuales evalúa como verdadero.",
+              }}
+            >{visible.length}</Metric>
           </div>
         </section>
       )}
@@ -677,13 +711,68 @@ const isServerView =
             </div>
             <div className="tk-home-metrics-rows">
               <div className="tk-home-metrics-row">
-            <Metric icon="trendingUp" label="Ingresos por servicios" className="tk-metric-primary" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
-            <Metric icon="refresh" label="Reembolsos recibidos" className="tk-home-metric-debt" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
-            <Metric icon="clock" label="Postergaciones por revisar" className="tk-home-metric-debt" help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
+            <Metric
+              icon="trendingUp"
+              label="Ingresos por servicios"
+              className="tk-metric-primary"
+              help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Total de pagos recibidos en el período seleccionado que corresponden a servicios prestados por TRIBUTEK.",
+                concepts: "Honorarios, Formalización (Constitución de empresa) y Otro. No incluye Impuestos, Retención de boletas, Cotizaciones previsionales, Postergación, Convenio ni Cobranza.",
+                conditions: "Se consideran pagos cuya fecha de pago pertenece al mes/período seleccionado y cuyo destino no es institución (destination ≠ \"institution\").",
+                formula: "Σ monto de pagos tales que pago.fecha ∈ período seleccionado, pago.destino ≠ institución y pago.concepto ∈ {Honorarios, Formalización, Otro}.",
+              }}
+            ><Money value={received.services} hidden={hidden} /></Metric>
+            <Metric
+              icon="refresh"
+              label="Reembolsos recibidos"
+              className="tk-home-metric-debt"
+              help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Total de abonos recibidos en el período registrados como reembolsos/gastos por cuenta del cliente.",
+                concepts: "Solo Cobranza (reembolso de gastos por cuenta del cliente).",
+                conditions: "Pagos con fecha en el período seleccionado, concepto Cobranza y destino distinto de institución (destination ≠ \"institution\").",
+                formula: "Σ monto de pagos tales que pago.fecha ∈ período seleccionado, pago.concepto = Cobranza y pago.destino ≠ institución.",
+              }}
+            ><Money value={received.reimbursements} hidden={hidden} /></Metric>
+            <Metric
+              icon="clock"
+              label="Postergaciones por revisar"
+              className="tk-home-metric-debt"
+              help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Monto total pendiente de las postergaciones vigentes/revisables hasta el período seleccionado.",
+                concepts: "Aplica a postergaciones de cualquier concepto diferido (según registros de postergación).",
+                conditions: "Postergaciones con período de origen ≤ período seleccionado y con saldo pendiente mayor a 0. El saldo descuenta abonos asociados a la postergación.",
+                formula: "Σ saldo_postergación(d) para cada postergación d con d.período ≤ período y saldo_postergación(d) > 0, donde saldo_postergación(d) = d.monto − Σ abonos vinculados a d.",
+              }}
+            ><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
               </div>
               <div className="tk-home-metrics-row">
-            <Metric icon="wallet" label="Clientes con pagos pendientes" className="tk-home-metric-debt" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-            <Metric icon="send" label="Obligaciones por enviar" className="tk-home-metric-debt" help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{pendingMonths.length}</Metric>
+            <Metric
+              icon="wallet"
+              label="Clientes con pagos pendientes"
+              className="tk-home-metric-debt"
+              help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Cantidad de clientes que mantienen deuda de servicios acumulada hasta el período seleccionado.",
+                concepts: "Solo servicios: Honorarios, Formalización (Constitución de empresa) y Otro.",
+                conditions: "Se evalúan todos los clientes de la vista (no depende de los filtros de tabla de esta sección). Incluye meses con período ≤ seleccionado y considera abonos/postergaciones por concepto.",
+                formula: "Conteo de clientes tales que Σ meses ≤ período Σ {Honorarios, Formalización, Otro} saldo pendiente > 0.",
+              }}
+            >{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric
+              icon="send"
+              label="Obligaciones por enviar"
+              className="tk-home-metric-debt"
+              help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
+              info={{
+                description: "Clientes cuyo registro mensual del período seleccionado aún no ha sido marcado como enviado.",
+                concepts: "Estado del mes del cliente (registro/período), no un concepto de cobro específico.",
+                conditions: "Existe mes para el cliente en el período seleccionado y el estado calculado del mes es “NO ENVIADO”. El estado depende de totales/pendientes y marca de envío del mes.",
+                formula: "Conteo de clientes con mes(cliente, período) existente y estado_mes = NO ENVIADO.",
+              }}
+            >{pendingMonths.length}</Metric>
               </div>
             </div>
           </section>
@@ -822,7 +911,7 @@ const isServerView =
       {view === "pagos" && (
         <>
           <section className="tk-card">
-            <div className="tk-card-head"><h2>Historial de pagos</h2></div>
+            <div className="tk-card-head"><h2>Historial de pagos</h2><button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}><Icon name="plus" className="h-4 w-4" />Registrar pago</button></div>
             <div className="tk-table-wrap">
               <table><thead><tr><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Monto</th><th>Método</th><th>Destino</th><th>Glosa</th><th></th></tr></thead><tbody>
                 {groups.map((g) => (

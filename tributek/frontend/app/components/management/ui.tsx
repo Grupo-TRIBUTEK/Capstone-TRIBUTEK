@@ -2,7 +2,7 @@
  * Interfaz ui. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { reportTheme } from "../ui/reportTheme";
 import { money } from "../ficha/model";
 import Icon, { type IconName } from "../ui/Icon";
@@ -40,29 +40,106 @@ export function Badge({ children }: { children: ReactNode }) {
           : "neutral";
   return <span className={`tk-badge ${color}`}>{children}</span>;
 }
-/** Presenta cifra y etiqueta con título de ayuda. */
-/** Presenta cifra y etiqueta con ícono opcional usando tokens globales. */
+
+export type MetricInfo = {
+  description: string;
+  concepts?: string;
+  conditions?: string;
+  formula?: string;
+};
+
+/** Presenta cifra y etiqueta; el ícono puede mostrar información contextual sin alterar el layout. */
 export function Metric({
   label,
   children,
   help,
   icon,
+  info,
   className = "",
 }: {
   label: string;
   children: ReactNode;
   help: string;
   icon?: IconName;
+  info?: MetricInfo;
   className?: string;
 }) {
+  const id = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
+  const [hover, setHover] = useState(false);
+  const visible = open || hover;
+
+  useEffect(() => {
+    if (!open) return;
+    const onDoc = (e: MouseEvent | TouchEvent) => {
+      if (!rootRef.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("touchstart", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("touchstart", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  const rows = info
+    ? ([
+        ["Descripción", info.description],
+        ["Conceptos asociados", info.concepts],
+        ["Condiciones", info.conditions],
+        ["Cálculo", info.formula],
+      ] as const).filter(([, v]) => v)
+    : [];
+
   return (
-    <div className={`tk-metric ${className}`} title={help}>
+    <div ref={rootRef} className={`tk-metric ${className}`} title={info ? undefined : help}>
       <div className="tk-metric-heading">
         <span className="tk-metric-label">{label}</span>
         {icon ? (
-          <span className="tk-metric-icon" aria-hidden="true">
-            <Icon name={icon} className="h-4 w-4" />
-          </span>
+          info ? (
+            <span className="tk-metric-info-anchor">
+              <button
+                type="button"
+                className="tk-metric-icon tk-metric-icon-trigger"
+                aria-label={`Información: ${label}`}
+                aria-expanded={visible}
+                aria-controls={id}
+                onClick={() => setOpen((v) => !v)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => setHover(false)}
+                onFocus={() => setHover(true)}
+                onBlur={() => setHover(false)}
+              >
+                <Icon name={icon} className="h-4 w-4" />
+              </button>
+              <span
+                id={id}
+                role="dialog"
+                aria-label={`Detalle de ${label}`}
+                className={`tk-metric-popover ${visible ? "is-open" : ""}`}
+              >
+                <strong className="tk-metric-popover-title">{label}</strong>
+                <dl className="tk-metric-popover-list">
+                  {rows.map(([k, v]) => (
+                    <div key={k} className="tk-metric-popover-row">
+                      <dt>{k}</dt>
+                      <dd>{v}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </span>
+            </span>
+          ) : (
+            <span className="tk-metric-icon" aria-hidden="true">
+              <Icon name={icon} className="h-4 w-4" />
+            </span>
+          )
         ) : null}
       </div>
       <strong className="tk-metric-value">{children}</strong>

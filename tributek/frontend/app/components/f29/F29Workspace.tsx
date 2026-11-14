@@ -9,6 +9,7 @@ import Icon from '../ui/Icon';
 import { FeaturedBadge, FeaturedFilter, FeaturedStar, useFeaturedClient } from '../ui/FeaturedClient';
 import HelpTip from '../ui/HelpTip'
 import { Modal, StatusMessage } from '../management/ui';
+import AdminUser from '../layout/AdminUser';
 import { authenticatedFetch } from '../../features/auth/auth-client';
 import { associated, calculate, emptyDatabase, manualLabels, matchesFile, rcvPeriods, message, money, newProjection, normalizeRut, periodLabel, sumRows, summary, validPeriod, validateDatabase, type Client, type Database, type Kind, type ManualKey, type Projection, type Row, type Source } from './model';
 import { folderFiles, readDatabase, writeDatabase, restoreFolder, rememberFilesSelection } from './storage';
@@ -280,11 +281,11 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     if (blocked)
         return <div className="tk"><h1>Proyección F29</h1><p role="alert">No se pudieron leer los datos guardados. No se sobrescribirán. {blocked}</p></div>;
     return <main className="tk f29">
-    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1>{active && <div className="tk-featured-name"><FeaturedStar rut={active.rut} name={active.name} />{featured.isFeatured(active.rut) && <FeaturedBadge />}</div>}<p className="tk-subtle">{active ? `RUT ${active.rut} - ${periodLabel(period)}` : periodLabel(period)}</p></div>{active && <button onClick={async () => { if ((await leave())) {
+    <header className="tk-header f29-heading"><div><p className="tk-eyebrow">TRIBUTEK / Proyección mensual</p><h1>{active ? active.name : 'Proyección F29'}</h1>{active && <div className="tk-featured-name"><FeaturedStar rut={active.rut} name={active.name} />{featured.isFeatured(active.rut) && <FeaturedBadge />}</div>}<p className="tk-subtle">{active ? `RUT ${active.rut} - ${periodLabel(period)}` : periodLabel(period)}</p></div><div className="tk-header-end">{active && <button onClick={async () => { if ((await leave())) {
         setActive(null);
         setDraft(null);
         setDirty(false);
-    } }}>Volver al panel</button>}</header>
+    } }}>Volver al panel</button>}<AdminUser /></div></header>
     <hr className="tk-header-divider" />
     
     {directoryError && <p role="alert" className="f29-error">{directoryError} La lista se actualizará automáticamente al recuperar la conexión.</p>}
