@@ -28,7 +28,12 @@ export type IconName =
   | "arrowLeft"
   | "percent"
   | "eye"
-  | "eyeOff";
+  | "eyeOff"
+  | "filter"
+  | "refresh"
+  | "clock"
+  | "send"
+  | "trendingUp";
 
 const paths: Record<IconName, string> = {
   home: "M3 10 12 3l9 7M5 9v12h5v-7h4v7h5V9",
@@ -62,6 +67,11 @@ const paths: Record<IconName, string> = {
   eye: "M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Zm10 3a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z",
   eyeOff:
     "m3 3 18 18M10.6 10.6a2 2 0 0 0 2.8 2.8M9.9 5.2A10.8 10.8 0 0 1 12 5c6.4 0 10 7 10 7a14 14 0 0 1-3.1 3.8M6.2 6.2C3.5 8 2 12 2 12s3.6 7 10 7c1 0 2-.2 2.9-.5",
+  filter: "M4 6h16M7 12h10M10 18h4",
+  refresh: "M3 12a9 9 0 0 1 15-6.7M21 12a9 9 0 0 1-15 6.7M18 3v4h-4M6 21v-4h4",
+  clock: "M12 3a9 9 0 1 1 0 18 9 9 0 0 1 0-18ZM12 7v5l3 2",
+  send: "M22 2 11 13M22 2l-7 20-4-9-9-4Z",
+  trendingUp: "M3 17l6-6 4 4 8-8M14 7h7v7",
 };
 
 // Decorativos: el texto visible del enlace o botón proporciona el nombre accesible.

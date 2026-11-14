@@ -7,6 +7,7 @@
 .f29 h3 { font-size: 18px; font-weight: 700; margin-top: 20px; }
 .f29 p:not(.tk-eyebrow):not(.tk-subtle) { line-height: 1.6; }
 .f29-heading { width: 100%; }
+.f29 .tk-header-divider { width: calc(100% - 64px); max-width: 1600px; margin: 0 auto 24px; border: 0; border-top: 1px solid var(--border); height: 0; }
 .f29-heading h1 { font-size: 30px; letter-spacing: -.8px; margin: 0; }
 .f29 > :not(.f29-heading):not(dialog) { width: calc(100% - 64px); max-width: 1600px; margin-left: auto; margin-right: auto; }
 .f29 button { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 42px; padding: 9px 16px; border: 1px solid var(--border); border-radius: 9px; background: var(--surface); color: var(--text-primary); font-weight: 600; cursor: pointer; text-decoration: none; white-space: nowrap; }
@@ -20,7 +21,10 @@
 .f29 input:focus-visible,.f29 button:focus-visible { outline: 3px solid var(--secondary); outline-offset: 2px; }
 .f29 .f29-check { display: flex; flex-direction: row; align-items: center; gap: 10px; margin: 18px 0; font-weight: 400; line-height: 1.5; }
 .f29-check input { width: 18px; height: 18px; accent-color: var(--primary); flex-shrink: 0; }
+.f29-filters { margin: 22px 0; }
+.f29-filters .tk-filters-title { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 14px; font-weight: 700; color: var(--text-primary); line-height: 1.2; }
 .f29-toolbar,.f29-folder { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; border: 1px solid var(--f29-line); border-radius: 14px; padding: 22px; background: var(--surface); margin: 22px 0; }
+.f29-filters .f29-toolbar { margin: 0; }
 .f29-toolbar label { gap: 7px; font-size: 12px; }
 .f29-grow { flex: 1; min-width: 230px; }.f29-folder>div { flex: 1; min-width: 230px; }
 .f29-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin: 20px 0; }
@@ -45,8 +49,8 @@
 .f29-info { color: var(--text-muted); font-size: 13px; }.f29-notice,.f29-error { margin: 12px 0; padding: 15px; background: var(--surface); }.f29-notice { border-left: 4px solid var(--success); white-space: pre-wrap; }.f29-error { border-left: 4px solid var(--error); }
 .f29 small { display: block; margin-top: 6px; }.f29-panel,.f29-backup { margin: 25px 0; padding: 20px; border: 1px solid var(--f29-line); border-radius: 12px; }.f29 summary { cursor: pointer; font-weight: 600; }.f29 pre { white-space: pre-wrap; font-family: inherit; line-height: 1.7; padding: 20px 0; }.f29-candidates { max-height: 320px; overflow: auto; padding: 16px 0; }.f29-candidates section { margin-bottom: 20px; }.f29-candidates li { overflow-wrap: anywhere; }.f29-report-preview { background: var(--report-paper); margin-bottom: 18px; }
 @media(max-width:1000px) { .f29-determination { grid-template-columns: 1fr; }.f29-results { grid-template-columns: 1fr 1fr; }.f29-sticky { position: static; } }
-@media(min-width:601px) and (max-width:767px) { .f29 > :not(.f29-heading):not(dialog) { width: calc(100% - 48px); } }
-@media(max-width:600px) { .f29 > :not(.f29-heading):not(dialog) { width: calc(100% - 48px); }.f29 h1 { font-size: 26px; }.f29 .f29-heading h1 { font-size: 30px; }.f29-results { grid-template-columns: 1fr; }.f29-determination { padding: 0 8px 8px; }.f29-determination th,.f29-determination td { padding: 8px; }.f29-actions button { flex: 1 1 45%; } }
+@media(min-width:601px) and (max-width:767px) { .f29 > :not(.f29-heading):not(dialog):not(.tk-header-divider) { width: calc(100% - 48px); } .f29 .tk-header-divider { width: calc(100% - 48px); margin-bottom: 20px; } }
+@media(max-width:600px) { .f29 > :not(.f29-heading):not(dialog):not(.tk-header-divider) { width: calc(100% - 48px); }.f29 .tk-header-divider { width: calc(100% - 48px); margin-bottom: 20px; }.f29 h1 { font-size: 26px; }.f29 .f29-heading h1 { font-size: 30px; }.f29-results { grid-template-columns: 1fr; }.f29-determination { padding: 0 8px 8px; }.f29-determination th,.f29-determination td { padding: 8px; }.f29-actions button { flex: 1 1 45%; } }
 
 /* Las notas de crédito mantienen su signo y destacan en ambos temas. */
 .f29 .f29-negative { color: var(--error); font-weight: 700; }
