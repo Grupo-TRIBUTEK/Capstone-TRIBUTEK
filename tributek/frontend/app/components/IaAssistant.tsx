@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Interfaz IaAssistant. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
@@ -27,9 +27,16 @@ export default function IaAssistant() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const nextId = useRef(0);
   const chatEnd = useRef<HTMLDivElement>(null)
   useEffect(() => { chatEnd.current?.scrollIntoView({ block: "nearest" }) }, [messages, isLoading, isOpen])
+  useEffect(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [consulta, isOpen]);
 
   useEffect(() => {
     queueMicrotask(() => setHasSession(Boolean(getAccessToken())));
@@ -109,12 +116,12 @@ export default function IaAssistant() {
       {isOpen && (
         <section
           aria-label="Asistente IA"
-          className="flex h-[min(32rem,calc(100dvh-7rem))] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden rounded-2xl border border-border bg-surface text-text-primary shadow-xl"
+          className="flex h-[min(32rem,calc(100dvh-7rem))] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden border border-border text-text-primary shadow-xl backdrop-blur-md"
+          style={{ background: "var(--chat-panel-bg)", borderRadius: "var(--radius-xl)" }}
         >
           <header className="flex items-center justify-between border-b border-border bg-background-subtle px-4 py-3">
             <div>
               <h2 className="font-semibold">Asistente TRIBUTEK</h2>
-              <p className="text-xs text-text-muted">¿En qué puedo ayudarte?</p>
             </div>
             <button
               type="button"
@@ -160,30 +167,35 @@ export default function IaAssistant() {
             )}
             <div ref={chatEnd} />
           </div>
-          <form ref={formRef} onSubmit={sendConsulta} className="flex items-end gap-2 border-t border-border p-3">
+          <form ref={formRef} onSubmit={sendConsulta} className="border-t border-border p-3">
             <label className="sr-only" htmlFor="ia-consulta">Escribe tu consulta</label>
-            <textarea
-              id="ia-consulta"
-              value={consulta}
-              onChange={(event) => setConsulta(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault();
-                  formRef.current?.requestSubmit();
-                }
-              }}
-              rows={2}
-              maxLength={2000}
-              placeholder="Escribe tu consulta…"
-              className="min-h-11 min-w-0 flex-1 resize-none rounded-lg border border-border bg-background px-3 py-2 text-sm text-text-primary outline-none placeholder:text-text-muted focus:border-secondary focus:ring-2 focus:ring-secondary"
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !consulta.trim()}
-              className="rounded-lg bg-primary px-3 py-2 text-sm font-semibold text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              Enviar
-            </button>
+            <div className="rounded-lg border border-border bg-background p-2 focus-within:border-secondary focus-within:ring-2 focus-within:ring-secondary">
+              <textarea
+                ref={inputRef}
+                id="ia-consulta"
+                value={consulta}
+                onChange={(event) => setConsulta(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" && !event.shiftKey) {
+                    event.preventDefault();
+                    formRef.current?.requestSubmit();
+                  }
+                }}
+                rows={1}
+                maxLength={2000}
+                placeholder="Escribe tu consulta…"
+                className="block max-h-40 min-h-[44px] w-full resize-y bg-transparent px-1 py-1 text-sm text-text-primary outline-none placeholder:text-text-muted"
+              />
+              <div className="mt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={isLoading || !consulta.trim()}
+                  className="rounded-md bg-primary px-3 py-1.5 text-sm font-semibold text-on-primary hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Enviar
+                </button>
+              </div>
+            </div>
           </form>
         </section>
       )}

@@ -9,22 +9,23 @@
   --brand-accent: #b98b7b;
   --white: #ffffff;
   --black: #000000;
-  --light-background: #f7f8fa;
+  --light-background: #f5f6fa;
   --light-muted: #64748b;
-  --light-border: #e2e8f0;
+  --light-border: #e1e6ed;
   --light-accent-surface: #faf5f3;
   --light-error: #b91c1c;
   --scrollbar-track: var(--surface-muted);
-  --scrollbar-thumb: color-mix(in srgb, var(--primary) 35%, var(--secondary) 65%);
-  --scrollbar-thumb-hover: var(--secondary-strong);
+  --scrollbar-thumb: color-mix(in srgb, var(--primary) 60%, transparent);
+  --scrollbar-thumb-hover: var(--primary);
 
   --background: var(--light-background);
   --background-subtle: #eef2f6;
-  --surface: var(--white);
+  --surface: rgba(255, 255, 255, 0.92);
   --surface-muted: #f1f4f7;
+  --table-stripe: #f4f7fb;
   --foreground: var(--brand-primary);
   --text: var(--foreground);
-  --text-primary: var(--foreground);
+  --text-primary: #263650;
   --text-muted: var(--light-muted);
   --border: var(--light-border);
   --border-muted: #cbd5e1;
@@ -49,17 +50,52 @@
   --error: var(--light-error);
   --error-surface: #fef2f2;
   --error-border: #fecaca;
---overlay: #252f4688;
+  --overlay: #252f4688;
   --overlay-hover: #252f46cc;
+
+  /* Escala de radios (sistema visual compartido) */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 17px;
+  --radius-xl: 24px;
+  --radius-pill: 9999px;
+
+  /* Superficies y paneles */
+  --panel-bg: rgba(255, 255, 255, 0.92);
+  --panel-border: 1px solid #e5e9ef;
+  --card-gradient-neutral: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
+  --chat-panel-bg: rgba(255, 255, 255, 0.84);
+
+  /* Indicadores */
+  --indicator-primary-bg: linear-gradient(135deg, #273653 0%, #1d2c48 100%);
+  --indicator-primary-border: 1px solid #273653;
+  --indicator-primary-text: #ffffff;
+  --indicator-secondary-bg: linear-gradient(135deg, #f4e9e4 0%, #f0e4df 100%);
+  --indicator-secondary-border: 1px solid #eadbd5;
+  --indicator-secondary-text: #263650;
+  --indicator-neutral-bg: linear-gradient(180deg, #ffffff 0%, #f0f4f8 100%);
+  --indicator-neutral-border: 1px solid #e1e6ed;
+  --indicator-neutral-text: #263650;
+  --indicator-icon-bg: rgba(255, 255, 255, 0.18);
+  --indicator-icon-bg-soft: rgba(38, 54, 80, 0.06);
+
+  /* Bordes compartidos */
+  --border-neutral: 1px solid #e1e6ed;
+  --border-warm: 1px solid #eadbd5;
+
+  /* Sombras compartidas */
+  --shadow-card-token: 0 5px 16px rgba(32, 48, 75, 0.04);
+  --shadow-panel-token: 0 12px 34px rgba(30, 47, 73, 0.06);
+
   --shadow-dialog: #252f4626;
   --shadow-modal: #252f4626;
   --shadow-overlay: #252f461a;
-  --shadow-card: #252f4614;
+  --shadow-card: var(--shadow-card-token);
   --shadow-soft: #252f4608;
   --modal-backdrop-blur: 8px;
   --modal-backdrop-opacity: 0.55;
   --modal-shadow: var(--shadow-modal);
-  --modal-backdrop-blur: 8px;
   --modal-backdrop-color: rgba(37, 47, 70, 0.55);
 
   /* Las exportaciones conservan una paleta clara en ambos temas. */
@@ -103,9 +139,9 @@
 
 
   /* Radios usados en controles, tarjetas y diálogos */
-  --control-radius: 0.5rem;
-  --card-radius: 0.75rem;
-  --dialog-radius: 1rem;
+  --control-radius: var(--radius-sm);
+  --card-radius: var(--radius-lg);
+  --dialog-radius: var(--radius-lg);
 
   color-scheme: light;
 }
@@ -116,9 +152,11 @@
 :root.dark {
   --background: #091426;
   --background-subtle: #263349;
-  --surface: #0d1728;
+  --surface: rgba(13, 23, 40, 0.92);
   --surface-muted: #263349;
+  --table-stripe: #1a2740;
   --foreground: #edf1f7;
+  --text-primary: #edf1f7;
   --text-muted: #bac5d6;
   --border: #43516a;
   --border-muted: #52617a;
@@ -134,9 +172,37 @@
   --error: #ffc4c8;
   --error-surface: #49252e;
   --error-border: #83505a;
-  --scrollbar-thumb: color-mix(in srgb, var(--secondary) 60%, var(--surface-muted));
-  --scrollbar-thumb-hover: color-mix(in srgb, var(--secondary) 78%, var(--surface-muted));
+  --scrollbar-thumb: color-mix(in srgb, #6f93c9 65%, var(--primary));
+  --scrollbar-thumb-hover: color-mix(in srgb, #8fb0de 75%, var(--primary));
   --overlay: #060b14b8;
+
+  /* Superficies y paneles */
+  --panel-bg: rgba(13, 23, 40, 0.92);
+  --panel-border: 1px solid #43516a;
+  --card-gradient-neutral: linear-gradient(180deg, #101c30 0%, #18253a 100%);
+  --chat-panel-bg: rgba(13, 23, 40, 0.84);
+
+  /* Indicadores */
+  --indicator-primary-bg: linear-gradient(135deg, #273653 0%, #1d2c48 100%);
+  --indicator-primary-border: 1px solid #52617a;
+  --indicator-primary-text: #ffffff;
+  --indicator-secondary-bg: linear-gradient(135deg, #3a3133 0%, #322a2c 100%);
+  --indicator-secondary-border: 1px solid #5a4a4d;
+  --indicator-secondary-text: #f3e8e4;
+  --indicator-neutral-bg: linear-gradient(180deg, #101c30 0%, #18253a 100%);
+  --indicator-neutral-border: 1px solid #43516a;
+  --indicator-neutral-text: #edf1f7;
+  --indicator-icon-bg: rgba(255, 255, 255, 0.12);
+  --indicator-icon-bg-soft: rgba(237, 241, 247, 0.08);
+
+  /* Bordes compartidos */
+  --border-neutral: 1px solid #43516a;
+  --border-warm: 1px solid #5a4a4d;
+
+  /* Sombras compartidas */
+  --shadow-card-token: 0 5px 16px rgba(0, 0, 0, 0.22);
+  --shadow-panel-token: 0 12px 34px rgba(0, 0, 0, 0.28);
+
   color-scheme: dark;
 }
 
@@ -232,6 +298,11 @@ body {
 
 * {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+table tbody tr:nth-child(even) > td,
+table tbody tr:nth-child(even) > th {
+  background: var(--table-stripe);
 }
 
 ::-webkit-scrollbar-thumb {

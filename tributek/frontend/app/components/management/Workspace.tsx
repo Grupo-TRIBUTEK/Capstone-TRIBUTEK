@@ -232,7 +232,6 @@ export default function Workspace({ view }: { view: View }) {
   const [periodValue, setPeriod] = useState("");
   const period = periodValue || (store.ready ? today().slice(0, 7) : "2026-09");
   const [search, setSearch] = useState("");
-  const featured = useFeaturedClient();
   const [periodPickerOpen, setPeriodPickerOpen] = useState(false);
   const [concept, setConcept] = useState("");
   const [status, setStatus] = useState("");
@@ -254,6 +253,7 @@ export default function Workspace({ view }: { view: View }) {
   const [gestiones, setGestiones] = useState<
     { id: string; clienteId: string; parentId: string | null; titulo: string; estado: string }[]
   >([]);
+  const featured = useFeaturedClient();
   const [paymentFilter, setPaymentFilter] = useState("");
   const allPayments = false;
 
@@ -377,7 +377,8 @@ const isServerView =
   });
 
   const visible = clients.filter(
-    (c) => (!featured.only || featured.isFeatured(c.rut)) &&
+    (c) =>
+      (!featured.only || featured.isFeatured(c.rut)) &&
       `${c.name} ${c.rut}`.toLocaleLowerCase("es").includes(search.toLocaleLowerCase("es")) &&
       (!machine || c.machine === machine) &&
       (!active || (active === "active") === c.active) &&
@@ -387,7 +388,6 @@ const isServerView =
           ? debt(vista, c.id, period, [concept as Concept])
           : balance(vista, getMonth(vista, c.id, period), concept as Concept)) > 0),
   );
-
   visible.sort((a, b) => Number(featured.isFeatured(b.rut)) - Number(featured.isFeatured(a.rut)));
 
   const openDeferrals = metaVista.deferrals.filter((d) => d.period <= period && deferralBalance(vista, d) > 0);
@@ -608,59 +608,82 @@ const isServerView =
           <p className="tk-subtle">{viewDescriptions[view]}</p>
         </div>
         <div className="tk-actions">
-          <button onClick={() => setHidden(!hidden)}><Icon name={hidden ? "eye" : "eyeOff"} className="h-4 w-4" />{hidden ? "Mostrar montos" : "Ocultar montos"}</button>
-          {view === "clientes" && <button className="primary" onClick={() => setClientModal("new")}>Nuevo cliente</button>}
           {view === "pagos" && <button className="primary" disabled={!clients.length} onClick={() => { setEditingPayment(undefined); setPaymentClient(clients[0]?.id || ""); }}>Registrar pago</button>}
         </div>
       </header>
-      {clients.find(c => featured.isFeatured(c.rut)) && (() => {
-        const c = clients.find(c => featured.isFeatured(c.rut))!;
-        return <section className="tk-featured-context" aria-label="Cliente destacado"><div><span className="tk-eyebrow">Cliente destacado</span><strong>{c.name}</strong><span>{c.rut} · {periodLabel(period)}</span></div><div className="tk-actions"><button onClick={() => setSelected({ client: c, data: vista })}>Abrir ficha</button><Link className="tk-button" href="/admin/f29">Ver proyección F29</Link></div></section>;
-      })()}
+      <hr className="tk-header-divider" />
       {load === "error" && <div role="alert" className="tk-error">{error} <button onClick={() => { setLoad("loading"); setReload((n) => n + 1); setError(""); }}>Reintentar</button></div>}
       {notice && <p role="status" className="tk-success"><StatusMessage text={notice} /> <button onClick={() => setNotice("")}>Cerrar</button></p>}
-      {view !== "inicio" && <div className="tk-toolbar">
+      {(view === "clientes" || view === "obligaciones") && (
+        <section
+          className="tk-metrics-group"
+          aria-label={view === "clientes" ? `Resumen de clientes - ${periodLabel(period)}` : `Resumen de obligaciones del período - ${periodLabel(period)}`}
+        >
+          <h2 className="tk-metrics-group-label">
+            {view === "clientes" ? <>Resumen de clientes - <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
+          </h2>
+          <div className="tk-metrics">
+            <Metric icon="users" label="Clientes visibles" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>
+            <Metric icon="wallet" label="Con deuda de servicios" help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric icon="calculator" label="Deuda acumulada con TRIBUTEK" help="Suma de los saldos pendientes de los clientes visibles hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
+          </div>
+        </section>
+      )}
+      {view !== "inicio" && (
+        <section className="tk-filters">
+          <h2 className="tk-filters-title"><Icon name="filter" className="tk-filters-title-icon h-4 w-4" />Filtros</h2>
+          <div className="tk-toolbar">
         <Field label={view === "pagos" ? "Mes de recepción" : "Período de trabajo"}>
           <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
             {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
           </button>
-          <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); setPeriodPickerOpen(false); } }} onBlur={(e) => { if (!(e.relatedTarget as HTMLElement | null)?.classList.contains("tk-period-btn")) setPeriodPickerOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") setPeriodPickerOpen(false); }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
+          <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setPeriodPickerOpen(false); setSelected(null); } }} onBlur={() => setPeriodPickerOpen(false)} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
         </Field>
         <label className="tk-field search"><span>Buscar cliente o RUT</span><input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Razón social o RUT" /></label>
         {(view === "clientes" || view === "obligaciones") && (
           <>
-            <details className="tk-details"><summary>Más filtros</summary><div className="tk-actions">
+            <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
             <Field label="Concepto pendiente"><select value={concept} onChange={(e) => setConcept(e.target.value)}><option value="">Todos</option>{(view === "clientes" ? receivables : concepts).map((c) => <option key={conceptLabel(c)} value={c}>{conceptLabel(c)}</option>)}</select></Field>
-              <Field label="Estado del mes"><select value={status} onChange={(e) => setStatus(e.target.value)}><option value="">Todos</option>{["NO ENVIADO", "ENVIADO", "PAGADO"].map((s) => <option key={s}>{s}</option>)}</select></Field>
+            <details className="tk-details">
+              <summary>Más filtros{[machine, active, featured.only].filter(Boolean).length > 0 ? ` (${[machine, active, featured.only].filter(Boolean).length})` : ""}</summary>
+              <div className="tk-more-filters">
               <Field label="Máquina"><select value={machine} onChange={(e) => setMachine(e.target.value)}><option value="">Todas</option>{Array.from(new Set(clients.map((c) => c.machine).filter(Boolean))).map((m) => <option key={m}>{m}</option>)}</select></Field>
               <Field label="Clientes"><select value={active} onChange={(e) => setActive(e.target.value)}><option value="">Activos e inactivos</option><option value="active">Activos</option><option value="inactive">Inactivos</option></select></Field>
-            </div></details>
+              <FeaturedFilter />
+              {(machine || active || featured.only) && <button type="button" className="tk-clear-filters" onClick={() => { setMachine(""); setActive(""); featured.setOnly(false); }}>Limpiar</button>}
+              </div>
+            </details>
           </>
         )}
-      </div>}
+          </div>
+        </section>
+      )}
             <div className="tk-content">
         {load === "loading" && <p role="status" className="tk-subtle">Cargando datos de TRIBUTEK…</p>}
         {view === "inicio" && (
         <>
-          <section className="tk-metrics-group tk-home-metrics-group" aria-label="Resumen del periodo">
+          <section className="tk-metrics-group tk-home-metrics-group" aria-label={`Resumen del mes - ${periodLabel(period)}`}>
             <div className="tk-home-metrics-heading">
-              <h2 className="tk-metrics-group-label">Resumen del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></h2>
-              <Field label="Período de trabajo">
-                <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
-                  {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
-                </button>
-                <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setSelected(null); setPeriodPickerOpen(false); } }} onBlur={(e) => { if (!(e.relatedTarget as HTMLElement | null)?.classList.contains("tk-period-btn")) setPeriodPickerOpen(false); }} onKeyDown={(e) => { if (e.key === "Escape") setPeriodPickerOpen(false); }} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
-              </Field>
+              <h2 className="tk-metrics-group-label">Resumen del mes - <span className="tk-period-heading-label">{periodLabel(period)}</span></h2>
+              <div className="tk-home-metrics-actions">
+                <Field label="Período de trabajo">
+                  <button type="button" className="tk-period-btn" onClick={togglePeriodPicker}>
+                    {period ? period.slice(0, 7) : "Seleccionar período"} <Icon name="calendar" className="h-4 w-4" />
+                  </button>
+                  <input type="month" className="tk-period-input" min="2000-01" max="2100-12" value={period} onChange={(e) => { if (e.target.value) { setPeriod(e.target.value); setPeriodPickerOpen(false); setSelected(null); } }} onBlur={() => setPeriodPickerOpen(false)} style={{ position: "absolute", opacity: 0, width: 0, height: 0, pointerEvents: "none" }} />
+                </Field>
+                <button type="button" className="tk-icon-button" onClick={() => setHidden(!hidden)} aria-label={hidden ? "Mostrar montos" : "Ocultar montos"} title={hidden ? "Mostrar montos" : "Ocultar montos"}><Icon name={hidden ? "eye" : "eyeOff"} className="h-4 w-4" /></button>
+              </div>
             </div>
             <div className="tk-home-metrics-rows">
               <div className="tk-home-metrics-row">
-            <Metric label="Recibido por servicios" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
-            <Metric label="Reembolsos recibidos" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
-            <Metric label="Postergaciones pendientes" help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
+            <Metric icon="trendingUp" label="Ingresos por servicios" className="tk-metric-primary" help="Suma de los pagos recibidos durante el período seleccionado y registrados como servicios. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.services} hidden={hidden} /></Metric>
+            <Metric icon="refresh" label="Reembolsos recibidos" className="tk-metric-secondary" help="Suma de los abonos registrados como cobranza durante el período, excluidos los destinados a instituciones. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={received.reimbursements} hidden={hidden} /></Metric>
+            <Metric icon="clock" label="Postergaciones por revisar" className="tk-metric-secondary" help="Suma de los saldos pendientes de postergaciones con período igual o anterior al seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={openDeferrals.reduce((s, d) => s + deferralBalance(vista, d), 0)} hidden={hidden} /></Metric>
               </div>
               <div className="tk-home-metrics-row">
-            <Metric label="Clientes con deuda de servicios" className="tk-home-metric-debt" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-            <Metric label="Obligaciones no enviadas" help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{pendingMonths.length}</Metric>
+            <Metric icon="wallet" label="Clientes con pagos pendientes" className="tk-home-metric-debt" help="Cantidad de clientes con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{clients.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
+            <Metric icon="send" label="Obligaciones por enviar" help="Cantidad de clientes con un registro del período seleccionado cuyo estado es “No enviado”. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{pendingMonths.length}</Metric>
               </div>
             </div>
           </section>
@@ -697,22 +720,8 @@ const isServerView =
       )}
       {(view === "clientes" || view === "obligaciones") && (
         <>
-          <section
-            className="tk-metrics-group"
-            aria-label={view === "clientes" ? `Resumen de clientes - ${periodLabel(period)}` : `Resumen de obligaciones del período - ${periodLabel(period)}`}
-          >
-            <h2 className="tk-metrics-group-label">
-              {view === "clientes" ? <>Resumen de clientes - <span className="tk-period-heading-label">{periodLabel(period)}</span></> : <>Resumen de obligaciones del período - <span className="tk-period-heading-label">{periodLabel(period)}</span></>}
-            </h2>
-            <div className="tk-metrics">
-              <Metric label="Clientes visibles" help="Cantidad de clientes que coinciden con la búsqueda y los filtros actuales.">{visible.length}</Metric>
-              <Metric label="Con deuda de servicios" help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada.">{visible.filter((c) => debt(vista, c.id, period, services) > 0).length}</Metric>
-              <Metric label="Deuda acumulada con TRIBUTEK" help="Suma de los saldos pendientes de los clientes visibles hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
-            </div>
-          </section>
           <section className="tk-card">
-            <div className="tk-card-head"><h2>Clientes</h2></div>
-            <div className="tk-panel"><FeaturedFilter /></div>
+            <div className="tk-card-head"><h2>Clientes</h2>{view === "clientes" && <button className="primary" onClick={() => setClientModal("new")}><Icon name="plus" className="h-4 w-4" />Nuevo cliente</button>}</div>
             <div className="tk-table-wrap">
               <table><thead><tr><th>Cliente</th><th>RUT</th><th>Deuda acumulada</th><th>Estado del mes</th><th>Estado</th><th>Máquina</th><th>Honorario</th><th></th></tr></thead><tbody>
                 {visible.map((c) => {
@@ -723,7 +732,12 @@ const isServerView =
                   const deuda = debt(vista, c.id, period);
                   return (
                     <tr key={c.id} className={featured.isFeatured(c.rut) ? "tk-featured-row" : undefined}>
-                      <td><div className="tk-featured-name"><FeaturedStar rut={c.rut} name={c.name} /><div><strong>{c.name}</strong><small>{c.rut}</small>{featured.isFeatured(c.rut) && <FeaturedBadge />}</div></div></td>
+                      <td>
+                        <div className="tk-featured-name">
+                          <FeaturedStar rut={c.rut} name={c.name} />
+                          <div><strong>{c.name}</strong><small>{c.rut}</small>{featured.isFeatured(c.rut) && <FeaturedBadge />}</div>
+                        </div>
+                      </td>
                       <td>{c.rut}</td>
                       <td>{deuda > 0 ? <strong><Money value={deuda} hidden={hidden} /></strong> : <Money value={deuda} hidden={hidden} />}</td>
                       <td><Badge>{t.status}</Badge></td>
@@ -742,7 +756,7 @@ const isServerView =
               </tbody></table>
             </div>
             {load === "error" && <Empty>No se pudieron cargar los clientes desde TRIBUTEK. Revisa el mensaje de error y reintenta.</Empty>}
-            {!visible.length && load === "ready" && <Empty>{search || status || concept || featured.only ? "No hay clientes para estos filtros. Puedes mostrar todos o ajustar la búsqueda." : "No hay clientes registrados."}</Empty>}
+            {!visible.length && load === "ready" && <Empty>{search || status || concept || machine || active || featured.only ? "No hay clientes para estos filtros. Puedes mostrar todos o ajustar la búsqueda." : "No hay clientes registrados."}</Empty>}
           </section>
         </>
       )}

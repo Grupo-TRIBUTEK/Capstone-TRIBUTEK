@@ -119,7 +119,9 @@ export default function AuditWorkspace() {
           Actualizar historial
         </button>
       </header>
+      <hr className="tk-header-divider" />
       <form className="audit-filters" onSubmit={apply}>
+        <h2 className="tk-filters-title"><Icon name="filter" className="h-4 w-4" />Filtros</h2>
         <div className="audit-search-row">
         <label className="audit-search">
           Buscar

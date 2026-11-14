@@ -5,6 +5,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { reportTheme } from "../ui/reportTheme";
 import { money } from "../ficha/model";
+import Icon, { type IconName } from "../ui/Icon";
 
 const statusActionPattern =
   /\b(guardad[oa]s?|guardar|agregad[oa]s?|agregaron|agregar|actualizad[oa]s?|actualizar|procesad[oa]s?|procesar|compartir|comparte|copiad[oa]s?|copiar|eliminad[oa]s?|eliminar|registrad[oa]s?|registrar|descargad[oa]s?|descargar|importad[oa]s?|importar)\b/gi;
@@ -40,23 +41,31 @@ export function Badge({ children }: { children: ReactNode }) {
   return <span className={`tk-badge ${color}`}>{children}</span>;
 }
 /** Presenta cifra y etiqueta con título de ayuda. */
+/** Presenta cifra y etiqueta con ícono opcional usando tokens globales. */
 export function Metric({
   label,
   children,
   help,
+  icon,
   className = "",
 }: {
   label: string;
   children: ReactNode;
   help: string;
+  icon?: IconName;
   className?: string;
 }) {
   return (
-    <div className={`tk-metric ${className}`}>
+    <div className={`tk-metric ${className}`} title={help}>
       <div className="tk-metric-heading">
-        <span title={help}>{label}</span>
+        <span className="tk-metric-label">{label}</span>
+        {icon ? (
+          <span className="tk-metric-icon" aria-hidden="true">
+            <Icon name={icon} className="h-4 w-4" />
+          </span>
+        ) : null}
       </div>
-      <strong>{children}</strong>
+      <strong className="tk-metric-value">{children}</strong>
     </div>
   );
 }

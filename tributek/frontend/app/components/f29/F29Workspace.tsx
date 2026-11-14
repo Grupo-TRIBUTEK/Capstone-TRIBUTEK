@@ -285,6 +285,7 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
         setDraft(null);
         setDirty(false);
     } }}>Volver al panel</button>}</header>
+    <hr className="tk-header-divider" />
     
     {directoryError && <p role="alert" className="f29-error">{directoryError} La lista se actualizará automáticamente al recuperar la conexión.</p>}
     {directory === null && !directoryError && <p role="status">Cargando clientes de TRIBUTEK…</p>}
@@ -294,12 +295,15 @@ const warn = (e: BeforeUnloadEvent) => { e.preventDefault(); }; window.addEventL
     <input hidden type="file" ref={csvInput} accept=".csv" multiple onChange={e => attempt(() => receivedFiles(e))}/>
     <input hidden type="file" ref={restoreInput} accept=".json" onChange={e => attempt(() => restore(e))}/>
     {!active ? <>
-      <div className="f29-toolbar"><label>Período de trabajo<button type="button" className="tk-period-btn" onClick={() => { periodInput.current?.showPicker?.(); periodInput.current?.focus(); }}>
+      <section className="f29-filters">
+        <h2 className="tk-filters-title"><Icon name="filter" className="h-4 w-4" />Filtros</h2>
+        <div className="f29-toolbar"><label>Período de trabajo<button type="button" className="tk-period-btn" onClick={() => { periodInput.current?.showPicker?.(); periodInput.current?.focus(); }}>
             {period ? period : 'Seleccionar período'} <Icon name="calendar" className="h-4 w-4" />
           </button><input ref={periodInput} type="month" className="f29-period-input" value={period} min="2000-01" max="2099-12" onChange={e => { if (validPeriod(e.target.value)) {
             setPeriod(e.target.value);
             setAvailable({});
         } }} style={{ position: 'absolute', opacity: 0, width: 0, height: 0, pointerEvents: 'none' }}/></label><label className="f29-grow">Buscar cliente o RUT<input value={search} onChange={e => setSearch(e.target.value)} placeholder="Razón social o RUT"/></label></div>
+      </section>
       <div className="f29-actions"><button className="f29-primary" onClick={() => attempt(startMonth)}>Iniciar mes</button><Link className="tk-button" href="/admin/clientes">Gestionar clientes</Link><button disabled={busy} onClick={() => attempt(() => locate(true, true))}>Actualizar estados</button><button disabled={!currentClients.length || busy} onClick={() => attempt(() => locate(true))}>Procesar todos</button></div>
       <section className="f29-folder"><div><strong>Carpeta RCV global</strong><p>{folder}</p></div><button onClick={() => attempt(async () => { await chooseFolder(); })}>Configurar carpeta RCV</button><button onClick={() => csvInput.current?.click()}>Importar CSV</button></section>
       <FeaturedFilter />
