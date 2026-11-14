@@ -20,8 +20,9 @@
 
   --background: var(--light-background);
   --background-subtle: #eef2f6;
-  --surface: rgba(255, 255, 255, 0.92);
+  --surface: #ffffff;
   --surface-muted: #f1f4f7;
+  --surface-elevated: #eef2f6;
   --table-stripe: #f4f7fb;
   --foreground: var(--brand-primary);
   --text: var(--foreground);
@@ -62,17 +63,17 @@
   --radius-pill: 9999px;
 
   /* Superficies y paneles */
-  --panel-bg: rgba(255, 255, 255, 0.92);
+  --panel-bg: #ffffff;
   --panel-border: 1px solid #e5e9ef;
   --card-gradient-neutral: linear-gradient(180deg, #ffffff 0%, #f7f9fc 100%);
-  --chat-panel-bg: rgba(255, 255, 255, 0.84);
+  --chat-panel-bg: #ffffff;
 
   /* Indicadores */
   --indicator-primary-bg: linear-gradient(135deg, #273653 0%, #1d2c48 100%);
   --indicator-primary-border: 1px solid #273653;
   --indicator-primary-text: #ffffff;
-  --indicator-secondary-bg: linear-gradient(135deg, #f4e9e4 0%, #f0e4df 100%);
-  --indicator-secondary-border: 1px solid #eadbd5;
+  --indicator-secondary-bg: #E2E8F0;
+  --indicator-secondary-border: 1px solid #cbd5e1;
   --indicator-secondary-text: #263650;
   --indicator-neutral-bg: linear-gradient(180deg, #ffffff 0%, #f0f4f8 100%);
   --indicator-neutral-border: 1px solid #e1e6ed;
@@ -152,8 +153,9 @@
 :root.dark {
   --background: #091426;
   --background-subtle: #263349;
-  --surface: rgba(13, 23, 40, 0.92);
+  --surface: #0d1728;
   --surface-muted: #263349;
+  --surface-elevated: #263349;
   --table-stripe: #1a2740;
   --foreground: #edf1f7;
   --text-primary: #edf1f7;
@@ -177,18 +179,18 @@
   --overlay: #060b14b8;
 
   /* Superficies y paneles */
-  --panel-bg: rgba(13, 23, 40, 0.92);
+  --panel-bg: #0d1728;
   --panel-border: 1px solid #43516a;
   --card-gradient-neutral: linear-gradient(180deg, #101c30 0%, #18253a 100%);
-  --chat-panel-bg: rgba(13, 23, 40, 0.84);
+  --chat-panel-bg: #0d1728;
 
   /* Indicadores */
   --indicator-primary-bg: linear-gradient(135deg, #273653 0%, #1d2c48 100%);
   --indicator-primary-border: 1px solid #52617a;
   --indicator-primary-text: #ffffff;
-  --indicator-secondary-bg: linear-gradient(135deg, #3a3133 0%, #322a2c 100%);
-  --indicator-secondary-border: 1px solid #5a4a4d;
-  --indicator-secondary-text: #f3e8e4;
+  --indicator-secondary-bg: #E2E8F0;
+  --indicator-secondary-border: 1px solid #cbd5e1;
+  --indicator-secondary-text: #263650;
   --indicator-neutral-bg: linear-gradient(180deg, #101c30 0%, #18253a 100%);
   --indicator-neutral-border: 1px solid #43516a;
   --indicator-neutral-text: #edf1f7;
@@ -298,6 +300,11 @@ body {
 
 * {
   scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+table tbody tr:nth-child(even) > td,
+table tbody tr:nth-child(even) > th {
+  background: var(--table-stripe);
 }
 
 table tbody tr:nth-child(even) > td,

@@ -195,17 +195,17 @@ export default function PortalHome() {
             </div>
             <div className="flex flex-col items-start justify-center p-6 md:p-8">
               <p className="text-body-sm font-semibold text-secondary-strong">
-                Próximamente
+                Material disponible
               </p>
               <p className="mt-2 text-body leading-relaxed text-text-muted">
-                Aquí podrás consultar el material de la presentación disponible en el
-                portal.
+                Consulta las presentaciones y tutoriales en PDF disponibles en el portal,
+                organizados por categoría.
               </p>
               <Link
                 href="/cliente/presentaciones"
                 className="mt-5 inline-flex min-h-10 items-center rounded-lg bg-primary px-4 py-2 text-body-sm font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               >
-                Ver presentación
+                Ver presentaciones
               </Link>
             </div>
           </article>

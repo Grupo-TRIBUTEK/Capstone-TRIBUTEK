@@ -239,7 +239,7 @@ export default function ClientCreateModal({
 
   return (
     <div
-      className="tributek-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-primary/55 p-4 sm:p-8"
+      className="tributek-overlay fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-overlay p-4 sm:p-6"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) requestClose();
@@ -407,13 +407,13 @@ export default function ClientCreateModal({
       </section>
 
       {showDiscardConfirmation && (
-        <div className="tributek-overlay fixed inset-0 z-[60] flex items-center justify-center bg-primary/40 p-4" role="presentation">
-          <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-xl bg-surface p-6 shadow-2xl">
-            <h3 id="discard-title" className="text-lg font-bold text-text-primary">¿Deseas salir?</h3>
+        <div className="tributek-overlay fixed inset-0 z-[60] flex items-center justify-center bg-overlay p-4" role="presentation">
+          <section role="alertdialog" aria-modal="true" aria-labelledby="discard-title" className="w-full max-w-sm rounded-[var(--radius-lg)] border border-border bg-surface p-6 shadow-[var(--shadow-panel-token)]">
+            <h3 id="discard-title" className="text-lg font-semibold text-primary">¿Deseas salir?</h3>
             <p className="mt-2 text-sm text-text-muted">Los datos ingresados se perderán.</p>
-            <div className="mt-6 flex justify-end gap-3">
-              <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="rounded-lg border border-border px-4 py-2.5 text-sm font-semibold text-text-primary">Continuar editando</button>
-              <button type="button" onClick={onClose} className="button-destructive rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors">Salir</button>
+            <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button type="button" onClick={() => setShowDiscardConfirmation(false)} className="inline-flex h-11 items-center justify-center rounded-[var(--radius-sm)] border border-border bg-surface px-4 text-sm font-semibold text-text-primary hover:bg-surface-muted">Continuar editando</button>
+              <button type="button" onClick={onClose} className="button-destructive inline-flex h-11 items-center justify-center rounded-[var(--radius-sm)] px-4 text-sm font-semibold transition-colors">Salir</button>
             </div>
           </section>
         </div>
@@ -422,14 +422,17 @@ export default function ClientCreateModal({
   );
 }
 
-const inputClassName = "h-11 w-full rounded-lg border border-border bg-surface px-3 text-sm text-text-primary outline-none focus:border-secondary focus:ring-2 focus:ring-secondary";
+const inputClassName = "h-11 w-full rounded-[var(--radius-sm)] border border-border bg-surface px-3 text-sm text-text-primary outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20";
 
 /** Agrupa etiqueta, control y marca de campo requerido del formulario. */
-function Field({ label, required, className = "", children }: { label: string; required?: boolean; className?: string; children: React.ReactNode }) {
+function Field({ label, required, className = "", hint, hintId, children }: { label: string; required?: boolean; className?: string; hint?: string; hintId?: string; children: React.ReactNode }) {
   return (
-    <label className={`block text-sm font-medium text-text-primary ${className}`}>
-      <span>{label}{required && <span className="ml-1 text-error" aria-hidden="true">*</span>}</span>
-      <span className="mt-1.5 block">{children}</span>
-    </label>
+    <div className={`block ${className}`}>
+      <label className="block text-sm font-medium text-text-primary">
+        <span>{label}{required && <span className="ml-1 text-error" aria-hidden="true">*</span>}</span>
+        <span className="mt-1.5 block">{children}</span>
+      </label>
+      {hint && <p id={hintId} className="mt-1.5 text-xs text-text-muted">{hint}</p>}
+    </div>
   );
 }

@@ -22,6 +22,7 @@ export default function IaAssistant() {
   const ocupado = useRef(false)
   const [hasSession, setHasSession] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [consulta, setConsulta] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,25 +113,36 @@ export default function IaAssistant() {
   }
 
   return (
-    <div data-ia-assistant className="fixed bottom-4 right-4 z-40 flex flex-col items-end gap-3 sm:bottom-6 sm:right-6">
+    <div data-ia-assistant className="fixed bottom-6 right-6 z-40 flex flex-col items-end gap-3 max-sm:bottom-5 max-sm:right-5">
       {isOpen && (
         <section
           aria-label="Asistente IA"
-          className="flex h-[min(32rem,calc(100dvh-7rem))] w-[min(23rem,calc(100vw-2rem))] flex-col overflow-hidden border border-border text-text-primary shadow-xl backdrop-blur-md"
-          style={{ background: "var(--chat-panel-bg)", borderRadius: "var(--radius-xl)" }}
+          className={`flex w-[min(23rem,calc(100vw-2.5rem))] flex-col overflow-hidden border border-border bg-surface text-text-primary shadow-xl ${isExpanded ? "h-[min(48rem,calc(100dvh-7rem))]" : "h-[min(32rem,calc(100dvh-7rem))]"}`}
+          style={{ borderRadius: "var(--radius-xl)" }}
         >
-          <header className="flex items-center justify-between border-b border-border bg-background-subtle px-4 py-3">
+          <header className="flex items-center justify-between border-b border-border bg-surface-elevated px-4 py-3">
             <div>
               <h2 className="font-semibold">Asistente TRIBUTEK</h2>
             </div>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Cerrar asistente"
-              className="rounded-md px-2 py-1 text-xl text-text-muted hover:bg-surface-muted"
-            >
-              ×
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setIsExpanded((v) => !v)}
+                aria-label={isExpanded ? "Reducir chat" : "Expandir chat verticalmente"}
+                title={isExpanded ? "Reducir chat" : "Expandir chat verticalmente"}
+                className="rounded-md px-2 py-1 text-sm text-text-muted hover:bg-surface-muted"
+              >
+                {isExpanded ? "↓" : "↑"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Cerrar asistente"
+                className="rounded-md px-2 py-1 text-xl text-text-muted hover:bg-surface-muted"
+              >
+                ×
+              </button>
+            </div>
           </header>
           <div className="flex justify-end border-b border-border px-4 py-2">
             <button type="button" disabled={isLoading} className="text-xs text-text-muted hover:underline disabled:opacity-50" onClick={() => { setMessages([])
@@ -145,12 +157,22 @@ export default function IaAssistant() {
               </p>
             )}
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`max-w-[90%] whitespace-pre-wrap rounded-xl px-3 py-2 text-sm ${message.role === "user" ? "ml-auto bg-primary text-on-primary" : "mr-auto bg-background-subtle text-text-primary"}`}
-              >
-                {message.text}
-              </div>
+              message.role === "assistant" ? (
+                <div key={message.id} className="mr-auto flex max-w-[90%] items-start gap-2">
+                  <img src="/icons/tributek-chatbot-esfera-clara.svg" alt="" aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0 dark:hidden" />
+                  <img src="/icons/tributek-chatbot-esfera.svg" alt="" aria-hidden="true" className="mt-0.5 hidden h-5 w-5 shrink-0 dark:block" />
+                  <div className="whitespace-pre-wrap rounded-xl bg-background-subtle px-3 py-2 text-sm text-text-primary">
+                    {message.text}
+                  </div>
+                </div>
+              ) : (
+                <div
+                  key={message.id}
+                  className="ml-auto max-w-[90%] whitespace-pre-wrap rounded-xl bg-primary px-3 py-2 text-sm text-on-primary"
+                >
+                  {message.text}
+                </div>
+              )
             ))}
             {isLoading && (
               <p className="text-sm text-text-muted" role="status">
@@ -202,12 +224,15 @@ export default function IaAssistant() {
       <button
         type="button"
         aria-expanded={isOpen}
-        aria-label={isOpen ? "Cerrar asistente IA" : "Abrir asistente IA"}
+        aria-label={isOpen ? "Cerrar asistente Tribu IA" : "Abrir asistente Tribu IA"}
         onClick={() => setIsOpen((open) => !open)}
-        className="flex h-14 items-center gap-2 rounded-full bg-primary px-5 font-semibold text-on-primary shadow-lg transition-transform hover:scale-105 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary"
+        className="group relative flex h-14 items-center gap-3 overflow-hidden rounded-full bg-primary px-4 pr-5 font-semibold text-on-primary shadow-[0_8px_24px_rgba(32,48,75,0.16)] transition-[box-shadow,background-color,transform] duration-200 hover:scale-105 hover:shadow-[0_10px_28px_rgba(32,48,75,0.22)] hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-secondary max-sm:h-12 max-sm:gap-2.5 max-sm:px-3 max-sm:pr-4"
       >
-        <span aria-hidden="true">✦</span>
-        <span>Asistente IA</span>
+        <span className="relative inline-flex h-10 w-10 shrink-0 items-center justify-center max-sm:h-9 max-sm:w-9">
+          <img src="/icons/tributek-chatbot-esfera-clara.svg" alt="" aria-hidden="true" className="h-full w-full dark:hidden" />
+          <img src="/icons/tributek-chatbot-esfera.svg" alt="" aria-hidden="true" className="hidden h-full w-full dark:block" />
+        </span>
+        <span className="relative">Tribu IA</span>
       </button>
     </div>
   );
