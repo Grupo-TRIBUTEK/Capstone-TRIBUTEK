@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'d8445047d45ca198adf184c27a3a780c021cf626a55e17470ef1f7372a447582'>;
+  StorageHashBase<'d23484710c678a5a6fed677c04d7ddddb1534b97a60324259994f51656454f0a'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -480,6 +480,11 @@ export type FieldOutputTypes = {
       readonly activo: CodecTypes['pg/bool@1']['output'];
       readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly actualizadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly twoFactorEnabled: CodecTypes['pg/bool@1']['output'];
+      readonly twoFactorSecret: Varchar<255> | null;
+      readonly twoFactorTempSecret: Varchar<255> | null;
+      readonly twoFactorRecoveryHashes: Varchar<2000> | null;
+      readonly twoFactorSetupExpiresAt: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
     };
     readonly UsuarioCliente: {
       readonly usuarioId: CodecTypes['pg/int8@1']['output'];
@@ -730,6 +735,11 @@ export type FieldInputTypes = {
       readonly activo: CodecTypes['pg/bool@1']['input'];
       readonly creadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly actualizadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly twoFactorEnabled: CodecTypes['pg/bool@1']['input'];
+      readonly twoFactorSecret: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly twoFactorTempSecret: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly twoFactorRecoveryHashes: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly twoFactorSetupExpiresAt: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
     };
     readonly UsuarioCliente: {
       readonly usuarioId: CodecTypes['pg/int8@1']['input'];
@@ -985,6 +995,12 @@ export type StorageColumnTypes = {
       readonly nombre_usuario: Varchar<80>;
       readonly password_hash: Varchar<255>;
       readonly rol_id: CodecTypes['pg/int8@1']['output'];
+      readonly two_factor_enabled: CodecTypes['pg/bool@1']['output'];
+      readonly two_factor_recovery_hashes: Varchar<2000> | null;
+      readonly two_factor_secret: Varchar<255> | null;
+      readonly two_factor_setup_expires_at:
+        CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
+      readonly two_factor_temp_secret: Varchar<255> | null;
     };
   };
 };
@@ -1235,6 +1251,11 @@ export type StorageColumnInputTypes = {
       readonly nombre_usuario: CodecTypes['sql/varchar@1']['input'];
       readonly password_hash: CodecTypes['sql/varchar@1']['input'];
       readonly rol_id: CodecTypes['pg/int8@1']['input'];
+      readonly two_factor_enabled: CodecTypes['pg/bool@1']['input'];
+      readonly two_factor_recovery_hashes: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly two_factor_secret: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly two_factor_setup_expires_at: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
+      readonly two_factor_temp_secret: CodecTypes['sql/varchar@1']['input'] | null;
     };
   };
 };
@@ -3246,6 +3267,38 @@ type ContractBase = Omit<
                   readonly nullable: true;
                 };
                 readonly actualizado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
+                };
+                readonly two_factor_enabled: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', false>;
+                  };
+                };
+                readonly two_factor_secret: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 255 };
+                };
+                readonly two_factor_temp_secret: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 255 };
+                };
+                readonly two_factor_recovery_hashes: {
+                  readonly nativeType: 'character varying';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 2000 };
+                };
+                readonly two_factor_setup_expires_at: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-temporal@1';
                   readonly nullable: true;
@@ -5625,6 +5678,41 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/timestamptz-temporal@1';
                 };
               };
+              readonly twoFactorEnabled: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
+              readonly twoFactorSecret: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 255 };
+                };
+              };
+              readonly twoFactorTempSecret: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 255 };
+                };
+              };
+              readonly twoFactorRecoveryHashes: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/varchar@1';
+                  readonly typeParams: { readonly length: 2000 };
+                };
+              };
+              readonly twoFactorSetupExpiresAt: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
             };
             readonly relations: {
               readonly auditorias: {
@@ -5737,6 +5825,13 @@ type ContractBase = Omit<
                 readonly activo: { readonly column: 'activo' };
                 readonly creadoEn: { readonly column: 'creado_en' };
                 readonly actualizadoEn: { readonly column: 'actualizado_en' };
+                readonly twoFactorEnabled: { readonly column: 'two_factor_enabled' };
+                readonly twoFactorSecret: { readonly column: 'two_factor_secret' };
+                readonly twoFactorTempSecret: { readonly column: 'two_factor_temp_secret' };
+                readonly twoFactorRecoveryHashes: { readonly column: 'two_factor_recovery_hashes' };
+                readonly twoFactorSetupExpiresAt: {
+                  readonly column: 'two_factor_setup_expires_at';
+                };
               };
             };
           };

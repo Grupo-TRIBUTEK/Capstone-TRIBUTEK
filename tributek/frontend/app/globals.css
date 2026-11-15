@@ -188,9 +188,9 @@
   --indicator-primary-bg: linear-gradient(135deg, #273653 0%, #1d2c48 100%);
   --indicator-primary-border: 1px solid #52617a;
   --indicator-primary-text: #ffffff;
-  --indicator-secondary-bg: #E2E8F0;
-  --indicator-secondary-border: 1px solid #cbd5e1;
-  --indicator-secondary-text: #263650;
+  --indicator-secondary-bg: #334155;
+  --indicator-secondary-border: 1px solid #475569;
+  --indicator-secondary-text: #e2e8f0;
   --indicator-neutral-bg: linear-gradient(180deg, #101c30 0%, #18253a 100%);
   --indicator-neutral-border: 1px solid #43516a;
   --indicator-neutral-text: #edf1f7;

@@ -3450,6 +3450,50 @@
                   "codecId": "pg/int8@1",
                   "kind": "scalar"
                 }
+              },
+              "twoFactorEnabled": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "twoFactorRecoveryHashes": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 2000
+                  }
+                }
+              },
+              "twoFactorSecret": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 255
+                  }
+                }
+              },
+              "twoFactorSetupExpiresAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "twoFactorTempSecret": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/varchar@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 255
+                  }
+                }
               }
             },
             "relations": {
@@ -3617,6 +3661,21 @@
                 },
                 "rolId": {
                   "column": "rol_id"
+                },
+                "twoFactorEnabled": {
+                  "column": "two_factor_enabled"
+                },
+                "twoFactorRecoveryHashes": {
+                  "column": "two_factor_recovery_hashes"
+                },
+                "twoFactorSecret": {
+                  "column": "two_factor_secret"
+                },
+                "twoFactorSetupExpiresAt": {
+                  "column": "two_factor_setup_expires_at"
+                },
+                "twoFactorTempSecret": {
+                  "column": "two_factor_temp_secret"
                 }
               },
               "namespaceId": "public",
@@ -6252,6 +6311,44 @@
                   "codecId": "pg/int8@1",
                   "nativeType": "int8",
                   "nullable": false
+                },
+                "two_factor_enabled": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": false
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "two_factor_recovery_hashes": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 2000
+                  }
+                },
+                "two_factor_secret": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 255
+                  }
+                },
+                "two_factor_setup_expires_at": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "two_factor_temp_secret": {
+                  "codecId": "sql/varchar@1",
+                  "nativeType": "character varying",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 255
+                  }
                 }
               },
               "foreignKeys": [
@@ -6306,7 +6403,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d8445047d45ca198adf184c27a3a780c021cf626a55e17470ef1f7372a447582"
+    "storageHash": "d23484710c678a5a6fed677c04d7ddddb1534b97a60324259994f51656454f0a"
   },
   "capabilities": {
     "postgres": {

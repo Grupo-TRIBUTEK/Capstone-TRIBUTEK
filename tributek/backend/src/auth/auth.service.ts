@@ -1,33 +1,123 @@
-/**
- * Lógica de sesión, credenciales y permisos de acceso. Aquí se coordinan validaciones y operaciones del módulo.
- */
-//4: lógica del login.
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+﻿import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import * as argon2 from 'argon2';
 import 'temporal-polyfill/global';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
-import { JwtService } from '@nestjs/jwt'; // Nueva importacion de JWT para tockens
+import { JwtService } from '@nestjs/jwt';
+import { generateSecret, generateURI, verifySync } from 'otplib';
+import * as QRCode from 'qrcode';
+import { encryptSecret, readSecret } from './two-factor-crypto.js';
+import { randomBytes } from 'crypto';
 
-/**
- * Servicio encargado de gestionar la lógica de autenticación de los usuarios.
- *
- * Su función es recibir los datos enviados desde el controlador de autenticación,
- * consultar el usuario en la base de datos mediante Prisma y validar que la cuenta
- * exista y se encuentre activa.
- *
- * También se encarga de:
- * - Verificar la contraseña mediante Argon2.
- * - Generar el token de autenticación mediante JWT.
- */
+type ChallengePayload = { sub?: string; purpose?: string; jti?: string };
+const SETUP_TTL_MS = 10 * 60 * 1000; // 10 min
 
 @Injectable()
 export class AuthService {
+  // In-memory protections (single-instance/dev). For multi-instance, persist in DB/Redis.
+  private readonly loginChallenges = new Map<string, { sub: string; exp: number }>();
+  private readonly usedTotpSteps = new Map<string, number>(); // userId -> last accepted step
+  private readonly verifyAttempts = new Map<string, { count: number; resetAt: number }>();
+
   constructor(
     private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService, // Agregamos JWTService para poder generar tokens de autenticación.
+    private readonly jwtService: JwtService,
   ) {}
+
+  private challengeSecret(): string {
+    const secret = process.env['JWT_2FA_SECRET'];
+    if (!secret) {
+      throw new Error('JWT_2FA_SECRET must be configured.');
+    }
+    return secret;
+  }
+
+  private normalizeRecoveryCode(code: string): string {
+    return code.trim().toLowerCase().replace(/[\s-]/g, '');
+  }
+
+  private isRecoveryCodeFormat(code: string): boolean {
+    return /^[a-f0-9]{8,16}$/i.test(this.normalizeRecoveryCode(code));
+  }
+
+  private async hashRecoveryCode(code: string): Promise<string> {
+    return argon2.hash(this.normalizeRecoveryCode(code));
+  }
+
+  private async verifyRecoveryCode(code: string, hash: string): Promise<boolean> {
+    try {
+      return await argon2.verify(hash, this.normalizeRecoveryCode(code));
+    } catch {
+      return false;
+    }
+  }
+
+  private parseRecoveryHashes(stored: unknown): string[] {
+    if (typeof stored !== 'string' || !stored) return [];
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed.filter((h): h is string => typeof h === 'string') : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private serializeRecoveryHashes(hashes: string[]): string | null {
+    return hashes.length ? JSON.stringify(hashes) : null;
+  }
+
+  private setupExpired(expiresAt: unknown): boolean {
+    if (!expiresAt) return true;
+    try {
+      const t = expiresAt instanceof Date ? expiresAt.getTime() : Date.parse(String(expiresAt));
+      return !Number.isFinite(t) || t < Date.now();
+    } catch {
+      return true;
+    }
+  }
+
+  private checkRateLimit(key: string, max: number, windowMs: number) {
+    const now = Date.now();
+    const cur = this.verifyAttempts.get(key);
+    if (!cur || now > cur.resetAt) {
+      this.verifyAttempts.set(key, { count: 1, resetAt: now + windowMs });
+      return;
+    }
+    cur.count += 1;
+    if (cur.count > max) {
+      throw new UnauthorizedException('Demasiados intentos. Intenta nuevamente más tarde.');
+    }
+  }
+
+  private clearRateLimit(key: string) {
+    this.verifyAttempts.delete(key);
+  }
+
+  private async getUsuarioById(id: string | number | bigint) {
+    return this.prisma.db.orm.public.Usuario.where({ id: BigInt(id) }).first();
+  }
+
+  private async issueAccessToken(usuario: any, rolNombre: string) {
+    const payload = {
+      sub: usuario.id.toString(),
+      nombreUsuario: usuario.nombreUsuario,
+      rolId: usuario.rolId.toString(),
+      rolNombre,
+      purpose: 'access',
+    };
+    const accessToken = await this.jwtService.signAsync(payload);
+    return {
+      mensaje: 'Inicio de sesión exitoso',
+      access_token: accessToken,
+      usuario: {
+        id: usuario.id.toString(),
+        nombreUsuario: usuario.nombreUsuario,
+        rolId: usuario.rolId.toString(),
+        rolNombre,
+      },
+    };
+  }
 
   /** Verifica el token temporal y su propósito, valida los datos y guarda la contraseña mediante hash al activar o restablecer la cuenta. */
   async activarCuenta(
@@ -41,19 +131,19 @@ export class AuthService {
     try {
       payload = await this.jwtService.verifyAsync(token);
     } catch {
-      throw new UnauthorizedException('El enlace es inv?lido o expir?.');
+      throw new UnauthorizedException('El enlace es inválido o expiró.');
     }
 
     const esInvitacion = payload.purpose === 'set-client-password';
     const esRestablecimiento = payload.purpose === 'reset-client-password';
     if ((!esInvitacion && !esRestablecimiento) || !payload.sub) {
-      throw new UnauthorizedException('El enlace no es v?lido.');
+      throw new UnauthorizedException('El enlace no es válido.');
     }
     if (!password || password.length < 10) {
-      throw new BadRequestException('La contrase?a debe tener al menos 10 caracteres.');
+      throw new BadRequestException('La contraseña debe tener al menos 10 caracteres.');
     }
     if (password !== confirmarPassword) {
-      throw new BadRequestException('Las contrase?as no coinciden.');
+      throw new BadRequestException('Las contraseñas no coinciden.');
     }
 
     const identificador = nombreUsuario?.trim();
@@ -62,7 +152,7 @@ export class AuthService {
       : identificador;
     if (esInvitacion && (!usuarioNombre || usuarioNombre.length > 80)) {
       throw new BadRequestException(
-        'Ingresa un nombre de usuario v?lido de hasta 80 caracteres.',
+        'Ingresa un nombre de usuario válido de hasta 80 caracteres.',
       );
     }
 
@@ -84,7 +174,7 @@ export class AuthService {
       (esInvitacion && usuario.activo) ||
       (esRestablecimiento && !usuario.activo)
     ) {
-      throw new UnauthorizedException('La cuenta no existe o el enlace ya no es v?lido.');
+      throw new UnauthorizedException('La cuenta no existe o el enlace ya no es válido.');
     }
 
     const clientesAsociados = await this.prisma.db.orm.public.UsuarioCliente.where({
@@ -99,7 +189,7 @@ export class AuthService {
         nombreUsuario: usuarioNombre as Varchar<80>,
       }).first();
       if (usuarioExistente && usuarioExistente.id !== usuario.id) {
-        throw new BadRequestException('Ese nombre de usuario ya est? en uso.');
+        throw new BadRequestException('Ese nombre de usuario ya está en uso.');
       }
     }
     if (correo) {
@@ -123,23 +213,12 @@ export class AuthService {
 
     return {
       mensaje: esInvitacion
-        ? 'Cuenta activada. Ya puedes iniciar sesi?n.'
-        : 'Contrase?a restablecida. Ya puedes iniciar sesi?n.',
+        ? 'Cuenta activada. Ya puedes iniciar sesión.'
+        : 'Contraseña restablecida. Ya puedes iniciar sesión.',
     };
   }
 
-  /**
-   * Procesa la solicitud de inicio de sesión.
-   *
-   * Actualmente:
-   * 1. Recibe el nombre de usuario desde el LoginDto.
-   * 2. Busca el usuario en PostgreSQL mediante Prisma 8.
-   * 3. Comprueba que el usuario exista.
-   * 4. comprueba que la cuenta esté activa.
-   * 5. Devuelve los datos básicos del usuario.
-   */
   async login(loginDto: LoginDto) {
-    // Se obtiene el nombre de usuario enviado desde el formulario de login.
     const identificador = loginDto.nombreUsuario?.trim();
     const nombreUsuario = identificador?.includes('@')
       ? identificador.toLowerCase()
@@ -155,20 +234,13 @@ export class AuthService {
       }).first();
     }
 
-    // Si no existe el usuario, se rechaza la autenticación.
     if (!usuario) {
       throw new UnauthorizedException('Usuario o contraseña incorrectos');
     }
-
-    // Se verifica que la cuenta esté activa.
     if (!usuario.activo) {
       throw new UnauthorizedException('Usuario inactivo');
     }
-
-    // Se compara la contraseña ingresada con el hash almacenado.
     const passwordValida = await argon2.verify(usuario.passwordHash, loginDto.password);
-
-    // Si la contraseña no coincide, se rechaza la autenticación.
     if (!passwordValida) {
       throw new UnauthorizedException('Usuario o contraseña incorrectos');
     }
@@ -176,32 +248,242 @@ export class AuthService {
     const rol = await this.prisma.db.orm.public.Rol.where({ id: usuario.rolId }).first();
     const rolNombre = String(rol?.nombre ?? '').toUpperCase();
 
-    // Por ahora se devuelve información básica del usuario.
-    // Posteriormente aquí se generará el token JWT.
-    const payload = {
-      // El sub representa el identificador del usuario dentro del JWT
-      sub: usuario.id.toString(),
-      nombreUsuario: usuario.nombreUsuario,
-      rolId: usuario.rolId.toString(),
-      rolNombre,
-    };
+    if (usuario.twoFactorEnabled) {
+      if (!usuario.twoFactorSecret) {
+        throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.');
+      }
+      const jti = randomBytes(16).toString('hex');
+      const challengeToken = await this.jwtService.signAsync(
+        { sub: usuario.id.toString(), purpose: '2fa-login', jti },
+        { expiresIn: '5m', secret: this.challengeSecret() },
+      );
+      this.loginChallenges.set(jti, { sub: usuario.id.toString(), exp: Date.now() + 5 * 60 * 1000 });
+      return {
+        requires2FA: true,
+        challengeToken,
+        mensaje: 'Ingresa el código de verificación o un código de recuperación para continuar.',
+      };
+    }
 
-    const accessToken = await this.jwtService.signAsync(payload);
+    return this.issueAccessToken(usuario, rolNombre);
+  }
 
+  async get2faStatus(userId: string) {
+    const usuario = await this.getUsuarioById(userId);
+    if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    const pending = Boolean(usuario.twoFactorTempSecret) && !usuario.twoFactorEnabled && !this.setupExpired(usuario.twoFactorSetupExpiresAt);
     return {
-      // Error corregido: En id se devuelven como strign y no como BigInit por temas de error con JSON
-
-      mensaje: 'Inicio de sesión exitoso',
-      access_token: accessToken,
-      usuario: {
-        id: usuario.id.toString(),
-        nombreUsuario: usuario.nombreUsuario,
-        rolId: usuario.rolId.toString(),
-        rolNombre,
-      },
+      enabled: Boolean(usuario.twoFactorEnabled),
+      pending,
+      recoveryCodesConfigured: this.parseRecoveryHashes(usuario.twoFactorRecoveryHashes).length > 0,
     };
   }
-}
 
-// auth.service.ts contiene la lógica de negocio de la autenticación.
-// El controlador (auth.controller.ts) recibe la petición:
+  async setup2fa(userId: string, password: string) {
+    this.checkRateLimit(`setup:${userId}`, 10, 15 * 60 * 1000);
+    if (!password) throw new BadRequestException('La contraseña es obligatoria.');
+    const usuario = await this.getUsuarioById(userId);
+    if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    const ok = await argon2.verify(usuario.passwordHash, password);
+    if (!ok) throw new UnauthorizedException('Contraseña incorrecta.');
+
+    const secret = generateSecret();
+    const label = usuario.email || usuario.nombreUsuario;
+    const otpauthUrl = generateURI({ issuer: 'TRIBUTEK', label, secret });
+    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
+    const encrypted = encryptSecret(secret);
+    const expiresAt = Temporal.Instant.fromEpochMilliseconds(Date.now() + SETUP_TTL_MS);
+
+    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+      twoFactorTempSecret: encrypted as Varchar<255>,
+      twoFactorSetupExpiresAt: expiresAt,
+      actualizadoEn: Temporal.Now.instant(),
+    });
+
+    return { otpauthUrl, qrCodeDataUrl, secret, expiresInSeconds: Math.floor(SETUP_TTL_MS / 1000) };
+  }
+
+  async confirm2fa(userId: string, code: string) {
+    this.checkRateLimit(`confirm:${userId}`, 10, 15 * 60 * 1000);
+    if (!code) throw new BadRequestException('El código es obligatorio.');
+    const usuario = await this.getUsuarioById(userId);
+    if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    if (!usuario.twoFactorTempSecret) {
+      throw new BadRequestException('No hay una configuración de 2FA pendiente.');
+    }
+    if (this.setupExpired(usuario.twoFactorSetupExpiresAt)) {
+      await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+        twoFactorTempSecret: null,
+        twoFactorSetupExpiresAt: null,
+        actualizadoEn: Temporal.Now.instant(),
+      });
+      throw new BadRequestException('La configuración de 2FA expiró. Inicia la configuración nuevamente.');
+    }
+    let plainSecret: string;
+    try {
+      plainSecret = readSecret(usuario.twoFactorTempSecret);
+    } catch {
+      throw new BadRequestException('La configuración de 2FA pendiente no es válida. Inicia la configuración nuevamente.');
+    }
+    const result = verifySync({ token: code.trim(), secret: plainSecret });
+    if (!result.valid) throw new UnauthorizedException('Código 2FA inválido.');
+
+    const encrypted = encryptSecret(plainSecret);
+    const recoveryCodes = Array.from({ length: 8 }, () => randomBytes(5).toString('hex'));
+    const recoveryHashes = await Promise.all(recoveryCodes.map((c) => this.hashRecoveryCode(c)));
+    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+      twoFactorEnabled: true,
+      twoFactorSecret: encrypted as Varchar<255>,
+      twoFactorTempSecret: null,
+      twoFactorSetupExpiresAt: null,
+      twoFactorRecoveryHashes: this.serializeRecoveryHashes(recoveryHashes) as Varchar<2000> | null,
+      actualizadoEn: Temporal.Now.instant(),
+    });
+    // Replay guard: mark accepted step (best-effort, in-memory)
+    if (typeof (result as any).timeStepUsed === 'number') {
+      this.usedTotpSteps.set(usuario.id.toString(), (result as any).timeStepUsed);
+    }
+    this.clearRateLimit(`confirm:${userId}`);
+    this.clearRateLimit(`setup:${userId}`);
+    return {
+      mensaje: '2FA activado correctamente.',
+      recoveryCodes,
+      recoveryCodesNotice: 'Guarda estos códigos en un lugar seguro. Cada código se puede usar una sola vez para recuperar el acceso y no se volverán a mostrar.',
+    };
+  }
+
+  /** Intenta consumir un código de recuperación de forma atómica (comparando hashes almacenados). No desactiva 2FA. */
+  private async consumeRecoveryCode(userId: bigint, code: string): Promise<boolean> {
+    const normalized = this.normalizeRecoveryCode(code);
+    if (!/^[a-f0-9]{8,16}$/i.test(normalized)) return false;
+    return this.prisma.db.transaction(async (tx) => {
+      const u = await tx.orm.public.Usuario.where({ id: userId }).first();
+      if (!u || !u.twoFactorEnabled) return false;
+      const hashes = this.parseRecoveryHashes(u.twoFactorRecoveryHashes);
+      if (!hashes.length) return false;
+      let matchIndex = -1;
+      for (let i = 0; i < hashes.length; i++) {
+        if (await this.verifyRecoveryCode(normalized, hashes[i])) { matchIndex = i; break; }
+      }
+      if (matchIndex < 0) return false;
+      const remaining = hashes.filter((_, i) => i !== matchIndex);
+      const oldJson = u.twoFactorRecoveryHashes as Varchar<2000> | null;
+      // Actualización condicional (compare-and-set por valor previo) para consumo one-time atómico.
+      const updated = await tx.orm.public.Usuario.where({
+        id: userId,
+        twoFactorRecoveryHashes: oldJson,
+      }).update({
+        twoFactorRecoveryHashes: this.serializeRecoveryHashes(remaining) as Varchar<2000> | null,
+        actualizadoEn: Temporal.Now.instant(),
+      });
+      return Boolean(updated);
+    });
+  }
+
+  async verify2fa(challengeToken: string, code: string) {
+    if (!challengeToken || !code) {
+      throw new BadRequestException('Token de desafío y código son obligatorios.');
+    }
+    let payload: ChallengePayload;
+    try {
+      payload = await this.jwtService.verifyAsync(challengeToken, {
+        secret: this.challengeSecret(),
+      });
+    } catch {
+      throw new UnauthorizedException('El desafío 2FA es inválido o expiró.');
+    }
+    if (payload.purpose !== '2fa-login' || !payload.sub || !payload.jti) {
+      throw new UnauthorizedException('Token de desafío no válido.');
+    }
+    const challenge = this.loginChallenges.get(payload.jti);
+    if (!challenge || challenge.sub !== payload.sub || challenge.exp < Date.now()) {
+      this.loginChallenges.delete(payload.jti);
+      throw new UnauthorizedException('El desafío 2FA expiró. Inicia sesión nuevamente.');
+    }
+    this.checkRateLimit(`verify:${payload.sub}`, 8, 10 * 60 * 1000);
+
+    const usuario = await this.getUsuarioById(payload.sub);
+    if (!usuario || !usuario.activo || !usuario.twoFactorEnabled || !usuario.twoFactorSecret) {
+      throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.');
+    }
+    const trimmed = code.trim();
+    let usedRecovery = false;
+
+    // Intentar TOTP primero (6 dígitos), si no aplica o falla intentar código de recuperación.
+    let totpValid = false;
+    let totpStep: number | undefined;
+    if (/^\d{6,8}$/.test(trimmed)) {
+      try {
+        const plainSecret = readSecret(usuario.twoFactorSecret);
+        const result = verifySync({ token: trimmed, secret: plainSecret });
+        totpValid = result.valid;
+        if (typeof (result as any).timeStepUsed === 'number') totpStep = (result as any).timeStepUsed;
+      } catch {
+        totpValid = false;
+      }
+    }
+
+    if (totpValid) {
+      // Best-effort replay prevention (in-memory per process)
+      const step = totpStep ?? Math.floor(Date.now() / 30000);
+      const last = this.usedTotpSteps.get(usuario.id.toString());
+      if (typeof last === 'number' && step <= last) {
+        throw new UnauthorizedException('El código ya fue utilizado. Espera un nuevo código.');
+      }
+      this.usedTotpSteps.set(usuario.id.toString(), step);
+    } else {
+      // Recuperación: consumir hash de forma atómica y one-time; NO desactiva 2FA.
+      usedRecovery = await this.consumeRecoveryCode(usuario.id, trimmed);
+      if (!usedRecovery) {
+        throw new UnauthorizedException('Código 2FA o de recuperación inválido.');
+      }
+    }
+
+    this.loginChallenges.delete(payload.jti);
+    this.clearRateLimit(`verify:${payload.sub}`);
+
+    const rol = await this.prisma.db.orm.public.Rol.where({ id: usuario.rolId }).first();
+    const rolNombre = String(rol?.nombre ?? '').toUpperCase();
+    const issued = await this.issueAccessToken(usuario, rolNombre);
+    if (usedRecovery) {
+      (issued as any).recoveryCodeUsed = true;
+      (issued as any).mensaje = 'Inicio de sesión exitoso con código de recuperación. 2FA sigue activo.';
+    }
+    return issued;
+  }
+
+  async disable2fa(userId: string, password: string, code?: string) {
+    this.checkRateLimit(`disable:${userId}`, 10, 15 * 60 * 1000);
+    if (!password) throw new BadRequestException('La contraseña es obligatoria.');
+    const usuario = await this.getUsuarioById(userId);
+    if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    const ok = await argon2.verify(usuario.passwordHash, password);
+    if (!ok) throw new UnauthorizedException('Contraseña incorrecta.');
+    if (!usuario.twoFactorEnabled) {
+      return { mensaje: '2FA ya estaba desactivado.' };
+    }
+    if (!usuario.twoFactorSecret) {
+      throw new BadRequestException('No se pudo verificar la configuración 2FA.');
+    }
+    if (!code) throw new BadRequestException('El código 2FA es obligatorio para desactivar.');
+    let plainSecret: string;
+    try {
+      plainSecret = readSecret(usuario.twoFactorSecret);
+    } catch {
+      throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.');
+    }
+    const valid = verifySync({ token: code.trim(), secret: plainSecret }).valid;
+    if (!valid) throw new UnauthorizedException('Código 2FA inválido.');
+    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+      twoFactorEnabled: false,
+      twoFactorSecret: null,
+      twoFactorTempSecret: null,
+      twoFactorSetupExpiresAt: null,
+      twoFactorRecoveryHashes: null,
+      actualizadoEn: Temporal.Now.instant(),
+    });
+    this.usedTotpSteps.delete(usuario.id.toString());
+    this.clearRateLimit(`disable:${userId}`);
+    return { mensaje: '2FA desactivado correctamente.' };
+  }
+}

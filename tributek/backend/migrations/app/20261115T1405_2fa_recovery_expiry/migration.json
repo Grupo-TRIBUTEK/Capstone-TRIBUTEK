@@ -1,0 +1,7 @@
+﻿{
+  "from": "f45e32ff1341dba7ce3eaba21c82e5c7f32e5a5f22b716848015e6717b66f6e3",
+  "to": "f45e32ff1341dba7ce3eaba21c82e5c7f32e5a5f22b716848015e6717b66f6e3",
+  "providedInvariants": [],
+  "createdAt": "2026-11-15T14:05:00.000Z",
+  "migrationHash": "manual-additive-2fa-recovery-expiry"
+}

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Interfaz Workspace. Las funciones de este archivo separan la presentación de sus acciones y estados; los comentarios siguientes describen cada responsabilidad.
  */
 "use client";
@@ -638,11 +638,11 @@ const isServerView =
             ><Money value={visible.reduce((s, c) => s + debt(vista, c.id, period), 0)} hidden={hidden} /></Metric>
             <Metric
               icon="wallet"
-              label="Con deuda de servicios"
+              label="Clientes con deuda de servicios"
               className="tk-home-metric-debt"
               help="Cantidad de clientes visibles con saldo pendiente en conceptos de servicios hasta el período seleccionado. Indicador interno de TRIBUTEK; no tiene una definición oficial asignada."
               info={{
-                description: "Cuenta cuántos clientes visibles mantienen deuda de servicios acumulada hasta el período seleccionado.",
+                description: "Cantidad de clientes visibles que mantienen deuda de servicios acumulada hasta el período seleccionado.",
                 concepts: "Solo servicios: Honorarios, Formalización (Constitución de empresa) y Otro. No incluye Cobranza ni otros conceptos.",
                 conditions: "Cliente visible (búsqueda/filtros actuales) y con saldo > 0 en servicios considerando meses con período ≤ seleccionado, abonos y postergaciones por concepto.",
                 formula: "Cantidad de clientes visibles tales que deuda_servicios(cliente, período) > 0, donde deuda_servicios = Σ meses ≤ período Σ {Honorarios, Formalización, Otro} saldo pendiente.",
