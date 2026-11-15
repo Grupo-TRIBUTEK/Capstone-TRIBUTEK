@@ -42,4 +42,5 @@ export const adminNavigation: {
     group: "Control",
   },
   { href: "/admin/auditoria", label: "Trazabilidad", icon: "shield", group: "Control" },
+  { href: "/admin/seguridad", label: "Seguridad", icon: "shield", group: "Control" },
 ];

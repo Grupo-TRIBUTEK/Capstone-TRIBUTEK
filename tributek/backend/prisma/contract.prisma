@@ -28,6 +28,11 @@ model Usuario {
   activo                 Boolean          @default(true)
   creadoEn               Timestamptz?     @map("creado_en")
   actualizadoEn          Timestamptz?     @map("actualizado_en")
+  twoFactorEnabled       Boolean          @default(false) @map("two_factor_enabled")
+  twoFactorSecret        VarChar(255)?    @map("two_factor_secret")
+  twoFactorTempSecret    VarChar(255)?    @map("two_factor_temp_secret")
+  twoFactorRecoveryHashes VarChar(2000)?  @map("two_factor_recovery_hashes")
+  twoFactorSetupExpiresAt Timestamptz?    @map("two_factor_setup_expires_at")
 
   rol                    Rol              @relation(fields:[rolId], references:[id])
   usuariosClientes       UsuarioCliente[]

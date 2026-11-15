@@ -1,27 +1,25 @@
-/**
- * Rutas HTTP de sesión, credenciales y permisos de acceso. Los decoradores indican método, URL y permisos; el controlador entrega la operación al servicio.
- */
-import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
+﻿import { Body, Controller, Get, Post, Req, UseGuards } from '@nestjs/common';
 
 import { AuthService } from './auth.service.js';
 import { LoginDto } from './dto/login.dto.js';
 import { ActivarCuentaDto } from './dto/activar-cuenta.dto.js';
 import { JwtAuthGuard } from './jwt-auth.guard.js';
-// roles
 import { Roles } from './decorators/roles.decorator.js';
 import { RolesGuard } from './roles.guard.js';
+import { Setup2faDto } from './dto/setup-2fa.dto.js';
+import { Confirm2faDto } from './dto/confirm-2fa.dto.js';
+import { Verify2faDto } from './dto/verify-2fa.dto.js';
+import { Disable2faDto } from './dto/disable-2fa.dto.js';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  /** Autenticar credenciales. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post('login')
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
   }
 
-  /** Activar o restablecer una cuenta. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Post('activar-cuenta')
   activarCuenta(@Body() dto: ActivarCuentaDto) {
     return this.authService.activarCuenta(
@@ -33,7 +31,6 @@ export class AuthController {
     );
   }
 
-  /** Confirmar que la sesión pasó el guard de autenticación. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @UseGuards(JwtAuthGuard)
   @Get('perfil')
   perfil() {
@@ -42,7 +39,6 @@ export class AuthController {
     };
   }
 
-  /** Confirmar que la sesión pasó los guards de autenticación y rol administrativo. La ruta delega las reglas de negocio al servicio; los guards se ejecutan antes del método. */
   @Roles('ADMIN', 1)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Get('admin')
@@ -50,5 +46,34 @@ export class AuthController {
     return {
       mensaje: 'Acceso autorizado para ADMIN',
     };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('2fa/status')
+  twoFactorStatus(@Req() req: any) {
+    return this.authService.get2faStatus(req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/setup')
+  setup2fa(@Req() req: any, @Body() dto: Setup2faDto) {
+    return this.authService.setup2fa(req.user.id, dto.password);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/confirm')
+  confirm2fa(@Req() req: any, @Body() dto: Confirm2faDto) {
+    return this.authService.confirm2fa(req.user.id, dto.code);
+  }
+
+  @Post('2fa/verify')
+  verify2fa(@Body() dto: Verify2faDto) {
+    return this.authService.verify2fa(dto.challengeToken, dto.code);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('2fa/disable')
+  disable2fa(@Req() req: any, @Body() dto: Disable2faDto) {
+    return this.authService.disable2fa(req.user.id, dto.password, dto.code);
   }
 }

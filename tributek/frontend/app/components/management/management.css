@@ -323,7 +323,8 @@ button.button-destructive:hover:not(:disabled) {
 }
 .tk-metrics {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 23.5%));
+  justify-content: center;
   gap: 15px;
   margin-bottom: 23px;
 }
@@ -340,8 +341,8 @@ button.button-destructive:hover:not(:disabled) {
   gap: 15px;
 }
 .tk-home-metrics-row .tk-metric {
-  flex: 0 1 calc(25% - 11.25px);
-  max-width: calc(25% - 11.25px);
+  flex: 0 1 calc(23.5% - 11.25px);
+  max-width: calc(23.5% - 11.25px);
 }
 .tk-metric {
   position: relative;
@@ -366,22 +367,22 @@ button.button-destructive:hover:not(:disabled) {
 }
 .tk-metric.tk-metric-primary .tk-metric-label,
 .tk-metric.tk-metric-primary .tk-metric-value { color: var(--indicator-primary-text) !important; opacity: 1; }
-.tk-metric.tk-metric-primary .tk-metric-icon { background: var(--indicator-icon-bg); color: var(--indicator-primary-text) !important; }
+.tk-metric.tk-metric-primary .tk-metric-icon { background: var(--indicator-icon-bg); border: 1px solid var(--indicator-icon-bg); color: var(--indicator-primary-text) !important; }
 .tk-metric.tk-home-metric-debt,
 .tk-home-metrics-row .tk-metric.tk-home-metric-debt,
 .tk-metrics .tk-metric.tk-home-metric-debt {
-  background: #E2E8F0 !important;
-  border: 1px solid #cbd5e1 !important;
-  color: #263650 !important;
+  background: var(--indicator-secondary-bg) !important;
+  border: var(--indicator-secondary-border) !important;
+  color: var(--indicator-secondary-text) !important;
 }
-.tk-metric.tk-home-metric-debt .tk-metric-label { opacity: 0.85; color: #263650 !important; }
-.tk-metric.tk-home-metric-debt .tk-metric-value { color: #263650 !important; }
-.tk-metric.tk-home-metric-debt .tk-metric-icon { background: rgba(38, 54, 80, 0.08); color: #263650 !important; }
+.tk-metric.tk-home-metric-debt .tk-metric-label { opacity: 0.85; color: var(--indicator-secondary-text) !important; }
+.tk-metric.tk-home-metric-debt .tk-metric-value { color: var(--indicator-secondary-text) !important; }
+.tk-metric.tk-home-metric-debt .tk-metric-icon { background: var(--indicator-icon-bg-soft); border: 1px solid var(--indicator-icon-bg-soft); color: var(--indicator-secondary-text) !important; }
 .tk-metric-heading {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  gap: 8px;
   width: 100%;
 }
 .tk-metric-label {
@@ -403,7 +404,7 @@ button.button-destructive:hover:not(:disabled) {
   justify-content: center;
   width: 30px;
   height: 30px;
-  border: 0;
+  border: 1px solid var(--indicator-icon-bg-soft);
   border-radius: var(--radius-pill);
   background: var(--indicator-icon-bg-soft);
   color: inherit;
@@ -499,7 +500,7 @@ button.button-destructive:hover:not(:disabled) {
   color: var(--indicator-secondary-text);
 }
 .tk-metric.tk-metric-secondary .tk-metric-label { opacity: 0.85; }
-.tk-metric.tk-metric-secondary .tk-metric-icon { background: var(--indicator-icon-bg-soft); }
+.tk-metric.tk-metric-secondary .tk-metric-icon { background: var(--indicator-icon-bg-soft); border: 1px solid var(--indicator-icon-bg-soft); }
 .tk-home-metrics-row .tk-metric.tk-home-metric-debt {
   /* mantiene variante neutra del sistema */
 }

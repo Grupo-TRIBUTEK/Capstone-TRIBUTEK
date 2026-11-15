@@ -14,6 +14,7 @@ import { clearAuth } from "@/app/features/auth/auth-client";
 const links = [
   { href: "/cliente/presentaciones", label: "Presentaciones" },
   { href: "/cliente#documentos", label: "Documentos" },
+  { href: "/cliente/seguridad", label: "Seguridad" },
 ];
 
 /** Presenta navegación del portal y controla su menú móvil. */
