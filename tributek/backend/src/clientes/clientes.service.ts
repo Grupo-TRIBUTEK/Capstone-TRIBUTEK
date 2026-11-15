@@ -11,6 +11,7 @@ import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
 import type { Varchar } from '@prisma/orm-postgres/target/codec-types';
 import { randomBytes } from 'node:crypto';
+import { credentialVersion } from '../auth/credential-version.js'
 import 'temporal-polyfill/global';
 import { PrismaService } from '../prisma/prisma.service.js';
 import { formatoRutValido, RUT_MENSAJE } from '../common/rut.js'
@@ -90,7 +91,7 @@ export class ClientesService {
     if (usuarioPortal && (nombreUsuario || emailUsuario)) {
       await this.prisma.db.orm.public.Usuario.where({ id: usuarioPortal.id }).update({
         ...(nombreUsuario ? { nombreUsuario: nombreUsuario as Varchar<80> } : {}),
-        ...(emailUsuario ? { email: emailUsuario as Varchar<150> } : {}),
+        ...(emailUsuario ? { email: emailUsuario as Varchar<150>, ...(emailUsuario !== usuarioPortal.email ? { emailVerificadoEn: null } : {}) } : {}),
       });
     }
 
@@ -149,7 +150,7 @@ export class ClientesService {
       );
     }
     const token = await this.jwtService.signAsync(
-      { sub: usuario.id.toString(), purpose: 'reset-client-password' },
+      { sub: usuario.id.toString(), purpose: 'reset-client-password', credentialVersion: credentialVersion(usuario.passwordHash) },
       { expiresIn: '24h' },
     );
     const frontendUrl = process.env['FRONTEND_URL'] || 'http://localhost:3000';

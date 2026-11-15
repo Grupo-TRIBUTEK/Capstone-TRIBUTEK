@@ -11,10 +11,12 @@ export const entities = {
   Factura: "Facturación",
   Gestion: "Constitución de empresas y gestiones",
   Usuario: "Accesos y seguridad",
+  Administrador: "Administradores",
   ProyeccionF29: "Proyección F29",
 } as const;
 export const actions = {
   CREAR: "Creación",
+  VERIFICAR_CORREO: "Verificación de correo",
   VERIFICAR: "Verificación técnica",
   ACTUALIZAR: "Actualización",
   ELIMINAR: "Eliminación",
@@ -22,6 +24,11 @@ export const actions = {
   ANULAR: "Anulación",
   PUBLICAR: "Publicación",
   INICIAR_SESION: "Inicio de sesión",
+  REVINCULAR_2FA: "Revinculación de app",
+  COMPROBAR_2FA: "Comprobación de app",
+  CONFIGURAR_2FA: "Configuración de 2FA",
+  ACTIVAR_2FA: "Activación de 2FA",
+  DESACTIVAR_2FA: "Desactivación de 2FA",
   ACCESO_FALLIDO: "Acceso fallido",
   CAMBIAR_PERMISOS: "Cambio de permisos",
 } as const;
@@ -35,6 +42,7 @@ export type AuditEntry = {
   usuario: { nombreUsuario: string } | null;
 };
 export type AuditPage = { items: AuditEntry[]; total: number };
+export const AUDIT_PAGE_SIZE = 25
 /** Utiliza una etiqueta conocida o conserva la clave original. */
 export function label(values: Record<string, string>, value: string) {
   return values[value] || value;
@@ -75,7 +83,7 @@ export function parsePage(value: unknown): AuditPage {
     }
     return row as AuditEntry;
   });
-  if (items.length > 20 || items.length > Number(value.total))
+  if (items.length > AUDIT_PAGE_SIZE || items.length > Number(value.total))
     throw new Error("La cantidad de registros recibida no es válida.");
   return { items, total: Number(value.total) };
 }

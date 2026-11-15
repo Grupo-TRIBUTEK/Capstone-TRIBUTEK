@@ -1,34 +1,41 @@
-﻿import { beforeEach, describe, expect, it } from 'vitest';
-import { UnauthorizedException } from '@nestjs/common';
+import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { UnauthorizedException } from '@nestjs/common'
+vi.mock('../prisma/db.js', () => ({ db: {} }))
+import { JwtStrategy } from './jwt.strategy.js'
+import { credentialVersion } from './credential-version.js'
+import type { PrismaService } from '../prisma/prisma.service.js'
 
+beforeEach(() => { process.env.JWT_SECRET = 'test-access-secret-for-strategy-1234567890' })
+const payload = { sub: '1', nombreUsuario: 'ana', rolId: '2', rolNombre: 'ADMIN', purpose: 'access', credentialVersion: credentialVersion('hash-de-prueba') }
+function setup(overrides = {}) {
+  const usuario = { id: 1n, activo: true, nombreUsuario: 'ana', rolId: 2n, passwordHash: 'hash-de-prueba', ...overrides }
+  const prisma = { db: { orm: { public: {
+    Usuario: { where: () => ({ first: async () => usuario }) },
+    Rol: { where: () => ({ first: async () => ({ nombre: 'CLIENTE' }) }) },
+  } } } } as unknown as PrismaService
+  return new JwtStrategy(prisma)
+}
 describe('JwtStrategy', () => {
-  beforeEach(() => {
-    process.env['JWT_SECRET'] = 'test-access-secret-for-strategy-1234567890';
-  });
-
-  async function load() {
-    const mod = await import('./jwt.strategy.js');
-    return new mod.JwtStrategy();
-  }
-
-  it('acepta token de acceso con purpose access y claims requeridos', async () => {
-    const strategy = await load();
-    const user = await strategy.validate({ sub: '1', nombreUsuario: 'ana', rolId: '2', rolNombre: 'ADMIN', purpose: 'access' } as any);
-    expect(user).toEqual({ id: '1', nombreUsuario: 'ana', rolId: '2', rolNombre: 'ADMIN' });
-  });
-
-  it('rechaza token temporal de desafío 2FA como acceso', async () => {
-    const strategy = await load();
-    await expect(strategy.validate({ sub: '1', purpose: '2fa-login', jti: 'x' } as any)).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-
-  it('rechaza cualquier token temporal/no-acceso aunque tenga claims', async () => {
-    const strategy = await load();
-    await expect(strategy.validate({ sub: '1', nombreUsuario: 'ana', rolId: '2', purpose: 'set-client-password' } as any)).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-
-  it('rechaza token sin claims de acceso requeridos', async () => {
-    const strategy = await load();
-    await expect(strategy.validate({ sub: '1', purpose: 'access' } as any)).rejects.toBeInstanceOf(UnauthorizedException);
-  });
-});
+  it('usa el rol vigente de la base y no confía en un nombre de rol del token', async () => {
+    expect(await setup().validate(payload)).toEqual({ id: '1', nombreUsuario: 'ana', rolId: '2', rolNombre: 'CLIENTE' })
+  })
+  it('rechaza un desafío 2FA aunque esté firmado', async () => {
+    await expect(setup().validate({ ...payload, purpose: '2fa-login' })).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+  it('rechaza otros propósitos temporales', async () => {
+    await expect(setup().validate({ ...payload, purpose: 'set-client-password' })).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+  it('rechaza sesiones antiguas sin vínculo a la contraseña', async () => {
+    await expect(setup().validate({ ...payload, credentialVersion: undefined })).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+  it('rechaza una cuenta desactivada después de iniciar sesión', async () => {
+    await expect(setup({ activo: false }).validate(payload)).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+  it('rechaza una sesión después de cambiar su contraseña o rol', async () => {
+    await expect(setup({ passwordHash: 'otro-hash' }).validate(payload)).rejects.toBeInstanceOf(UnauthorizedException)
+    await expect(setup({ rolId: 1n }).validate(payload)).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+  it('rechaza identificadores que no son IDs decimales', async () => {
+    await expect(setup().validate({ ...payload, sub: "' OR 1=1" })).rejects.toBeInstanceOf(UnauthorizedException)
+  })
+})

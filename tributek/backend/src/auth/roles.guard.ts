@@ -16,9 +16,9 @@ export class RolesGuard implements CanActivate {
 
   /** Compara los roles declarados en la ruta con la sesión. Si no hay roles declarados, este guard no añade una restricción de rol. */
   canActivate(context: ExecutionContext): boolean {
-    const roles = this.reflector.get<Array<number | string>>(
+    const roles = this.reflector.getAllAndOverride<Array<number | string>>(
       ROLES_KEY,
-      context.getHandler(),
+      [context.getHandler(), context.getClass()],
     );
 
     // Si la ruta no tiene @Roles(), permite el acceso.

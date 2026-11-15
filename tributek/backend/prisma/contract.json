@@ -3407,6 +3407,13 @@
                   }
                 }
               },
+              "emailVerificadoEn": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -3646,6 +3653,9 @@
                 },
                 "email": {
                   "column": "email"
+                },
+                "emailVerificadoEn": {
+                  "column": "email_verificado_en"
                 },
                 "id": {
                   "column": "id"
@@ -3990,6 +4000,32 @@
                 }
               ],
               "indexes": [
+                {
+                  "columns": [
+                    "accion",
+                    "creado_en",
+                    "id"
+                  ],
+                  "name": "auditoria_accion_fecha_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "entidad",
+                    "creado_en",
+                    "id"
+                  ],
+                  "name": "auditoria_entidad_fecha_id_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "creado_en",
+                    "id"
+                  ],
+                  "name": "auditoria_fecha_id_idx",
+                  "unique": false
+                },
                 {
                   "columns": [
                     "usuario_id"
@@ -6274,6 +6310,11 @@
                     "length": 150
                   }
                 },
+                "email_verificado_en": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "id": {
                   "codecId": "pg/int8@1",
                   "default": {
@@ -6403,7 +6444,7 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "d23484710c678a5a6fed677c04d7ddddb1534b97a60324259994f51656454f0a"
+    "storageHash": "e160dcd18fd32a41e73598f5c6dd9271626302cc837d3acb0ca0be6da579d7bb"
   },
   "capabilities": {
     "postgres": {

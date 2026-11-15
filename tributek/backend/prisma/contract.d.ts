@@ -33,7 +33,7 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'d23484710c678a5a6fed677c04d7ddddb1534b97a60324259994f51656454f0a'>;
+  StorageHashBase<'e160dcd18fd32a41e73598f5c6dd9271626302cc837d3acb0ca0be6da579d7bb'>;
 export type ExecutionHash = ExecutionHashBase<string>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
@@ -475,6 +475,7 @@ export type FieldOutputTypes = {
       readonly rolId: CodecTypes['pg/int8@1']['output'];
       readonly nombre: Varchar<120>;
       readonly email: Varchar<150> | null;
+      readonly emailVerificadoEn: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly nombreUsuario: Varchar<80>;
       readonly passwordHash: Varchar<255>;
       readonly activo: CodecTypes['pg/bool@1']['output'];
@@ -730,6 +731,7 @@ export type FieldInputTypes = {
       readonly rolId: CodecTypes['pg/int8@1']['input'];
       readonly nombre: CodecTypes['sql/varchar@1']['input'];
       readonly email: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly emailVerificadoEn: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly nombreUsuario: CodecTypes['sql/varchar@1']['input'];
       readonly passwordHash: CodecTypes['sql/varchar@1']['input'];
       readonly activo: CodecTypes['pg/bool@1']['input'];
@@ -990,6 +992,7 @@ export type StorageColumnTypes = {
       readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly email: Varchar<150> | null;
+      readonly email_verificado_en: CodecTypes['pg/timestamptz-temporal@1']['output'] | null;
       readonly id: CodecTypes['pg/int8@1']['output'];
       readonly nombre: Varchar<120>;
       readonly nombre_usuario: Varchar<80>;
@@ -1246,6 +1249,7 @@ export type StorageColumnInputTypes = {
       readonly actualizado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly creado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly email: CodecTypes['sql/varchar@1']['input'] | null;
+      readonly email_verificado_en: CodecTypes['pg/timestamptz-temporal@1']['input'] | null;
       readonly id: CodecTypes['pg/int8@1']['input'];
       readonly nombre: CodecTypes['sql/varchar@1']['input'];
       readonly nombre_usuario: CodecTypes['sql/varchar@1']['input'];
@@ -1448,6 +1452,21 @@ type ContractBase = Omit<
               primaryKey: { readonly columns: readonly ['id'] };
               uniques: readonly [];
               indexes: readonly [
+                {
+                  readonly name: 'auditoria_fecha_id_idx';
+                  readonly columns: readonly ['creado_en', 'id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'auditoria_entidad_fecha_id_idx';
+                  readonly columns: readonly ['entidad', 'creado_en', 'id'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'auditoria_accion_fecha_id_idx';
+                  readonly columns: readonly ['accion', 'creado_en', 'id'];
+                  readonly unique: false;
+                },
                 {
                   readonly name: 'auditoria_usuario_id_idx_65b6616a';
                   readonly prefix: 'auditoria_usuario_id_idx';
@@ -3239,6 +3258,11 @@ type ContractBase = Omit<
                   readonly codecId: 'sql/varchar@1';
                   readonly nullable: true;
                   readonly typeParams: { readonly length: 150 };
+                };
+                readonly email_verificado_en: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                  readonly nullable: true;
                 };
                 readonly nombre_usuario: {
                   readonly nativeType: 'character varying';
@@ -5644,6 +5668,13 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 150 };
                 };
               };
+              readonly emailVerificadoEn: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'pg/timestamptz-temporal@1';
+                };
+              };
               readonly nombreUsuario: {
                 readonly nullable: false;
                 readonly type: {
@@ -5820,6 +5851,7 @@ type ContractBase = Omit<
                 readonly rolId: { readonly column: 'rol_id' };
                 readonly nombre: { readonly column: 'nombre' };
                 readonly email: { readonly column: 'email' };
+                readonly emailVerificadoEn: { readonly column: 'email_verificado_en' };
                 readonly nombreUsuario: { readonly column: 'nombre_usuario' };
                 readonly passwordHash: { readonly column: 'password_hash' };
                 readonly activo: { readonly column: 'activo' };

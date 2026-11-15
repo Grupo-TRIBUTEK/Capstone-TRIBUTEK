@@ -1,0 +1,52 @@
+{
+  "correctas": 26,
+  "pruebas": [
+    "Ingreso sin 2FA conserva sesión y rol",
+    "Cuenta principal puede crear administradores",
+    "Usuario duplicado se rechaza",
+    "La cuenta nueva puede entrar al panel",
+    "La cuenta nueva no hereda permiso de creación",
+    "Cliente no puede entrar al panel administrativo",
+    "Cliente no puede crear administradores",
+    "Generación de QR y secreto TOTP",
+    "Activación con ocho códigos de recuperación",
+    "Estado de seguridad refleja la activación",
+    "No se reemplaza un 2FA ya activado",
+    "Contraseña sola produce desafío y no una sesión",
+    "Desafío no autoriza administración",
+    "Desafío no autoriza crear cuentas",
+    "Código inválido no permite ingreso",
+    "Recuperación permite ingreso manteniendo 2FA",
+    "Código de recuperación no puede reutilizarse",
+    "Ingreso con TOTP completo emite sesión",
+    "El desafío completado no se puede reutilizar",
+    "Permiso principal permanece después del 2FA",
+    "Seguridad y administradores comparten la sesión final",
+    "Desactivación requiere contraseña y TOTP",
+    "Estado final de la cuenta de prueba desactivado",
+    "Auditoría registra activación y desactivación",
+    "Auditoría registra ingreso completado con 2FA",
+    "Auditoría no contiene secretos, contraseñas o códigos"
+  ],
+  "baseRealModificada": false,
+  "fecha": "2026-11-15",
+  "pruebas_automatizadas_backend": 248,
+  "compilacion_backend": "correcta",
+  "compilacion_frontend": "correcta",
+  "cuenta_real": {
+    "usuario": "ConstanzaS",
+    "id": "1",
+    "dos_factores_activado_por_estas_pruebas": false
+  },
+  "selector_ingreso": {
+    "app": "verificado en navegador con API simulada",
+    "correo": "verificado en navegador con API simulada",
+    "verificacion_correo_existente": "verificada en navegador con API simulada",
+    "regreso_login": "correcto",
+    "vista_movil_sin_desbordamiento": true
+  },
+  "arranque_backend_y_postgresql": "correcto",
+  "smtp_configurado": true,
+  "envios_reales_durante_pruebas_selector": false,
+  "migracion_correo_verificado": "aplicada con respaldo previo"
+}

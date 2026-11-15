@@ -13,19 +13,21 @@ import {
   label,
   parsePage,
   dateLabel,
+  AUDIT_PAGE_SIZE,
   type AuditEntry,
   type AuditPage,
 } from "./model";
 import "./auditoria.css";
 
 type Filters = {
+  periodo: 'reciente' | 'personalizado' | 'todo'
   buscar: string;
   entidad: string;
   accion: string;
   desde: string;
   hasta: string;
 };
-const empty: Filters = { buscar: "", entidad: "", accion: "", desde: "", hasta: "" };
+const empty: Filters = { periodo: "reciente", buscar: "", entidad: "", accion: "", desde: "", hasta: "" }
 type Result = { key: string; data?: AuditPage; error?: string };
 
 /** Coordina historial, paginación y filtros; separa los filtros en edición de los aplicados. */
@@ -36,16 +38,23 @@ export default function AuditWorkspace() {
   const [refresh, setRefresh] = useState(0);
   const [result, setResult] = useState<Result | null>(null);
   const [selected, setSelected] = useState<AuditEntry | null>(null);
+  const [advancedOpen, setAdvancedOpen] = useState(false)
   const dialog = useRef<HTMLDialogElement>(null);
   const params = new URLSearchParams({
     pagina: String(page),
-    limite: "20",
+    limite: String(AUDIT_PAGE_SIZE),
     ...filters,
   }).toString();
   const key = `${params}&refresh=${refresh}`;
   const current = result?.key === key ? result : null;
   const loading = !current;
   const data = current?.data;
+  const periodLabel = filters.periodo === "reciente" ? "Últimos 30 días" : filters.periodo === "todo" ? "Todo el historial" : "Fechas personalizadas"
+  const filterError = draft.periodo === "personalizado" && !draft.desde && !draft.hasta
+    ? "Indica al menos una fecha para consultar ese período."
+    : draft.desde && draft.hasta && draft.desde > draft.hasta
+      ? "La fecha desde no puede ser posterior a hasta."
+      : ""
 
   useEffect(() => {
     const controller = new AbortController();
@@ -91,6 +100,10 @@ export default function AuditWorkspace() {
   /** Aplica filtros y vuelve a la primera página. */
   function apply(event: FormEvent) {
     event.preventDefault();
+    if (filterError) {
+      setAdvancedOpen(true)
+      return
+    }
     setFilters({ ...draft, buscar: draft.buscar.trim() });
     setPage(1);
     setRefresh((n) => n + 1);
@@ -104,7 +117,9 @@ export default function AuditWorkspace() {
   }
   /** Actualiza un filtro en edición sin ejecutar todavía la búsqueda. */
   function field(name: keyof Filters, value: string) {
-    setDraft((previous) => ({ ...previous, [name]: value }));
+    setDraft((previous) => ({ ...previous, [name]: value,
+      ...((name === "desde" || name === "hasta") ? { periodo: "personalizado" as const } : {}),
+    }))
   }
   return (
     <section className="audit">
@@ -127,6 +142,18 @@ export default function AuditWorkspace() {
       <form className="audit-filters" onSubmit={apply}>
         <h2 className="tk-filters-title"><Icon name="filter" className="h-4 w-4" />Filtros</h2>
         <div className="audit-search-row">
+        <label className="audit-period">
+          Período
+          <select aria-label="Período" value={draft.periodo} onChange={(event) => {
+            const periodo = event.target.value as Filters["periodo"]
+            setDraft((previous) => ({ ...previous, periodo, desde: "", hasta: "" }))
+            if (periodo === "personalizado") setAdvancedOpen(true)
+          }}>
+            <option value="reciente">Últimos 30 días</option>
+            <option value="todo">Todo el historial</option>
+            <option value="personalizado">Fechas personalizadas</option>
+          </select>
+        </label>
         <label className="audit-search">
           Buscar
           <input
@@ -139,7 +166,8 @@ export default function AuditWorkspace() {
         </label>
         <button type="submit" aria-label="Buscar en trazabilidad"><Icon name="search" className="h-4 w-4" /> Buscar</button>
         </div>
-        <details className="audit-advanced">
+        {filterError && <p className="audit-filter-error" role="status">{filterError}</p>}
+        <details className="audit-advanced" open={advancedOpen} onToggle={(event) => setAdvancedOpen(event.currentTarget.open)}>
           <summary>Más filtros{[filters.entidad, filters.accion, filters.desde, filters.hasta].filter(Boolean).length > 0 && <span className="audit-filter-count">{[filters.entidad, filters.accion, filters.desde, filters.hasta].filter(Boolean).length} activos</span>}</summary>
           <div className="audit-filter-fields">
         <label>
@@ -205,7 +233,7 @@ export default function AuditWorkspace() {
           <h2>Historial de acciones</h2>
           <span aria-live="polite">
             {data
-              ? `${data.total} registros encontrados`
+              ? `Mostrando ${data.items.length} de ${data.total} registros · ${periodLabel}`
               : loading
                 ? "Consultando…"
                 : "Consulta no disponible"}
@@ -278,14 +306,14 @@ export default function AuditWorkspace() {
               </div>
               <nav className="audit-pagination" aria-label="Páginas del historial">
                 <span>
-                  Página {page} de {Math.max(1, Math.ceil(data.total / 20))}
+                  Página {page} de {Math.max(1, Math.ceil(data.total / AUDIT_PAGE_SIZE))}
                 </span>
                 <div className="audit-buttons">
                   <button disabled={page === 1} onClick={() => setPage((p) => p - 1)}>
                     Anterior
                   </button>
                   <button
-                    disabled={page * 20 >= data.total}
+                    disabled={page * AUDIT_PAGE_SIZE >= data.total}
                     onClick={() => setPage((p) => p + 1)}
                   >
                     Siguiente

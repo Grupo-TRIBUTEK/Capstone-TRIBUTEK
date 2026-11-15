@@ -1,4 +1,4 @@
-﻿import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, Optional, UnauthorizedException, ServiceUnavailableException } from '@nestjs/common';
 import { LoginDto } from './dto/login.dto.js';
 import { PrismaService } from '../prisma/prisma.service.js';
 import * as argon2 from 'argon2';
@@ -8,7 +8,11 @@ import { JwtService } from '@nestjs/jwt';
 import { generateSecret, generateURI, verifySync } from 'otplib';
 import * as QRCode from 'qrcode';
 import { encryptSecret, readSecret } from './two-factor-crypto.js';
+import { EmailVerificationService } from '../correo/email-verification.service.js'
 import { randomBytes } from 'crypto';
+import { credentialVersion } from './credential-version.js'
+
+let dummyPasswordHash: Promise<string> | undefined
 
 type ChallengePayload = { sub?: string; purpose?: string; jti?: string };
 const SETUP_TTL_MS = 10 * 60 * 1000; // 10 min
@@ -16,13 +20,14 @@ const SETUP_TTL_MS = 10 * 60 * 1000; // 10 min
 @Injectable()
 export class AuthService {
   // In-memory protections (single-instance/dev). For multi-instance, persist in DB/Redis.
-  private readonly loginChallenges = new Map<string, { sub: string; exp: number }>();
+  private readonly loginChallenges = new Map<string, { sub: string; exp: number; email?: string | null; credentialVersion: string }>()
   private readonly usedTotpSteps = new Map<string, number>(); // userId -> last accepted step
   private readonly verifyAttempts = new Map<string, { count: number; resetAt: number }>();
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
+    @Optional() private readonly correo?: EmailVerificationService,
   ) {}
 
   private challengeSecret(): string {
@@ -105,6 +110,7 @@ export class AuthService {
       rolId: usuario.rolId.toString(),
       rolNombre,
       purpose: 'access',
+      credentialVersion: credentialVersion(usuario.passwordHash),
     };
     const accessToken = await this.jwtService.signAsync(payload);
     return {
@@ -127,7 +133,7 @@ export class AuthService {
     password: string,
     confirmarPassword: string,
   ) {
-    let payload: { sub?: string; purpose?: string };
+    let payload: { sub?: string; purpose?: string; credentialVersion?: string }
     try {
       payload = await this.jwtService.verifyAsync(token);
     } catch {
@@ -139,7 +145,7 @@ export class AuthService {
     if ((!esInvitacion && !esRestablecimiento) || !payload.sub) {
       throw new UnauthorizedException('El enlace no es válido.');
     }
-    if (!password || password.length < 10) {
+    if (typeof password !== 'string' || password.length < 10 || password.length > 128) {
       throw new BadRequestException('La contraseña debe tener al menos 10 caracteres.');
     }
     if (password !== confirmarPassword) {
@@ -176,6 +182,9 @@ export class AuthService {
     ) {
       throw new UnauthorizedException('La cuenta no existe o el enlace ya no es válido.');
     }
+    if (esRestablecimiento && payload.credentialVersion !== credentialVersion(usuario.passwordHash)) {
+      throw new UnauthorizedException('El enlace ya fue utilizado o dejó de ser válido. Solicita uno nuevo.')
+    }
 
     const clientesAsociados = await this.prisma.db.orm.public.UsuarioCliente.where({
       usuarioId: usuario.id,
@@ -203,13 +212,14 @@ export class AuthService {
       }
     }
 
-    await this.prisma.db.orm.public.Usuario.where({ id: usuario.id }).update({
+    const updated = await this.prisma.db.orm.public.Usuario.where({ id: usuario.id, passwordHash: usuario.passwordHash, activo: usuario.activo }).update({
       ...(usuarioNombre ? { nombreUsuario: usuarioNombre as Varchar<80> } : {}),
-      ...(esInvitacion && correo ? { email: correo as Varchar<150> } : {}),
+      ...(esInvitacion && correo ? { email: correo as Varchar<150>, emailVerificadoEn: null } : {}),
       passwordHash: (await argon2.hash(password)) as Varchar<255>,
       activo: true,
       actualizadoEn: Temporal.Now.instant(),
     });
+    if (!updated) throw new UnauthorizedException('El enlace ya fue utilizado o dejó de ser válido.')
 
     return {
       mensaje: esInvitacion
@@ -219,6 +229,10 @@ export class AuthService {
   }
 
   async login(loginDto: LoginDto) {
+    for (const [id, challenge] of this.loginChallenges) if (challenge.exp <= Date.now()) this.loginChallenges.delete(id)
+    if (typeof loginDto?.nombreUsuario !== 'string' || loginDto.nombreUsuario.length > 150 || typeof loginDto.password !== 'string' || !loginDto.password || loginDto.password.length > 128) {
+      throw new BadRequestException('Ingresa un usuario y una contraseña válidos.')
+    }
     const identificador = loginDto.nombreUsuario?.trim();
     const nombreUsuario = identificador?.includes('@')
       ? identificador.toLowerCase()
@@ -234,33 +248,33 @@ export class AuthService {
       }).first();
     }
 
-    if (!usuario) {
-      throw new UnauthorizedException('Usuario o contraseña incorrectos');
-    }
-    if (!usuario.activo) {
-      throw new UnauthorizedException('Usuario inactivo');
-    }
-    const passwordValida = await argon2.verify(usuario.passwordHash, loginDto.password);
-    if (!passwordValida) {
+    dummyPasswordHash ??= argon2.hash(randomBytes(32).toString('hex'))
+    const passwordValida = await argon2.verify(usuario?.passwordHash ?? await dummyPasswordHash, loginDto.password)
+    if (!usuario?.activo || !passwordValida) {
       throw new UnauthorizedException('Usuario o contraseña incorrectos');
     }
 
     const rol = await this.prisma.db.orm.public.Rol.where({ id: usuario.rolId }).first();
     const rolNombre = String(rol?.nombre ?? '').toUpperCase();
 
-    if (usuario.twoFactorEnabled) {
-      if (!usuario.twoFactorSecret) {
-        throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.');
-      }
+    const emailEnabled = this.emailRegistrado(usuario)
+    if (usuario.twoFactorEnabled || emailEnabled) {
+      if (!usuario.twoFactorSecret && !emailEnabled) throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.')
+      const methods: string[] = []
+      if (usuario.twoFactorEnabled && usuario.twoFactorSecret) methods.push('app')
+      if (emailEnabled) methods.push('email')
+      if (!methods.length) throw new ServiceUnavailableException('El servicio de verificación por correo no está disponible. Intenta nuevamente más tarde.')
       const jti = randomBytes(16).toString('hex');
       const challengeToken = await this.jwtService.signAsync(
         { sub: usuario.id.toString(), purpose: '2fa-login', jti },
         { expiresIn: '5m', secret: this.challengeSecret() },
       );
-      this.loginChallenges.set(jti, { sub: usuario.id.toString(), exp: Date.now() + 5 * 60 * 1000 });
+      this.loginChallenges.set(jti, { sub: usuario.id.toString(), exp: Date.now() + 5 * 60 * 1000, email: emailEnabled ? usuario.email : null, credentialVersion: credentialVersion(usuario.passwordHash) })
       return {
         requires2FA: true,
         challengeToken,
+        methods,
+        maskedEmail: emailEnabled ? this.ocultarEmail(usuario.email!) : null,
         mensaje: 'Ingresa el código de verificación o un código de recuperación para continuar.',
       };
     }
@@ -274,6 +288,11 @@ export class AuthService {
     const pending = Boolean(usuario.twoFactorTempSecret) && !usuario.twoFactorEnabled && !this.setupExpired(usuario.twoFactorSetupExpiresAt);
     return {
       enabled: Boolean(usuario.twoFactorEnabled),
+      emailEnabled: this.emailRegistrado(usuario),
+      emailVerified: this.emailVerificado(usuario),
+      emailRegistered: this.emailRegistrado(usuario),
+      emailDeliveryAvailable: this.correo?.disponible() ?? false,
+      maskedEmail: usuario.email ? this.ocultarEmail(usuario.email!) : null,
       pending,
       recoveryCodesConfigured: this.parseRecoveryHashes(usuario.twoFactorRecoveryHashes).length > 0,
     };
@@ -284,11 +303,12 @@ export class AuthService {
     if (!password) throw new BadRequestException('La contraseña es obligatoria.');
     const usuario = await this.getUsuarioById(userId);
     if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    if (usuario.twoFactorEnabled) throw new BadRequestException('La verificación en dos pasos ya está activada.');
     const ok = await argon2.verify(usuario.passwordHash, password);
     if (!ok) throw new UnauthorizedException('Contraseña incorrecta.');
 
     const secret = generateSecret();
-    const label = usuario.email || usuario.nombreUsuario;
+    const label = usuario.nombreUsuario;
     const otpauthUrl = generateURI({ issuer: 'TRIBUTEK', label, secret });
     const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl);
     const encrypted = encryptSecret(secret);
@@ -308,6 +328,7 @@ export class AuthService {
     if (!code) throw new BadRequestException('El código es obligatorio.');
     const usuario = await this.getUsuarioById(userId);
     if (!usuario || !usuario.activo) throw new UnauthorizedException('Sesión no válida.');
+    if (usuario.twoFactorEnabled) throw new BadRequestException('La verificación en dos pasos ya está activada.');
     if (!usuario.twoFactorTempSecret) {
       throw new BadRequestException('No hay una configuración de 2FA pendiente.');
     }
@@ -380,10 +401,17 @@ export class AuthService {
     });
   }
 
-  async verify2fa(challengeToken: string, code: string) {
-    if (!challengeToken || !code) {
-      throw new BadRequestException('Token de desafío y código son obligatorios.');
-    }
+  private emailRegistrado(usuario: { email?: unknown }) {
+    return typeof usuario.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usuario.email)
+  }
+  private emailVerificado(usuario: { email?: unknown, emailVerificadoEn?: unknown }) {
+    return typeof usuario.email === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usuario.email) && Boolean(usuario.emailVerificadoEn)
+  }
+  private ocultarEmail(email: string) {
+    const [local, domain] = email.split('@')
+    return `${local.slice(0, 1)}***@${domain}`
+  }
+  private async validarDesafio(challengeToken: string) {
     let payload: ChallengePayload;
     try {
       payload = await this.jwtService.verifyAsync(challengeToken, {
@@ -400,14 +428,61 @@ export class AuthService {
       this.loginChallenges.delete(payload.jti);
       throw new UnauthorizedException('El desafío 2FA expiró. Inicia sesión nuevamente.');
     }
+    return { sub: payload.sub, jti: payload.jti, email: challenge.email, credentialVersion: challenge.credentialVersion }
+  }
+
+  async enviarCodigoIngreso(challengeToken: string) {
+    if (typeof challengeToken !== 'string' || !challengeToken) throw new BadRequestException('El desafío es obligatorio.')
+    const payload = await this.validarDesafio(challengeToken)
+    const usuario = await this.getUsuarioById(payload.sub)
+    if (!usuario?.activo || credentialVersion(usuario.passwordHash) !== payload.credentialVersion || !this.emailRegistrado(usuario) || payload.email !== usuario.email) throw new UnauthorizedException('La cuenta cambió desde que comenzó este intento. Inicia sesión nuevamente.')
+    if (!this.correo) throw new ServiceUnavailableException('El envío de correo no está disponible.')
+    const sent = await this.correo.enviar(`${payload.sub}:login:${payload.jti}`, usuario.email!, 'login', `${payload.sub}:login`)
+    return { ...sent, maskedEmail: this.ocultarEmail(usuario.email!) }
+  }
+
+  async solicitarVerificacionMiCorreo(userId: string, password: string) {
+    this.checkRateLimit(`email-enroll:${userId}`, 5, 15 * 60 * 1000)
+    const usuario = await this.getUsuarioById(userId)
+    if (!usuario?.activo) throw new UnauthorizedException('Sesión no válida.')
+    if (!usuario.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(usuario.email)) throw new BadRequestException('Registra un correo válido con la responsable de tu cuenta antes de verificarlo.')
+    if (typeof password !== 'string' || !password || !(await argon2.verify(usuario.passwordHash, password))) throw new UnauthorizedException('Contraseña incorrecta.')
+    if (!this.correo) throw new ServiceUnavailableException('El envío de correo no está disponible.')
+    const sent = await this.correo.enviar(`${userId}:email-enrollment`, usuario.email, 'email-enrollment')
+    return { ...sent, maskedEmail: this.ocultarEmail(usuario.email) }
+  }
+
+  async confirmarMiCorreo(userId: string, code: string) {
+    const usuario = await this.getUsuarioById(userId)
+    if (!usuario?.activo || !usuario.email) throw new UnauthorizedException('Sesión no válida.')
+    if (!this.correo || typeof code !== 'string') throw new BadRequestException('Solicita primero el código de verificación.')
+    this.correo.consumir(`${userId}:email-enrollment`, usuario.email, code)
+    const updated = await this.prisma.db.orm.public.Usuario.where({ id: usuario.id, email: usuario.email }).update({ emailVerificadoEn: Temporal.Now.instant(), actualizadoEn: Temporal.Now.instant() })
+    if (!updated) throw new BadRequestException('El correo cambió. Solicita un código para la dirección actual.')
+    return { mensaje: 'Correo verificado. Ya puedes elegirlo como método al iniciar sesión.' }
+  }
+
+  async verify2fa(challengeToken: string, code: string, method: 'app' | 'email' = 'app') {
+    if (!['app', 'email'].includes(method)) throw new BadRequestException('Método de verificación inválido.')
+    if (typeof challengeToken !== 'string' || typeof code !== 'string' || !challengeToken || !code) {
+      throw new BadRequestException('Token de desafío y código son obligatorios.');
+    }
+    const payload = await this.validarDesafio(challengeToken)
     this.checkRateLimit(`verify:${payload.sub}`, 8, 10 * 60 * 1000);
 
     const usuario = await this.getUsuarioById(payload.sub);
-    if (!usuario || !usuario.activo || !usuario.twoFactorEnabled || !usuario.twoFactorSecret) {
-      throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.');
-    }
+    if (!usuario || !usuario.activo || credentialVersion(usuario.passwordHash) !== payload.credentialVersion) throw new UnauthorizedException('No se pudo validar la autenticación en dos pasos.')
     const trimmed = code.trim();
     let usedRecovery = false;
+    if (method === 'email') {
+      if (!this.emailRegistrado(usuario) || !this.correo || payload.email !== usuario.email) throw new UnauthorizedException('No hay un correo válido para este intento de ingreso.')
+      this.correo.consumir(`${payload.sub}:login:${payload.jti}`, usuario.email!, trimmed)
+      if (!usuario.emailVerificadoEn) {
+        const confirmed = await this.prisma.db.orm.public.Usuario.where({ id: usuario.id, email: usuario.email }).update({ emailVerificadoEn: Temporal.Now.instant(), actualizadoEn: Temporal.Now.instant() })
+        if (!confirmed) throw new UnauthorizedException('El correo cambió durante la verificación. Inicia sesión nuevamente.')
+      }
+    } else {
+      if (!usuario.twoFactorEnabled || !usuario.twoFactorSecret) throw new UnauthorizedException('La app autenticadora no está configurada.')
 
     // Intentar TOTP primero (6 dígitos), si no aplica o falla intentar código de recuperación.
     let totpValid = false;
@@ -439,6 +514,8 @@ export class AuthService {
       }
     }
 
+    }
+    this.correo?.descartar(`${payload.sub}:login:${payload.jti}`)
     this.loginChallenges.delete(payload.jti);
     this.clearRateLimit(`verify:${payload.sub}`);
 
@@ -452,6 +529,32 @@ export class AuthService {
     return issued;
   }
 
+  /** Vuelve a mostrar el QR vigente solo tras contraseña y un código de recuperación de uso único. */
+  async relink2fa(userId: string, password: string, recoveryCode: string) {
+    this.checkRateLimit(`relink:${userId}`, 5, 15 * 60 * 1000)
+    if (typeof password !== 'string' || typeof recoveryCode !== 'string' || !password || !recoveryCode) {
+      throw new BadRequestException('Ingresa tu contraseña y un código de recuperación que no hayas usado.')
+    }
+    const usuario = await this.getUsuarioById(userId)
+    if (!usuario?.activo || !usuario.twoFactorEnabled || !usuario.twoFactorSecret) throw new BadRequestException('No hay una aplicación autenticadora activa para volver a vincular.')
+    if (!(await argon2.verify(usuario.passwordHash, password))) throw new UnauthorizedException('Contraseña incorrecta.')
+    const secret = readSecret(usuario.twoFactorSecret)
+    const otpauthUrl = generateURI({ issuer: 'TRIBUTEK', label: usuario.nombreUsuario, secret })
+    const qrCodeDataUrl = await QRCode.toDataURL(otpauthUrl)
+    if (!(await this.consumeRecoveryCode(usuario.id, recoveryCode))) throw new UnauthorizedException('El código de recuperación no es válido o ya fue usado.')
+    this.clearRateLimit(`relink:${userId}`)
+    return { qrCodeDataUrl, secret, mensaje: 'Escanea el QR desde tu aplicación autenticadora y comprueba su código. La protección sigue activada.' }
+  }
+
+  async confirmRelink2fa(userId: string, code: string) {
+    this.checkRateLimit(`relink-confirm:${userId}`, 8, 10 * 60 * 1000)
+    const usuario = await this.getUsuarioById(userId)
+    if (!usuario?.activo || !usuario.twoFactorEnabled || !usuario.twoFactorSecret) throw new UnauthorizedException('No se puede comprobar esta vinculación.')
+    if (typeof code !== 'string' || !/^\d{6}$/.test(code) || !verifySync({ token: code, secret: readSecret(usuario.twoFactorSecret) }).valid) throw new UnauthorizedException('El código no coincide. Comprueba la cuenta elegida y la hora automática de tu teléfono.')
+    this.clearRateLimit(`relink-confirm:${userId}`)
+    return { mensaje: 'Aplicación vinculada y código comprobado. Ya puedes usarla para iniciar sesión.' }
+  }
+
   async disable2fa(userId: string, password: string, code?: string) {
     this.checkRateLimit(`disable:${userId}`, 10, 15 * 60 * 1000);
     if (!password) throw new BadRequestException('La contraseña es obligatoria.');
@@ -460,7 +563,7 @@ export class AuthService {
     const ok = await argon2.verify(usuario.passwordHash, password);
     if (!ok) throw new UnauthorizedException('Contraseña incorrecta.');
     if (!usuario.twoFactorEnabled) {
-      return { mensaje: '2FA ya estaba desactivado.' };
+      return { mensaje: 'La app autenticadora ya estaba desactivada.' };
     }
     if (!usuario.twoFactorSecret) {
       throw new BadRequestException('No se pudo verificar la configuración 2FA.');
@@ -484,6 +587,6 @@ export class AuthService {
     });
     this.usedTotpSteps.delete(usuario.id.toString());
     this.clearRateLimit(`disable:${userId}`);
-    return { mensaje: '2FA desactivado correctamente.' };
+    return { mensaje: 'App autenticadora desactivada. Si tu correo está verificado, el ingreso por correo sigue disponible.' };
   }
 }

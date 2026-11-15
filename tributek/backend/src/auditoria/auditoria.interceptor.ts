@@ -13,16 +13,18 @@ export class AuditoriaInterceptor implements NestInterceptor {
 
   intercept(context: ExecutionContext, next: CallHandler) {
     const request = context.switchToHttp().getRequest<AuditRequest>();
-    const login = request.path === '/auth/login' && request.method === 'POST';
-    const entidad = login ? 'Usuario' : entidades[request.path.split('/')[1] ?? ''];
+    const login = ['/auth/login', '/auth/2fa/verify'].includes(request.path) && request.method === 'POST';
+    const seguridad: Record<string, string> = { '/auth/2fa/email/confirm': 'VERIFICAR_CORREO', '/auth/2fa/relink': 'REVINCULAR_2FA', '/auth/2fa/relink/confirm': 'COMPROBAR_2FA', '/auth/2fa/setup': 'CONFIGURAR_2FA', '/auth/2fa/confirm': 'ACTIVAR_2FA', '/auth/2fa/disable': 'DESACTIVAR_2FA' };
+    const securityAction = request.method === 'POST' ? seguridad[request.path] : undefined;
+    const entidad = login || securityAction ? 'Usuario' : entidades[request.path.split('/')[1] ?? ''];
     if (!entidad || !['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) return next.handle();
     return next.handle().pipe(concatMap(async (result: unknown) => {
       const data = result as { id?: unknown; usuario?: { id?: unknown } } | null;
       const actor = login ? data?.usuario?.id : request.user?.id;
       if (typeof actor !== 'string' || !/^\d+$/.test(actor)) return result;
-      const candidato = login ? actor : data?.id ?? request.params.id ?? request.params.abonoId ?? request.params.postergacionId ?? request.params.clienteId ?? request.params.client;
+      const candidato = login || securityAction ? actor : data?.id ?? request.params.id ?? request.params.abonoId ?? request.params.postergacionId ?? request.params.clienteId ?? request.params.client;
       const entidadId = typeof candidato === 'bigint' || typeof candidato === 'number' || typeof candidato === 'string' && /^\d+$/.test(candidato) ? String(candidato) : null;
-      const accion = login ? 'INICIAR_SESION' : request.method === 'DELETE' ? 'ELIMINAR' : ['PUT', 'PATCH'].includes(request.method) ? 'ACTUALIZAR' : 'CREAR';
+      const accion = login ? 'INICIAR_SESION' : securityAction ?? (request.method === 'DELETE' ? 'ELIMINAR' : ['PUT', 'PATCH'].includes(request.method) ? 'ACTUALIZAR' : 'CREAR');
       try {
         await this.auditoria.registrar({ usuarioId: actor, entidad, entidadId, accion, detalle: login ? 'Inicio de sesión correcto.' : `${request.method} ${request.path.split('?')[0]} completado correctamente.` });
       } catch (error) {

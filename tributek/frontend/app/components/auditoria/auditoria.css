@@ -27,6 +27,8 @@
 .audit-filters input,.audit-filters select { width: 100%; min-width: 0; font-weight: 400; }
 .audit-search-row { display: flex; align-items: end; gap: .75rem; }
 .audit-search { flex: 1; min-width: 0; }
+.audit-period { flex: 0 1 14rem; min-width: 0; }
+.audit-filter-error { margin: 0; color: var(--error); font-size: .875rem; }
 .audit-search-row > button { display: inline-flex; align-items: center; gap: .45rem; min-height: 44px; }
 .audit-advanced summary { cursor: pointer; width: fit-content; font-size: .875rem; font-weight: 600; color: var(--text-muted); padding: .3rem 0; }
 .audit-advanced summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 4px; }
@@ -55,6 +57,7 @@
 .audit-description { white-space: pre-wrap; }
 .audit-sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 @media(max-width: 800px) { .audit-filter-fields { grid-template-columns: repeat(2,minmax(0,1fr)); } .audit table { min-width: 780px; } }
+@media(max-width: 600px) { .audit-search-row { flex-wrap: wrap; } .audit-period,.audit-search { flex: 1 1 100%; } }
 @media(min-width: 481px) and (max-width: 767px) { .audit > :not(.audit-heading):not(dialog):not(.tk-header-divider) { width: calc(100% - 48px); } .audit .tk-header-divider { width: calc(100% - 48px); margin-bottom: 20px; } }
 @media(max-width: 480px) { .audit > :not(.audit-heading):not(dialog):not(.tk-header-divider) { width: calc(100% - 48px); }.audit .tk-header-divider { width: calc(100% - 48px); margin-bottom: 20px; }.audit-filter-fields { grid-template-columns: minmax(0,1fr); } .audit-search,.audit-filters .audit-buttons { grid-column: auto; } .audit-dialog dl { grid-template-columns: minmax(0,1fr); gap: .4rem; } .audit-dialog dd { margin-bottom: .75rem; } }
 
@@ -67,3 +70,7 @@
 .audit-tag[data-action="VERIFICAR"] { color: #6b21a8; background: #faf5ff; }
 .dark .audit-tag[data-action="ACTUALIZAR"] { color: #bfdbfe; background: #1e3154; }
 .dark .audit-tag[data-action="VERIFICAR"] { color: #e9d5ff; background: #382348; }
+
+.audit-tag[data-action="CONFIGURAR_2FA"] { color: #456b9b; background: #648bc419; }
+.audit-tag[data-action="ACTIVAR_2FA"] { color: #247761; background: #2f8f7919; }
+.audit-tag[data-action="DESACTIVAR_2FA"] { color: #a56a16; background: #d49a3519; }

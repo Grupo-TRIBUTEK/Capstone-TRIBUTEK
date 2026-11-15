@@ -1,0 +1,29 @@
+.tk-home-charts { margin: 8px 0 24px; }
+.tk-chart-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 18px; }
+.tk-chart-heading h2 { margin: 0 0 6px; }
+.tk-chart-heading p, .tk-chart-caption { color: var(--text-muted); font-size: 13px; margin: 0; }
+.tk-chart-grid { display: grid; grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr); gap: 20px; }
+.tk-chart-card { min-width: 0; padding: 24px; border: 1px solid var(--line); border-radius: 16px; background: var(--surface); box-shadow: 0 4px 16px var(--shadow-soft); }
+.tk-chart-cash { border-top: 3px solid #648bc4; }
+.tk-chart-status { border-top: 3px solid #b98b7b; }
+.tk-chart-card h3 { margin: 0 0 8px; font-size: 17px; color: var(--text); }
+.tk-chart-legend { display: flex; flex-wrap: wrap; gap: 16px; margin: 20px 0; font-size: 12px; color: var(--text-muted); }
+.tk-chart-legend span, .tk-chart-state-label > span { display: inline-flex; align-items: center; gap: 8px; }
+.tk-home-charts i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+.tk-home-charts .green { background: #2f8f79; }
+.tk-home-charts .amber { background: #d49a35; }
+.tk-home-charts .coral { background: #d56868; }
+.tk-chart-months { display: grid; gap: 18px; }
+.tk-chart-month { display: grid; grid-template-columns: 108px minmax(0, 1fr); align-items: center; gap: 12px; }
+.tk-chart-month-label { font-size: 12px; color: var(--text-muted); }
+.tk-chart-series { display: grid; gap: 6px; }
+.tk-chart-bar-row { display: grid; grid-template-columns: minmax(0, 1fr) 106px; align-items: center; gap: 10px; }
+.tk-chart-track { display: block; height: 10px; background: color-mix(in srgb, var(--text-muted) 12%, transparent); border-radius: 8px; overflow: hidden; }
+.tk-chart-fill { display: block; height: 100%; border-radius: inherit; }
+.tk-chart-amount { font-size: 12px; text-align: right; font-variant-numeric: tabular-nums; }
+.tk-chart-states { display: grid; gap: 28px; margin: 32px 0; }
+.tk-chart-state-label { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; font-size: 14px; }
+.tk-chart-state-label strong { font-size: 22px; }
+.tk-chart-note { color: var(--text-muted); font-size: 12px; line-height: 1.6; margin: 22px 0 16px; }
+@media (max-width: 1000px) { .tk-chart-grid { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .tk-chart-card { padding: 18px; } .tk-chart-month { grid-template-columns: 1fr; gap: 6px; } .tk-chart-bar-row { grid-template-columns: minmax(0, 1fr) 100px; } }

@@ -12,12 +12,15 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/roles.guard.js'
+import { Roles } from '../auth/decorators/roles.decorator.js'
 import { CreateAsignacionServicioDto } from './dto/create-asignacion-servicio.dto.js';
 import { CreateServicioDto } from './dto/create-servicio.dto.js';
 import { ServiciosService } from './servicios.service.js';
 
 @Controller('servicios')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('ADMIN', 1)
 export class ServiciosController {
   constructor(private readonly serviciosService: ServiciosService) {}
 

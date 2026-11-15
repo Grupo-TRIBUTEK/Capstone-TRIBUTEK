@@ -1,11 +1,17 @@
-﻿"use client";
+"use client";
 
 import { FormEvent, useEffect, useState } from "react";
+import Image from "next/image"
+import EmailLoginSettings from "./EmailLoginSettings"
+import RelinkAuthenticator from "./RelinkAuthenticator"
 import { confirm2fa, disable2fa, get2faStatus, setup2fa } from "@/app/features/auth/auth-client";
 
-type Status = { enabled: boolean; pending: boolean };
+import { useDialogs } from "@/app/components/ui/DialogProvider"
+
+type Status = { enabled: boolean; pending: boolean; emailEnabled: boolean; emailVerified?: boolean; emailRegistered: boolean; emailDeliveryAvailable: boolean; maskedEmail: string | null };
 
 export default function TwoFactorSettings() {
+  const dialogs = useDialogs()
   const [status, setStatus] = useState<Status | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,8 +56,10 @@ export default function TwoFactorSettings() {
 
   async function onSetup(e: FormEvent) {
     e.preventDefault();
+    if (busy) return
     setBusy(true); setError(""); setNotice("");
     try {
+      if (!(await dialogs.confirm("Se generará una configuración para vincular tu aplicación autenticadora. ¿Continuar?", { title: "Acción solicitada", confirmLabel: "Generar QR" }))) return
       const data = await setup2fa(setupPassword);
       setSetupData(data);
       setSetupPassword("");
@@ -63,8 +71,10 @@ export default function TwoFactorSettings() {
 
   async function onConfirm(e: FormEvent) {
     e.preventDefault();
+    if (busy) return
     setBusy(true); setError(""); setNotice("");
     try {
+      if (!(await dialogs.confirm("Al activar la verificación en dos pasos, necesitarás tu aplicación autenticadora para iniciar sesión. Guarda los códigos de recuperación que se mostrarán a continuación.", { title: "Acción solicitada", confirmLabel: "Activar 2FA" }))) return
       const res = await confirm2fa(confirmCode.trim());
       setNotice(res.mensaje || "2FA activado correctamente.");
       if (res.recoveryCodes?.length) setRecoveryCodes(res.recoveryCodes);
@@ -78,8 +88,10 @@ export default function TwoFactorSettings() {
 
   async function onDisable(e: FormEvent) {
     e.preventDefault();
+    if (busy) return
     setBusy(true); setError(""); setNotice("");
     try {
+      if (!(await dialogs.confirm("Se desactivará la app autenticadora. Si tu correo está verificado, podrás seguir ingresando con un código por correo. ¿Continuar?", { title: "Acción solicitada", confirmLabel: "Desactivar app", tone: "danger" }))) return
       const res = await disable2fa(disablePassword, disableCode.trim());
       setNotice(res.mensaje || "2FA desactivado.");
       setDisablePassword(""); setDisableCode("");
@@ -103,7 +115,7 @@ export default function TwoFactorSettings() {
 
       {status && (
         <div className="rounded-xl border border-border bg-surface p-4">
-          <p className="text-sm text-text-primary">Estado: <span className={`font-semibold ${status.enabled ? "text-success" : "text-warning"}`}>{status.enabled ? "Activado" : status.pending ? "Pendiente de confirmación" : "Desactivado"}</span></p>
+          <p className="text-sm text-text-primary">App autenticadora: <span className={`font-semibold ${status.enabled ? "text-success" : "text-warning"}`}>{status.enabled ? "Activado" : status.pending ? "Pendiente de confirmación" : "Desactivado"}</span></p>
         </div>
       )}
 
@@ -117,9 +129,9 @@ export default function TwoFactorSettings() {
         </div>
       )}
 
-      {!status?.enabled && (
+      {status && !status.enabled && (
         <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
-          <h3 className="font-semibold text-text-primary">Activar 2FA</h3>
+          <h3 className="font-semibold text-text-primary">Activar app autenticadora</h3>
           {!setupData ? (
             <form onSubmit={onSetup} className="space-y-3 max-w-md">
               <label className="block text-sm font-medium text-text-primary">Contraseña actual
@@ -131,11 +143,11 @@ export default function TwoFactorSettings() {
             <div className="space-y-4">
               <p className="text-sm text-text-muted">Escanea este código QR con tu app autenticadora. Si no puedes escanearlo, ingresa el secreto manualmente.</p>
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
-                <img src={setupData.qrCodeDataUrl} alt="Código QR para configurar 2FA" className="h-44 w-44 rounded-lg border border-border bg-white p-2" />
+                <Image unoptimized width={176} height={176} src={setupData.qrCodeDataUrl} alt="Código QR para configurar 2FA" className="h-44 w-44 rounded-lg border border-border bg-white p-2" />
                 <div className="min-w-0">
                   <p className="text-xs font-semibold uppercase tracking-wide text-text-muted">Secreto manual</p>
                   <code className="mt-1 block break-all rounded border border-border bg-surface-muted p-2 text-xs text-text-primary">{setupData.secret}</code>
-                  <p className="mt-2 text-xs text-text-muted">URI otpauth: <span className="break-all">{setupData.otpauthUrl}</span></p>
+                  <p className="mt-2 text-xs text-text-muted">Esta clave es privada. No la compartas ni la incluyas en capturas de la presentación.</p>
                 </div>
               </div>
               <form onSubmit={onConfirm} className="space-y-3 max-w-md">
@@ -152,9 +164,13 @@ export default function TwoFactorSettings() {
         </div>
       )}
 
+      {status?.emailRegistered && <EmailLoginSettings enabled={status.emailVerified === true} registered={status.emailRegistered} available={status.emailDeliveryAvailable} maskedEmail={status.maskedEmail} onVerified={refresh} />}
+
+      {status?.enabled && <RelinkAuthenticator />}
+
       {status?.enabled && (
         <div className="space-y-4 rounded-xl border border-border bg-surface p-5">
-          <h3 className="font-semibold text-text-primary">Desactivar 2FA</h3>
+          <h3 className="font-semibold text-text-primary">Desactivar app autenticadora</h3>
           <p className="text-sm text-text-muted">Para desactivar la verificación en dos pasos, confirma tu contraseña y un código actual de tu app autenticadora.</p>
           <form onSubmit={onDisable} className="space-y-3 max-w-md">
             <label className="block text-sm font-medium text-text-primary">Contraseña actual
@@ -163,7 +179,7 @@ export default function TwoFactorSettings() {
             <label className="block text-sm font-medium text-text-primary">Código 2FA actual
               <input inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]{6,8}" maxLength={8} required value={disableCode} onChange={(e) => setDisableCode(e.target.value.replace(/\D/g, ""))} className="mt-1 h-11 w-full rounded-lg border border-border bg-surface px-3 text-text-primary outline-none focus:border-primary focus:ring-2 focus:ring-primary/20" placeholder="000000" />
             </label>
-            <button type="submit" disabled={busy || !disablePassword || disableCode.length < 6} className="rounded-lg border border-error-border bg-error-surface px-4 py-2.5 text-sm font-semibold text-error hover:opacity-90 disabled:opacity-60">{busy ? "Desactivando…" : "Desactivar 2FA"}</button>
+            <button type="submit" disabled={busy || !disablePassword || disableCode.length < 6} className="rounded-lg border border-error-border bg-error-surface px-4 py-2.5 text-sm font-semibold text-error hover:opacity-90 disabled:opacity-60">{busy ? "Desactivando…" : "Desactivar app"}</button>
           </form>
         </div>
       )}

@@ -1,4 +1,2 @@
-﻿/** Contrato de entrada para setup 2FA. */
-export class Setup2faDto {
-  password: string;
-}
+import { PasswordDto } from './security.dto.js'
+export class Setup2faDto extends PasswordDto {}

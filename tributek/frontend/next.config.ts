@@ -3,6 +3,14 @@ import path from "node:path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: "/:path*", headers: [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "X-Frame-Options", value: "DENY" },
+      { key: "Referrer-Policy", value: "no-referrer" },
+    ] }]
+  },
   allowedDevOrigins: ["192.168.1.23", "127.0.0.1"],
   experimental: {
     proxyTimeout: 70_000,
@@ -10,6 +18,7 @@ const nextConfig: NextConfig = {
   /** Reenvía cada prefijo de API al servicio de Nest que escucha en el puerto 3001. */
   async rewrites() {
     return [
+      { source: "/administradores/:path*", destination: "http://localhost:3001/administradores/:path*" },
       { source: "/auditoria/:path*", destination: "http://localhost:3001/auditoria/:path*" },
       { source: "/payment-evidence/:path*", destination: "http://localhost:3001/payment-evidence/:path*" },
       {

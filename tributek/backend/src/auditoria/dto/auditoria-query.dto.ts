@@ -9,6 +9,8 @@ import {
   IsString,
   IsDateString,
   ValidateIf,
+  IsIn,
+  MaxLength,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -24,18 +26,25 @@ export class AuditoriaQueryDto {
   @IsInt()
   @Min(1)
   @Max(100)
-  limite?: number = 20;
+  limite?: number = 25
+
+  @IsOptional()
+  @IsIn(['reciente', 'personalizado', 'todo'])
+  periodo?: 'reciente' | 'personalizado' | 'todo' = 'reciente'
 
   @IsOptional()
   @IsString()
+  @MaxLength(150)
   buscar?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   entidad?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(80)
   accion?: string;
 
   @IsOptional()

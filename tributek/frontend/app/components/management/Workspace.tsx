@@ -16,6 +16,7 @@ import ClientCreateModal, {
 } from "../features/clientes/ClientCreateModal";
 import ClientSheet, { PaymentForm, type ClientView } from "./ClientSheet";
 import Formalization from "./Formalization";
+import HomeCharts from "./HomeCharts"
 import {
   receivedByCategory,
   balance,
@@ -776,11 +777,12 @@ const isServerView =
               </div>
             </div>
           </section>
+          <HomeCharts data={vista} period={period} hidden={hidden} loading={load === "loading"} failed={load === "error"} featuredId={clients.find(c => featured.isFeatured(c.rut))?.id} featuredName={clients.find(c => featured.isFeatured(c.rut))?.name} />
           <section className="tk-card">
             <div className="tk-card-head"><h2>Control de vencimientos</h2><Link className="tk-button" href={`/admin/obligaciones${period ? `?period=${period}` : ""}`}>Ver obligaciones</Link></div>
-            <div className="tk-panel">
+            {dueRows.length > 0 && <div className="tk-panel">
               <div className="tk-grid">
-                {[{ c: "Cotizaciones", day: 12 }, { c: "Impuestos", day: 20 }].map(({ c, day }) => (
+                {[{ c: "Cotizaciones", day: 12 }, { c: "Impuestos", day: 20 }].filter(({ c }) => dueRows.some(r => r.concept === c)).map(({ c, day }) => (
                   <div className="tk-due" key={conceptLabel(c)}>
                     <span>{conceptLabel(c)} - referencia interna día {day}</span>
                     <strong>{dueRows.filter((r) => r.concept === c).length} clientes</strong>
@@ -788,7 +790,7 @@ const isServerView =
                   </div>
                 ))}
               </div>
-            </div>
+            </div>}
             {dueRows.length ? (
               <div className="tk-table-wrap">
                 <table><thead><tr><th>Cliente</th><th>Concepto</th><th>Saldo</th><th></th></tr></thead><tbody>
@@ -802,7 +804,7 @@ const isServerView =
                   ))}
                 </tbody></table>
               </div>
-            ) : <Empty>No hay impuestos ni cotizaciones previsionales pendientes en este período.</Empty>}
+            ) : <div className="tk-panel tk-subtle">Sin vencimientos pendientes en este período.</div>}
           </section>
           <p className="tk-subtle">Ingresos: abonos de honorarios, formalización, cobranza y otro recibidos en {periodLabel(period)}. Las fechas de referencia no sustituyen el vencimiento confirmado del trámite.</p>
         </>

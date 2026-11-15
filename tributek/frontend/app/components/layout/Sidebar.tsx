@@ -8,6 +8,7 @@ import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { clearAuth } from "@/app/features/auth/auth-client";
 
+import AdministratorAccessLink from "../administradores/AdministratorAccessLink"
 import Icon from "../ui/Icon";
 import { adminNavigation } from "./adminNavigation";
 import ThemeSelect from "./Theme";
@@ -84,6 +85,7 @@ export default function Sidebar() {
           </details>
         ))}
       </nav>
+      <AdministratorAccessLink collapsed={collapsed} pathname={pathname} />
       <div className="admin-sidebar-theme mt-6 flex w-full items-center justify-center gap-3">
         <ThemeSelect sidebar />
       </div>

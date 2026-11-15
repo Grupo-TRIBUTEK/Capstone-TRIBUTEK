@@ -3,6 +3,7 @@
  */
 import { Module } from '@nestjs/common';
 import { AuthController } from './auth.controller.js';
+import { CorreoModule } from '../correo/correo.module.js'
 import { AuthService } from './auth.service.js';
 import { PrismaModule } from '../prisma/prisma.module.js';
 import { JwtModule } from '@nestjs/jwt'; // hacemos npm install @nestjs/jwt desde el backend (docuemtnarlo)
@@ -10,11 +11,13 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtStrategy } from './jwt.strategy.js';
 import { RolesGuard } from './roles.guard.js'; // roles
 import { JwtAuthGuard } from './jwt-auth.guard.js';
+import { LoginThrottleGuard } from './login-throttle.guard.js'
 @Module({
   imports: [
     //Agregamos el módulo de Prisma para poder
     // inyectar el servicio de Prisma en AuthService.
     PrismaModule,
+    CorreoModule,
     // Agregamos el módulo de JWT para poder generar
     // tokens de autenticación. :)
     JwtModule.register({
@@ -29,7 +32,7 @@ import { JwtAuthGuard } from './jwt-auth.guard.js';
     PassportModule.register({ defaultStrategy: 'jwt' }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RolesGuard, JwtAuthGuard],
+  providers: [AuthService, JwtStrategy, RolesGuard, JwtAuthGuard, LoginThrottleGuard],
   exports: [AuthService, JwtAuthGuard],
 })
 export class AuthModule {}

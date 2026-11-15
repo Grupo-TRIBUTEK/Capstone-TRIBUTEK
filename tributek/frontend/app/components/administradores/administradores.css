@@ -1,0 +1,9 @@
+.tk-admin-accounts { max-width: 1440px; margin: 0 auto; }
+.tk-admin-create { max-width: 580px; }
+.tk-admin-create > form { padding: 24px; }
+.tk-admin-fields { display: grid; gap: 18px; border: 0; padding: 0; margin: 22px 0; min-width: 0; }
+.tk-admin-fields input { width: 100%; }
+.tk-admin-fields small { font-size: 12px; color: var(--text-muted); }
+.tk-admin-form-actions { justify-content: flex-end; }
+.tk-admin-create::backdrop { background: #10182766; backdrop-filter: blur(6px); }
+@media(max-width: 520px) { .tk-admin-create > form { padding: 18px; } }

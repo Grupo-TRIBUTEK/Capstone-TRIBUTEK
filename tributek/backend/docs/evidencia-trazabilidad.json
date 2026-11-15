@@ -1,0 +1,35 @@
+{
+  "fecha": "2026-11-15",
+  "backend": {
+    "archivosPruebaAprobados": 26,
+    "pruebasAprobadas": 262,
+    "compilacion": "correcta"
+  },
+  "frontend": {
+    "tipos": "correctos",
+    "eslintArchivosModificados": "correcto",
+    "navegador": "Chromium con respuestas de API simuladas",
+    "casos": [
+      "25 filas por página y conteo de coincidencias",
+      "navegación a la segunda página",
+      "apertura y cierre de detalle",
+      "consulta explícita de todo el historial",
+      "consulta de un período antiguo",
+      "limpiar restablece los últimos 30 días",
+      "filtros adaptados al ancho móvil",
+      "resultado vacío",
+      "rechazo de una respuesta de más de 25 filas",
+      "error de servidor y reintento"
+    ]
+  },
+  "baseLocal": {
+    "consulta": "ORM real contra PostgreSQL",
+    "registrosConsultadosEnTotal": 29,
+    "primeraPagina": 25,
+    "segundaPagina": 4,
+    "registrosRepetidosEntrePaginas": 0,
+    "indicesVerificadosComoValidos": 3,
+    "eliminacionesDeDatos": 0
+  },
+  "alcance": "Se optimiza consulta y navegación. No se implementa eliminación automática ni archivado sin una política de retención."
+}

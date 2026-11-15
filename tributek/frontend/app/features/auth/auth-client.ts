@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Sesión del navegador y solicitudes autenticadas. El backend sigue siendo responsable de autorizar cada operación.
  */
 const TOKEN_KEY = "tributek_access_token";
@@ -20,6 +20,8 @@ export type LoginSuccess = {
 export type LoginChallenge = {
   requires2FA: true;
   challengeToken: string;
+  methods?: ('app' | 'email')[];
+  maskedEmail?: string | null;
   mensaje?: string;
 };
 
@@ -54,6 +56,8 @@ async function readErrorMessage(response: Response, fallback: string) {
 
 /** Envía credenciales. Si requiere 2FA devuelve desafío sin guardar sesión; si no, guarda sesión. */
 export async function login(nombreUsuario: string, password: string): Promise<LoginResult> {
+  // Un intento nuevo no debe conservar la sesión de otra cuenta durante el desafío.
+  clearAuth();
   const response = await fetch("/auth/login", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -70,11 +74,11 @@ export async function login(nombreUsuario: string, password: string): Promise<Lo
 }
 
 /** Verifica código 2FA con el token de desafío y guarda sesión si es exitoso. */
-export async function verifyLogin2fa(challengeToken: string, code: string): Promise<LoginSuccess> {
+export async function verifyLogin2fa(challengeToken: string, code: string, method: 'app' | 'email' = 'app'): Promise<LoginSuccess> {
   const response = await fetch("/auth/2fa/verify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ challengeToken, code }),
+    body: JSON.stringify({ challengeToken, code, method }),
   });
   if (!response.ok) {
     throw new Error(await readErrorMessage(response, "No se pudo verificar el código."));
@@ -87,7 +91,7 @@ export async function verifyLogin2fa(challengeToken: string, code: string): Prom
 export async function get2faStatus() {
   const response = await authenticatedFetch("/auth/2fa/status");
   if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo obtener el estado de 2FA."));
-  return (await response.json()) as { enabled: boolean; pending: boolean };
+  return (await response.json()) as { enabled: boolean; pending: boolean; emailEnabled: boolean; emailRegistered: boolean; emailDeliveryAvailable: boolean; maskedEmail: string | null };
 }
 
 export async function setup2fa(password: string) {
@@ -153,4 +157,36 @@ export async function validateAdminAccess() {
     return false;
   }
   return true;
+}
+
+export async function relink2fa(password: string, recoveryCode: string) {
+  const response = await authenticatedFetch("/auth/2fa/relink", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password, recoveryCode }),
+  })
+  if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo volver a mostrar el QR."))
+  return await response.json() as { qrCodeDataUrl: string, secret: string }
+}
+
+export async function confirmRelink2fa(code: string) {
+  const response = await authenticatedFetch("/auth/2fa/relink/confirm", {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }),
+  })
+  if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo comprobar la vinculación."))
+  return await response.json() as { mensaje: string }
+}
+
+export async function sendLoginEmailCode(challengeToken: string) {
+  const response = await fetch("/auth/2fa/email/send", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ challengeToken }) })
+  if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo enviar el código de ingreso."))
+  return await response.json() as { mensaje: string, maskedEmail: string }
+}
+export async function requestMyEmailVerification(password: string) {
+  const response = await authenticatedFetch("/auth/2fa/email/enroll", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ password }) })
+  if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo enviar la verificación."))
+  return await response.json() as { mensaje: string, maskedEmail: string }
+}
+export async function confirmMyEmailVerification(code: string) {
+  const response = await authenticatedFetch("/auth/2fa/email/confirm", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ code }) })
+  if (!response.ok) throw new Error(await readErrorMessage(response, "No se pudo verificar el correo."))
+  return await response.json() as { mensaje: string }
 }

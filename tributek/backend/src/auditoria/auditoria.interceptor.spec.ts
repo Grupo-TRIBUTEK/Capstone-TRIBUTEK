@@ -48,3 +48,21 @@ describe('Registro de operaciones reales', () => {
     log.mockRestore();
   });
 })
+
+describe('Trazabilidad integrada con 2FA', () => {
+  it('registra el inicio de sesión solo después de completar el desafío', async () => {
+    const { registrar, interceptor, context } = setup('/auth/login', 'POST', undefined)
+    await lastValueFrom(interceptor.intercept(context, { handle: () => of({ requires2FA: true, challengeToken: 'privado' }) }))
+    expect(registrar).not.toHaveBeenCalled()
+    const verified = setup('/auth/2fa/verify', 'POST', undefined)
+    await lastValueFrom(verified.interceptor.intercept(verified.context, { handle: () => of({ usuario: { id: '7' }, access_token: 'privado' }) }))
+    expect(verified.registrar).toHaveBeenCalledWith(expect.objectContaining({ usuarioId: '7', accion: 'INICIAR_SESION', entidad: 'Usuario' }))
+    expect(JSON.stringify(verified.registrar.mock.calls)).not.toContain('privado')
+  })
+  it.each([['setup', 'CONFIGURAR_2FA'], ['confirm', 'ACTIVAR_2FA'], ['disable', 'DESACTIVAR_2FA'], ['relink', 'REVINCULAR_2FA'], ['relink/confirm', 'COMPROBAR_2FA']])('registra %s sin secretos ni códigos', async (path, action) => {
+    const { registrar, interceptor, context } = setup(`/auth/2fa/${path}`, 'POST')
+    await lastValueFrom(interceptor.intercept(context, { handle: () => of({ secret: 'secreto-privado', qrCodeDataUrl: 'qr-privado', recoveryCodes: ['codigo-privado'] }) }))
+    expect(registrar).toHaveBeenCalledWith(expect.objectContaining({ usuarioId: '1', entidadId: '1', accion: action, entidad: 'Usuario' }))
+    expect(JSON.stringify(registrar.mock.calls)).not.toContain('privado')
+  })
+})

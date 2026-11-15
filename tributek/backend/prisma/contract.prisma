@@ -23,6 +23,7 @@ model Usuario {
   rolId                  BigInt           @map("rol_id")
   nombre                 VarChar(120)
   email                  VarChar(150)?    @unique
+  emailVerificadoEn      Timestamptz?     @map("email_verificado_en")
   nombreUsuario          VarChar(80)      @unique @map("nombre_usuario")
   passwordHash           VarChar(255)     @map("password_hash")
   activo                 Boolean          @default(true)
@@ -365,6 +366,9 @@ model Auditoria {
 
   usuario   Usuario?       @relation(fields:[usuarioId], references:[id])
 
+  @@index([creadoEn, id], map: "auditoria_fecha_id_idx")
+  @@index([entidad, creadoEn, id], map: "auditoria_entidad_fecha_id_idx")
+  @@index([accion, creadoEn, id], map: "auditoria_accion_fecha_id_idx")
   @@map("auditoria")
 }
 

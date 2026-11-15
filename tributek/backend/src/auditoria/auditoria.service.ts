@@ -35,15 +35,24 @@ export class AuditoriaService {
   /** Aplica filtros al historial y devuelve una página y su total; limita la consulta a 100 eventos por página. */
   async listar(query: AuditoriaQueryDto): Promise<AuditPage> {
     const pagina = Math.max(1, query.pagina ?? 1);
-    const limite = Math.min(100, Math.max(1, query.limite ?? 20));
+    const limite = Math.min(100, Math.max(1, query.limite ?? 25))
     const skip = (pagina - 1) * limite;
 
     if (query.desde && query.hasta && query.desde > query.hasta) throw new BadRequestException('La fecha desde no puede ser posterior a hasta.');
     let consulta = this.prisma.db.orm.public.Auditoria;
     if (query.entidad) consulta = consulta.where({ entidad: query.entidad as Varchar<80> });
     if (query.accion) consulta = consulta.where({ accion: query.accion as Varchar<80> });
-    const desde = parseFechaIsoOpcional(query.desde, 'desde');
-    const hasta = parseFechaIsoOpcional(query.hasta, 'hasta');
+    let desde = parseFechaIsoOpcional(query.desde, 'desde')
+    let hasta = parseFechaIsoOpcional(query.hasta, 'hasta')
+    if (!desde && !hasta) {
+      if (query.periodo === 'personalizado') {
+        throw new BadRequestException('Indica al menos una fecha para consultar el período personalizado.')
+      }
+      if (query.periodo !== 'todo') {
+        hasta = Temporal.Now.plainDateISO('America/Santiago')
+        desde = hasta.subtract({ days: 29 })
+      }
+    }
     if (desde) consulta = consulta.where(a => a.creadoEn.gte(desde.toZonedDateTime('America/Santiago').toInstant()));
     if (hasta) consulta = consulta.where(a => a.creadoEn.lt(hasta.add({ days: 1 }).toZonedDateTime('America/Santiago').toInstant()));
     const buscar = query.buscar?.trim();
