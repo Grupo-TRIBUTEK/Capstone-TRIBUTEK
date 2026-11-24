@@ -28,13 +28,13 @@ export const adminNavigation: {
     group: "Gestión mensual",
   },
   { href: "/admin/pagos", label: "Pagos", icon: "wallet", group: "Gestión mensual" },
-  { href: "/admin/f29", label: "Proyección F29", icon: "file", group: "Gestión mensual" },
   {
     href: "/admin/postergaciones",
     label: "Postergaciones",
     icon: "calendar",
     group: "Gestión mensual",
   },
+  { href: "/admin/f29", label: "Proyección F29", icon: "file", group: "Gestión mensual" },
   {
     href: "/admin/formalizaciones",
     label: "Constitución de empresas",
