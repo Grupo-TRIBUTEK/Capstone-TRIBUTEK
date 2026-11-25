@@ -118,6 +118,28 @@ function filaOperativa(fila: Element) {
   return Array.from(fila.children).flatMap((celda, i) => columnaOperativa(cabeceras[i]?.textContent ?? '') && visibleParaLectura(celda) ? [textoOperativo(celda)] : []).join(' ')
 }
 
+/** Expone solo columnas operativas del listado de clientes, con etiquetas inequívocas. */
+function clientesVisibles() {
+  const clientes: Record<string, string>[] = []
+  for (const tabla of Array.from(document.querySelectorAll('table'))) {
+    const columnas = Array.from(tabla.querySelectorAll('thead tr:first-child th')).map(e => e.textContent?.trim() ?? '')
+    const indices = { nombre: columnas.indexOf('Cliente'), rut: columnas.indexOf('RUT'), deudaAcumulada: columnas.indexOf('Deuda acumulada'), estadoMes: columnas.indexOf('Estado del mes'), estado: columnas.indexOf('Estado'), honorario: columnas.indexOf('Honorario') }
+    if (indices.nombre < 0 || indices.rut < 0 || indices.deudaAcumulada < 0) continue
+    for (const fila of Array.from(tabla.querySelectorAll('tbody tr')).filter(visibleParaLectura)) {
+      const dato: Record<string, string> = {}
+      for (const [key, index] of Object.entries(indices)) {
+        const celda = fila.children[index]
+        if (!celda || !visibleParaLectura(celda)) continue
+        const valor = key === 'nombre' ? celda.querySelector('strong')?.textContent?.trim() ?? '' : textoOperativo(celda)
+        if (valor) dato[key] = ocultarDatosPrivados(valor).slice(0, key === 'nombre' ? 200 : 120)
+      }
+      if (dato.nombre && dato.rut) clientes.push(dato)
+      if (clientes.length >= 25) return clientes
+    }
+  }
+  return clientes
+}
+
 /** Contexto operativo de la pantalla actual, sin contactos, credenciales ni formularios personales. */
 export function describirVista() {
   const titulos = Array.from(document.querySelectorAll('h1, h2, .tk-subtle, [role="alert"], [role="status"], .f29-error, .tk-error, .tk-empty, .tk-metric, .tk-line'))
@@ -125,5 +147,8 @@ export function describirVista() {
   const filas = Array.from(document.querySelectorAll('table tbody tr')).filter(visibleParaLectura).slice(0, 25).map(filaOperativa)
   const campos = Array.from(document.querySelectorAll<HTMLInputElement | HTMLSelectElement>('input[type="number"], input[type="date"], input[type="month"], select'))
     .filter(e => visibleParaLectura(e) && !controlPrivado(nombre(e))).slice(0, 20).map(e => `${nombre(e)}: ${ocultarDatosPrivados(e instanceof HTMLSelectElement ? e.selectedOptions[0]?.textContent ?? '' : e.value)}`)
-  return ['Contexto parcial de la pantalla actual; no es toda la base de datos. Los datos privados se omiten.', ...titulos, ...filas, ...campos].filter(Boolean).join('\n').slice(0, 5000)
+  const clientes = clientesVisibles()
+  // Conserva el JSON completo dentro del límite de contexto de la petición.
+  while (clientes.length && JSON.stringify(clientes).length > 3500) clientes.pop()
+  return ['Contexto parcial de la pantalla actual; no es toda la base de datos. Los datos privados se omiten.', ...(clientes.length ? [`Clientes visibles: ${JSON.stringify(clientes)}`] : []), ...titulos, ...filas, ...campos].filter(Boolean).join('\n').slice(0, 5000)
 }

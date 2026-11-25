@@ -62,7 +62,7 @@ export function navegarVista(consulta: string, ruta: string, historial: Mensaje[
   const esAyuda = ayuda.test(q)
   if ((!lectura.test(q) && !esAyuda) || /\b(elimina|borra|guarda|modifica|no puedo|no funciona|error)\b/.test(q)) return undefined
   // El resumen y las fichas necesitan el reconocimiento específico por cliente/período.
-  if (/estado general|resumen|panorama|como estan|\bficha\b/.test(q)) return undefined
+  if (/estado general|resumen|panorama|como estan|\bficha\b|\b(datos|informacion|deuda|saldo|honorario)\b/.test(q)) return undefined
   const coincidencias = vistasAsistente.filter(v => v.alias.some(alias => contiene(q, alias)))
   const permitidas = coincidencias.filter(v => admin ? v.destino.startsWith('/admin') : v.destino.startsWith('/cliente'))
   const max = Math.max(0, ...permitidas.map(v => Math.max(...v.alias.filter(a => contiene(q, a)).map(a => a.length))))

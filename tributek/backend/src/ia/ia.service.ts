@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { ConsultaIaDto } from './dto/consulta-ia.dto.js';
 import { conversar, evitarBucle } from './conversacion.js'
+import { consultarClientes } from './lectura-clientes.js'
 import { orientar, GUIA_TRIBUTEK } from './orientacion.js'
 import { ordenDirecta, rutasAdmin, rutasCliente, validarAccion } from './acciones.js'
 
@@ -83,6 +84,8 @@ export class IaService {
     const saludo = conversar(consulta)
     if (saludo) return { respuesta: saludo }
     const rutas = administrador ? rutasAdmin : rutasCliente
+    const datosClientes = consultarClientes(consulta, contexto ?? '', vista ?? '', administrador)
+    if (datosClientes) return datosClientes
     const orientacion = orientar(consulta, contexto ?? '', controles ?? [], historial, administrador)
     if (orientacion) return orientacion
     const directa = controles && ordenDirecta(consulta, controles, rutas)

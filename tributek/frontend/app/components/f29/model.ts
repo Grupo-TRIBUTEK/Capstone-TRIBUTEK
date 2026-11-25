@@ -73,6 +73,8 @@ export function periodLabel(period: string) {
 export const validPeriod = (p: string) => /^20\d{2}-(0[1-9]|1[0-2])$/.test(p);
 /** Quita puntos y espacios y normaliza la K para comparar RUT. */
 export const normalizeRut = (rut: string) => rut.replace(/[.\s]/g, "").toUpperCase();
+/** Acepta el formato del directorio sin exigir un dígito verificador correcto para visualizarlo. */
+export const validRutFormat = (rut: string) => /^(\d{7,8})-([0-9K])$/.test(normalizeRut(rut));
 /** Comprueba formato y dígito verificador del RUT mediante módulo 11. */
 export function validRut(rut: string) {
   const match = normalizeRut(rut).match(/^(\d{7,8})-([0-9K])$/);
@@ -434,7 +436,7 @@ export function validateDatabase(value: unknown): Database {
       !c.name.trim() ||
       c.name.length > 200 ||
       typeof c.rut !== "string" ||
-      !validRut(c.rut) ||
+      !validRutFormat(c.rut) ||
       ids.has(c.id) ||
       ruts.has(normalizeRut(c.rut))
     )

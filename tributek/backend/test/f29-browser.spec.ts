@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { emptyDatabase, newProjection, validRut, validateDatabase } from '../../frontend/app/components/f29/model.js';
 import { directoryClients } from '../../frontend/app/components/f29/directory.js';
 import { folderFiles, rememberFilesSelection, restoreFolder } from '../../frontend/app/components/f29/storage.js';
 
@@ -10,6 +11,25 @@ describe('Directorio real de F29', () => {
     const cached = [{ id: 'proyeccion-local', name: 'Nombre anterior', rut: '17.842.693-1' }, { id: 'antiguo', name: 'Eliminado', rut: '16473852-3' }];
     expect(directoryClients(remote, cached)).toEqual([{ id: 'proyeccion-local', name: 'Camila Fuentes', rut: '17842693-1' }]);
     expect(cached).toHaveLength(2);
+  });
+  it('muestra toda la cartera cuando los clientes nuevos tienen un dígito por revisar y no tienen RCV', () => {
+    const nuevos = [
+      { id: '43', nombreRazonSocial: 'Cliente nuevo uno', rut: '17842693-2' },
+      { id: '44', nombreRazonSocial: 'Cliente nuevo dos', rut: '16473852-4' },
+    ];
+    expect(nuevos.every(c => !validRut(c.rut))).toBe(true);
+    const clients = directoryClients([...remote, ...nuevos], []);
+    expect(clients.map(c => c.id)).toEqual(['servidor:42', 'servidor:43', 'servidor:44']);
+    const projection = newProjection(clients[1].id, '2026-11');
+    const saved = validateDatabase({ ...emptyDatabase, clients, projections: [projection] });
+    expect(saved.projections[0].sales).toBeUndefined();
+    expect(saved.projections[0].purchases).toBeUndefined();
+    expect(directoryClients([...remote, ...nuevos], saved.clients)).toEqual(clients);
+  });
+  it('mantiene la validación de formato y del respaldo sin modificar el RUT recibido', () => {
+    expect(() => directoryClients([{ ...remote[0], rut: 'sin-rut' }], [])).toThrow('inválido');
+    expect(() => validateDatabase({ ...emptyDatabase, clients: [{ id: 'x', name: 'Cliente', rut: 'sin-rut' }] })).toThrow('inválido');
+    expect(directoryClients([{ ...remote[0], rut: '17.842.693-2' }], [])[0].rut).toBe('17842693-2');
   });
   it('no sustituye un fallo del servidor por una cartera local ficticia', () => {
     expect(() => directoryClients({ error: 'Sin conexión' }, [])).toThrow();
